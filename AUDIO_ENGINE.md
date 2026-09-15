@@ -10,13 +10,28 @@ The `AVAudioSourceNode` callback delegates to `RenderKernel`. Control changes
 are immutable `RenderSnapshot` values transferred through a fixed-capacity C11
 atomic queue. The renderer owns only raw retained handles and a render-local
 cursor. Retired handles and playback events return through another SPSC queue;
-the main control thread performs every Swift release, decoder stop, callback,
-and error report.
+the main control thread receives returned handles, updates ownership, and sends
+callbacks/error reports. Retired streams are handed to a cleanup worker for decoder
+stop and final destruction. Handles stay open until any in-flight read finishes.
 
 The renderer performs no allocation, locking, logging, file access, collection
 mutation, user callbacks, or Swift object destruction. Ring-buffer positions
 are monotonic 64-bit atomic sample counters, with modulo used only to address
 fixed storage.
+
+## Responsive preparation
+
+Normal Play/Next, resume-from-position, seeking, and file preloading open, seek,
+and prime their sources on a background worker. A single-use prepared source owns
+the stream until the control actor accepts it. The engine checks request generations
+before committing playback or queue changes; Stop, Pause, or newer playback intents
+invalidate older work. Failed preparation leaves the current track playing.
+Unused results are disposed of off-main. A changed output sample rate rejects the
+prepared stream instead of rendering it with an incompatible format.
+
+The synchronous backend compatibility API and output-device recovery still prepare
+synchronously. Core Audio engine configuration/start remain on the control actor.
+This is not a claim that every possible source of UI or hardware latency is removed.
 
 ## Transitions
 

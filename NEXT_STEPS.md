@@ -1,5 +1,12 @@
 # Candidate next steps
 
+## Playback responsiveness
+
+Playback preparation, preloading, seeking and decoder cleanup now avoid blocking
+the UI on file I/O. Tests/TSan passed and the optimized build is installed; see the
+[performance record](docs/exec-plans/completed/playback-responsiveness.md). Real-world
+storage and audible-onset measurements remain outside this completed pass.
+
 ## Last.fm sign-in
 
 Browser sign-in and build-time application configuration are implemented and

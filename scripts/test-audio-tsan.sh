@@ -2,4 +2,4 @@
 set -eu
 
 swift test --sanitize=thread \
-  --filter 'AudioAtomicTests|AudioDiagnosticsPollerTests|NativeAudioBackendTests|PlaybackQueueShuffleTests'
+  --filter 'AudioAtomicTests|AudioDiagnosticsPollerTests|NativeAudioBackendTests|PlaybackPreparationTests|PlaybackQueueShuffleTests'

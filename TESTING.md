@@ -1,5 +1,33 @@
 # Candidate Testing and Validation
 
+## Playback responsiveness — 2026-09-15
+
+See the [completed implementation record](docs/exec-plans/completed/playback-responsiveness.md).
+Normal file opening/priming and seeking now run off-main; request generations keep
+late results from changing playback or queue state. Retired decoder cleanup uses
+an explicit worker-completion signal before closing file handles.
+
+- Final isolated `./check.sh quick -j 4`: 310 XCTest cases (two optional-store skips)
+  and 334 Swift Testing cases in 43 suites; zero failures.
+- Final `./scripts/test-audio-tsan.sh`: 37 cases, zero warnings, including rapid
+  native WAV/FLAC start/retirement. An earlier stress run detected two races in
+  polling-based cleanup; the explicit completion fix passed the final reruns.
+- Python suite: 109 cases, two optional vendor-rebuild skips, zero failures.
+- Final optimized build/package: 97.55 seconds, ad-hoc signature verified. The
+  pre-existing unused-result warning in TagWriterService remains unchanged.
+- Controlled 250 ms source-factory delay: main-actor heartbeat 255.600042 ms with
+  synchronous preparation versus 0.016042 ms with final asynchronous preparation.
+  These are scheduling measurements from a synthetic seam, not live UI/NAS latency.
+- `/Applications/Songbird.app` matches all 44 built bundle file/link entries; legal
+  documents/resources match source and Last.fm application configuration is preserved.
+  The prior installed app is backed up. Version remains 0.1.0; restart is user-controlled.
+
+Logs, SHA-256 records and install receipt:
+`/Users/aji/project/songbird-public-verification/playback-performance-20260915/`.
+Tests used a disposable source copy/home/profile and committed/synthetic fixtures.
+No real-library or media access. This pass did not measure audible onset, perform
+rendered UI interaction, or repeat physical CD/AirPlay coverage.
+
 ## Last.fm browser sign-in — 2026-09-15
 
 Settings now offers browser sign-in without username, password, API-key, or secret

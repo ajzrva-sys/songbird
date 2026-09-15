@@ -253,10 +253,26 @@ public final class PlaybackEngine: ObservableObject {
         guard !Task.isCancelled, generation == playRequestGeneration else {
             return .failure(.cancelled)
         }
+        var prepared: (any PreparedAudioSource)?
+        if let preparingBackend = backend as? any SourcePreparingPlayerBackend {
+            do {
+                prepared = try await preparingBackend.prepareSource(source, startAt: startAt ?? 0)
+            } catch {
+                guard !Task.isCancelled, generation == playRequestGeneration,
+                      !(error is CancellationError) else { return .failure(.cancelled) }
+                let failure = PlaybackStartError.backendRejected(error.localizedDescription)
+                reportError(failure.localizedDescription)
+                return .failure(failure)
+            }
+            guard !Task.isCancelled, generation == playRequestGeneration else {
+                return .failure(.cancelled)
+            }
+        }
         return startPlayback(
             track,
             source: source,
             startAt: startAt,
+            prepared: prepared,
             committing: queueCommit
         )
     }
@@ -265,10 +281,15 @@ public final class PlaybackEngine: ObservableObject {
         _ track: Track,
         source: AudioSource,
         startAt: TimeInterval?,
+        prepared: (any PreparedAudioSource)? = nil,
         committing queueCommit: (() -> Void)?
     ) -> Result<Void, PlaybackStartError> {
         do {
-            try backend.play(source, durationHint: track.duration)
+            if let prepared, let preparingBackend = backend as? any SourcePreparingPlayerBackend {
+                try preparingBackend.playPrepared(prepared, durationHint: track.duration)
+            } else {
+                try backend.play(source, durationHint: track.duration)
+            }
         } catch {
             let failure = PlaybackStartError.backendRejected(error.localizedDescription)
             reportError(failure.localizedDescription)
@@ -282,7 +303,7 @@ public final class PlaybackEngine: ObservableObject {
         LibraryStatus.shared.clearPlaybackError()
 
         if let startAt, startAt > 0 {
-            backend.seek(to: startAt)
+            if prepared == nil { backend.seek(to: startAt) }
             position = startAt
         } else {
             position = 0
@@ -326,6 +347,7 @@ public final class PlaybackEngine: ObservableObject {
     }
 
     public func pause() {
+        playRequestGeneration &+= 1
         persistLastTrack()
         backend.pause()
         status = .paused
@@ -400,7 +422,30 @@ public final class PlaybackEngine: ObservableObject {
     }
 
     public func seekTo(_ time: TimeInterval) {
-        backend.seek(to: time)
+        guard let preparingBackend = backend as? any SourcePreparingPlayerBackend,
+              let source = activeSource else {
+            backend.seek(to: time)
+            didSeek(to: time)
+            return
+        }
+        playRequestGeneration &+= 1
+        let generation = playRequestGeneration
+        Task { [weak self] in
+            do {
+                let prepared = try await preparingBackend.prepareSource(source, startAt: time)
+                guard let self, generation == self.playRequestGeneration,
+                      self.activeSource == source else { return }
+                try preparingBackend.seekPrepared(prepared)
+                self.didSeek(to: time)
+            } catch {
+                guard let self, generation == self.playRequestGeneration,
+                      !(error is CancellationError) else { return }
+                self.reportError("Could not seek: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func didSeek(to time: TimeInterval) {
         position = time
         nowPlaying.updateNowPlaying()
         persistLastTrack()
@@ -554,6 +599,11 @@ public final class PlaybackEngine: ObservableObject {
             if let pending = pendingNextTrack,
                let pendingNextSource,
                upcomingContains(pending) {
+                if let preparingBackend = backend as? any SourcePreparingPlayerBackend,
+                   !preparingBackend.hasPreparedNext(pendingNextSource) {
+                    preload(pending, crossfadeDuration: pending.isAudioCDTrack ? 0 : crossfade)
+                    return
+                }
                 backend.setNextSource(
                     pendingNextSource,
                     crossfadeDuration: pending.isAudioCDTrack ? 0 : crossfade
@@ -573,6 +623,10 @@ public final class PlaybackEngine: ObservableObject {
     }
 
     private func preload(_ track: Track, crossfadeDuration: TimeInterval) {
+        // An obsolete pending stream must not begin while its replacement loads.
+        backend.setNextSource(nil, crossfadeDuration: 0)
+        pendingNextTrack = nil
+        pendingNextSource = nil
         preloadRequestGeneration &+= 1
         let generation = preloadRequestGeneration
         preloadTask?.cancel()
@@ -601,9 +655,22 @@ public final class PlaybackEngine: ObservableObject {
                   generation == self.preloadRequestGeneration else { return }
             switch resolved {
             case .success(let source):
-                self.backend.setNextSource(source, crossfadeDuration: crossfadeDuration)
-                self.pendingNextTrack = track
-                self.pendingNextSource = source
+                do {
+                    if let preparingBackend = self.backend as? any SourcePreparingPlayerBackend {
+                        let prepared = try await preparingBackend.prepareSource(source, startAt: 0)
+                        guard !Task.isCancelled, generation == self.preloadRequestGeneration else { return }
+                        try preparingBackend.setNextPrepared(prepared, crossfadeDuration: crossfadeDuration)
+                    } else {
+                        self.backend.setNextSource(source, crossfadeDuration: crossfadeDuration)
+                    }
+                    self.pendingNextTrack = track
+                    self.pendingNextSource = source
+                } catch {
+                    guard !Task.isCancelled, generation == self.preloadRequestGeneration else { return }
+                    self.backend.setNextSource(nil, crossfadeDuration: 0)
+                    self.pendingNextTrack = nil
+                    self.pendingNextSource = nil
+                }
             case .failure:
                 self.backend.setNextURL(nil, crossfadeDuration: 0)
                 self.pendingNextTrack = nil

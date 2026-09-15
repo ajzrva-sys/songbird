@@ -30,6 +30,7 @@ public final class NativeDecoderSession: @unchecked Sendable, RenderPCMSource {
     private var file: AVAudioFile?
     private var flac: OpaquePointer?
     private var decodeThread: Thread?
+    private let workerCompletion = DispatchGroup()
     private let lifecycle = AtomicUInt32(PCMSourceState.idle.rawValue)
     private let decodeLatencyMetrics = AtomicLatencyMetrics()
     private let conversionLatencyMetrics = AtomicLatencyMetrics()
@@ -126,7 +127,12 @@ public final class NativeDecoderSession: @unchecked Sendable, RenderPCMSource {
     public func start() {
         guard state == .idle else { return }
         lifecycle.storeRelease(PCMSourceState.decoding.rawValue)
-        let thread = Thread { [weak self] in self?.decodeLoop() }
+        let completion = workerCompletion
+        completion.enter()
+        let thread = Thread { [weak self, completion] in
+            defer { completion.leave() }
+            self?.decodeLoop()
+        }
         thread.name = "Songbird native decoder"
         thread.qualityOfService = .userInitiated
         decodeThread = thread
@@ -135,12 +141,11 @@ public final class NativeDecoderSession: @unchecked Sendable, RenderPCMSource {
 
     public func stop() {
         lifecycle.storeRelease(PCMSourceState.cancelled.rawValue)
-        decodeThread?.cancel()
         if let thread = decodeThread, thread !== Thread.current {
-            let deadline = Date().addingTimeInterval(1)
-            while thread.isExecuting && Date() < deadline {
-                Thread.sleep(forTimeInterval: 0.001)
-            }
+            // The atomic lifecycle cancels decoding. Do not cancel NSThread:
+            // even a not-yet-started worker must run its completion signal.
+            // Retired streams wait here on the cleanup worker, never the renderer.
+            workerCompletion.wait()
         }
         decodeThread = nil
         file = nil

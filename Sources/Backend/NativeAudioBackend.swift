@@ -12,7 +12,7 @@ enum EqualPowerCrossfade {
 
 @MainActor
 public final class NativeAudioBackend:
-    PlayerBackend,
+    SourcePreparingPlayerBackend,
     AudioDiagnosticsProviding,
     @unchecked Sendable
 {
@@ -107,28 +107,72 @@ public final class NativeAudioBackend:
     }
 
     public func play(_ source: AudioSource, durationHint: TimeInterval) throws {
+        try validateSource(source)
+        if engine == nil { try prepare() }
+        let stream = try NativeStreamPreparation.makeStream(source, sampleRate: sampleRate, startAt: 0)
+        try playPrepared(NativePreparedSource(
+            source: source, sampleRate: sampleRate, startAt: 0, stream: stream
+        ), durationHint: durationHint)
+    }
+
+    func prepareSource(_ source: AudioSource, startAt: TimeInterval) async throws -> any PreparedAudioSource {
+        try validateSource(source)
+        if engine == nil { try prepare() }
+        return try await NativeStreamPreparation.prepare(source, sampleRate: sampleRate, startAt: startAt)
+    }
+
+    func playPrepared(_ source: any PreparedAudioSource, durationHint: TimeInterval) throws {
+        try replacePrepared(source, wasPaused: false)
+        currentDurationHint = durationHint
+    }
+
+    func seekPrepared(_ source: any PreparedAudioSource) throws {
+        guard source.source == currentSource else { throw CancellationError() }
+        try replacePrepared(source, wasPaused: _isPaused)
+    }
+
+    private func checkedPreparation(_ source: any PreparedAudioSource) throws -> NativePreparedSource {
+        guard engine != nil,
+              let prepared = source as? NativePreparedSource,
+              prepared.sampleRate == sampleRate else {
+            throw NativeAudioError.operationFailed("accept source after audio output changed; try again", -1)
+        }
+        return prepared
+    }
+
+    private func replacePrepared(_ source: any PreparedAudioSource, wasPaused: Bool) throws {
+        let prepared = try checkedPreparation(source)
+        let stream = try prepared.consume()
+        stream.session.start()
+        let pointer = UInt(bitPattern: Unmanaged.passRetained(stream).toOpaque())
+        cancelFade(restoringVolume: true)
+        stopRendererAndReclaim()
+        guard submit(RenderSnapshot(
+            command: .replaceActive, streamPointer: pointer,
+            startFrame: UInt64(max(0, prepared.startAt) * sampleRate)
+        )) else {
+            reclaimUnsubmitted(pointer)
+            throw NativeAudioError.operationFailed("queue playback command", -1)
+        }
+        streams[pointer] = stream
+        activePointer = pointer
+        pendingPointer = 0
+        currentSource = prepared.source
+        do {
+            if !wasPaused { try engine?.start() }
+        } catch {
+            stopImmediately()
+            throw error
+        }
+        _isRunning = true
+        _isPaused = wasPaused
+    }
+
+    private func validateSource(_ source: AudioSource) throws {
         if case .file(let url) = source,
            !Self.supportedExtensions.contains(url.pathExtension.lowercased()) {
             throw NativeAudioError.unsupportedFormat(url.lastPathComponent)
         }
-        if engine == nil { try prepare() }
-
-        cancelFade(restoringVolume: true)
-        stopRendererAndReclaim()
-        let (pointer, stream) = try makeStream(source: source)
-        guard submit(RenderSnapshot(command: .replaceActive, streamPointer: pointer)) else {
-            reclaimUnsubmitted(pointer)
-            throw NativeAudioError.operationFailed("queue playback command", -1)
-        }
-        activePointer = pointer
-        streams[pointer] = stream
-        currentSource = source
-        currentDurationHint = durationHint
-
-        guard let engine else { throw NativeAudioError.closed }
-        try engine.start()
-        _isRunning = true
-        _isPaused = false
     }
 
     public func pause() {
@@ -214,56 +258,53 @@ public final class NativeAudioBackend:
 
     public func seek(to time: TimeInterval) {
         guard let source = currentSource else { return }
-        let wasPaused = _isPaused
-        engine?.stop()
-        enqueueStopAndReclaim()
-
         do {
-            let (pointer, stream) = try makeStream(source: source, startAt: time)
-            let startFrame = UInt64(max(0, time) * sampleRate)
-            guard submit(RenderSnapshot(
-                command: .replaceActive,
-                streamPointer: pointer,
-                startFrame: startFrame
-            )) else {
-                reclaimUnsubmitted(pointer)
-                throw NativeAudioError.operationFailed("queue seek command", -1)
-            }
-            streams[pointer] = stream
-            activePointer = pointer
-            pendingPointer = 0
-            if !wasPaused { try engine?.start() }
+            let stream = try NativeStreamPreparation.makeStream(source, sampleRate: sampleRate, startAt: time)
+            try seekPrepared(NativePreparedSource(
+                source: source, sampleRate: sampleRate, startAt: time, stream: stream
+            ))
         } catch {
-            stop()
             onError?("Could not seek source: \(error.localizedDescription)")
         }
     }
 
     public func setNextSource(_ source: AudioSource?, crossfadeDuration: TimeInterval) {
-        let crossfadeFrames = UInt64(max(0, crossfadeDuration) * sampleRate)
         guard let source else {
             _ = submit(RenderSnapshot(command: .clearPending))
             pendingPointer = 0
             return
         }
         if streams[pendingPointer]?.session.source == source { return }
-
         do {
-            let (pointer, stream) = try makeStream(source: source)
-            guard submit(RenderSnapshot(
-                command: .setPending,
-                streamPointer: pointer,
-                crossfadeFrames: crossfadeFrames
-            )) else {
-                reclaimUnsubmitted(pointer)
-                throw NativeAudioError.operationFailed("queue preload command", -1)
-            }
-            streams[pointer] = stream
-            pendingPointer = pointer
+            let stream = try NativeStreamPreparation.makeStream(source, sampleRate: sampleRate, startAt: 0)
+            try setNextPrepared(NativePreparedSource(
+                source: source, sampleRate: sampleRate, startAt: 0, stream: stream
+            ), crossfadeDuration: crossfadeDuration)
         } catch {
-            stop()
+            setNextSource(nil, crossfadeDuration: 0)
             onError?("Could not preload source: \(error.localizedDescription)")
         }
+    }
+
+    func hasPreparedNext(_ source: AudioSource) -> Bool {
+        streams[pendingPointer]?.session.source == source
+    }
+
+    func setNextPrepared(_ source: any PreparedAudioSource, crossfadeDuration: TimeInterval) throws {
+        let prepared = try checkedPreparation(source)
+        if streams[pendingPointer]?.session.source == prepared.source { return }
+        let stream = try prepared.consume()
+        stream.session.start()
+        let pointer = UInt(bitPattern: Unmanaged.passRetained(stream).toOpaque())
+        guard submit(RenderSnapshot(
+            command: .setPending, streamPointer: pointer,
+            crossfadeFrames: UInt64(max(0, crossfadeDuration) * sampleRate)
+        )) else {
+            reclaimUnsubmitted(pointer)
+            throw NativeAudioError.operationFailed("queue preload command", -1)
+        }
+        streams[pointer] = stream
+        pendingPointer = pointer
     }
 
     public var position: TimeInterval {
@@ -386,22 +427,8 @@ public final class NativeAudioBackend:
         source: AudioSource,
         startAt: TimeInterval = 0
     ) throws -> (UInt, RenderStream) {
-        let session: any RenderPCMSource
-        switch source {
-        case .file(let url):
-            session = try NativeDecoderSession(url: url, sampleRate: sampleRate)
-        case .audioCD(let cdSource):
-            session = try AudioCDReader(source: cdSource, sampleRate: sampleRate)
-        }
-        if startAt > 0 { try session.seek(to: startAt) }
-        if session.minimumPlaybackFrames == 0 {
-            try session.prime(minimumFrames: 8_192)
-        }
-        // Optical streams fill their deeper startup buffer on their worker.
-        // The renderer emits silence until that threshold is ready, keeping
-        // Play and the rest of the interface responsive during drive spin-up.
-        session.start()
-        let stream = RenderStream(session: session)
+        let stream = try NativeStreamPreparation.makeStream(source, sampleRate: sampleRate, startAt: startAt)
+        stream.session.start()
         let pointer = UInt(bitPattern: Unmanaged.passRetained(stream).toOpaque())
         return (pointer, stream)
     }
@@ -429,7 +456,7 @@ public final class NativeAudioBackend:
     private func reclaimUnsubmitted(_ pointer: UInt) {
         guard let raw = UnsafeRawPointer(bitPattern: pointer) else { return }
         let stream = Unmanaged<RenderStream>.fromOpaque(raw).takeRetainedValue()
-        stream.session.stop()
+        NativeStreamCleanup.retire(stream)
     }
 
     private func drainRenderEvents() {
@@ -474,10 +501,10 @@ public final class NativeAudioBackend:
         let retained = Unmanaged<RenderStream>.fromOpaque(raw).takeRetainedValue()
         retiredDecodeLatency.add(retained.session.decodeLatency)
         retiredConversionLatency.add(retained.session.conversionLatency)
-        retained.session.stop()
         streams.removeValue(forKey: pointer)
         if activePointer == pointer { activePointer = 0 }
         if pendingPointer == pointer { pendingPointer = 0 }
+        NativeStreamCleanup.retire(retained)
     }
 
     private func observeDeviceChanges() {

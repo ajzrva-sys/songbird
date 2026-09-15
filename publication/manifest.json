@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1784,
+  "payload_file_count_including_manifest": 1787,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -85,10 +85,10 @@
     },
     {
       "path": "AUDIO_ENGINE.md",
-      "sha256": "95e4d53053fa2ccb9c795c04202e39515d5df873603ce6257cea5cbd6b2fc218",
-      "bytes": 2690,
+      "sha256": "0678ef9fc309c6c208b8ba3586ff8f43459642dc773abdba6f6aa5cdcdc3c365",
+      "bytes": 3677,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "95e4d53053fa2ccb9c795c04202e39515d5df873603ce6257cea5cbd6b2fc218"
     },
     {
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "85e283684a8993b4661f5bbfacdd49f2799d90fa19a5009936a41587273e06e9",
-      "bytes": 2656,
+      "sha256": "c2eac3f57e1e3b6ef6489d38a7d858210516a1f7dec55173afb87aab95a00655",
+      "bytes": 3012,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -374,18 +374,18 @@
     },
     {
       "path": "Sources/Backend/NativeAudioBackend.swift",
-      "sha256": "d08ecff6d5ac2fbd6749557f2ffa6934c5b099858857a7d21af7fc188f319bb5",
-      "bytes": 23164,
+      "sha256": "fd0ce8926c8bdb7b7621e6d013521081644b072a4fbabd9e761f575e02353c06",
+      "bytes": 24667,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "d08ecff6d5ac2fbd6749557f2ffa6934c5b099858857a7d21af7fc188f319bb5"
     },
     {
       "path": "Sources/Backend/NativeDecoderSession.swift",
-      "sha256": "a8eb45dd3f4bcc99266245e43a9fa596399ba23c5091e9fc95d1372a6a980fa8",
-      "bytes": 12715,
+      "sha256": "6e68b27eff109481eb041d54db2b52cf1d7749b3bd70e59ab84109a3fda104a8",
+      "bytes": 12969,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "a8eb45dd3f4bcc99266245e43a9fa596399ba23c5091e9fc95d1372a6a980fa8"
     },
     {
@@ -395,6 +395,13 @@
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "cacdd01a4e54d3003fe32dfc2ca2565e4510c2bedfeb9758c522923d29542b0b"
+    },
+    {
+      "origin": "playback-responsiveness",
+      "path": "Sources/Backend/PreparedAudioSource.swift",
+      "sha256": "42c7799d5848ddc64252cb49c7dca0729ffb687b312d5e59a1ac1ccaaf61d1f7",
+      "bytes": 3439,
+      "mode": 420
     },
     {
       "path": "Sources/Backend/RenderKernel.swift",
@@ -1232,8 +1239,8 @@
     },
     {
       "path": "Sources/Playback/PlaybackEngine.swift",
-      "sha256": "5bc233b55c3092df0904833bc16852474a31a47e9c13c436143f8b76c6a3f9b1",
-      "bytes": 29345,
+      "sha256": "d968c1696baae9268e5aaa9d59f08f0ab284634715c515a6ed92ee0d649cc45d",
+      "bytes": 32818,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "5bc233b55c3092df0904833bc16852474a31a47e9c13c436143f8b76c6a3f9b1"
@@ -2337,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "745a5a3949658c2661cbe0bcbbccf6dfa495f38b9e81d8cb6f0ad663feed5686",
-      "bytes": 23586,
+      "sha256": "dd0a8ae53284ad1c0964c2382aa6a91d818255a009de48a02fde3d7ea7ddefef",
+      "bytes": 25440,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3050,6 +3057,13 @@
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "80bd82a5fde91dc2ecce82a2dc670f498e34c9c52f749b263b8dca783e1b5ca2"
+    },
+    {
+      "origin": "playback-responsiveness",
+      "path": "Tests/SongbirdTests/PlaybackPreparationTests.swift",
+      "sha256": "4bbfa1494cb077028dfc0fa0fdaa5c81bc8ffe28e668db680ffab62fb2c68b1b",
+      "bytes": 13368,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/PlaybackQueueShuffleTests.swift",
@@ -12599,6 +12613,13 @@
       "origin": "baseline-documentation"
     },
     {
+      "origin": "playback-responsiveness",
+      "path": "docs/exec-plans/completed/playback-responsiveness.md",
+      "sha256": "1cc7e47b84abc88d3027986bfc28805034a55f168d5294bc3607c615a5c1488a",
+      "bytes": 6914,
+      "mode": 420
+    },
+    {
       "path": "docs/exec-plans/completed/publication-baseline.md",
       "sha256": "c7a7975c9abc50172a23eccf3b15c78b6154780610e8aef303beac6c811308ac",
       "bytes": 8689,
@@ -12881,10 +12902,10 @@
     },
     {
       "path": "scripts/test-audio-tsan.sh",
-      "sha256": "47d6d17a59f47a290e603685b3d4fcd9e7548c4f0b909a2d98711d24216511da",
-      "bytes": 158,
+      "sha256": "43a4f7363644c3aa8626b8f98fa9812df47e6a7871fae6e9bfd184d4b720924e",
+      "bytes": 183,
       "mode": 493,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "47d6d17a59f47a290e603685b3d4fcd9e7548c4f0b909a2d98711d24216511da"
     },
     {
