@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1778,
+  "payload_file_count_including_manifest": 1779,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -2314,10 +2314,10 @@
     },
     {
       "path": "Sources/Views/TrackTableView.swift",
-      "sha256": "debd7f0caf70c7fde9fc8cd119d9f085715bb5876940c83525d330973ba22dc4",
-      "bytes": 28522,
+      "sha256": "02ae2ee5652a09a8dda1ba4206bd4d4dd7b2285a10d0febf9ab49a2c7e85ab24",
+      "bytes": 28446,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "debd7f0caf70c7fde9fc8cd119d9f085715bb5876940c83525d330973ba22dc4"
     },
     {
@@ -2330,8 +2330,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "dc62b0cf855e2eb8874111c656ef3ee5b97e37f4e57ff64da689d838b8b97e17",
-      "bytes": 19842,
+      "sha256": "a84de41a4549b5f716c6a91c1619ac2dead753936e3c9e179f74b9489a7ac77d",
+      "bytes": 21502,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3155,6 +3155,13 @@
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "63f376f9443c7955b6322b598bec9631bb2457599888954bdb2cfbd4cfafd815"
+    },
+    {
+      "origin": "column-context-menu-fix",
+      "path": "Tests/SongbirdTests/TrackTableColumnMenuTests.swift",
+      "sha256": "06aef5c0704b77f65506861c04d8b5ae3a592ccb5d7259c9717dc6a5df75207b",
+      "bytes": 3197,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/TrackTableColumnPrefsTests.swift",

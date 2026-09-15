@@ -435,20 +435,7 @@ struct TrackTableColumnHeader: View {
                 Button("Widen Column") { adjustColumnWidth(column, by: 16) }
             }
             .contextMenu {
-                Button("Move Left") { moveColumn(column, direction: -1) }
-                    .disabled(!canMoveColumn(column, direction: -1))
-                Button("Move Right") { moveColumn(column, direction: 1) }
-                    .disabled(!canMoveColumn(column, direction: 1))
-                if showsPlaylistOrderOption {
-                    Divider()
-                    Button("Playlist Order") { usePlaylistOrder = true }
-                }
-                Divider()
-                columnVisibilitySubmenu
-                Divider()
-                Button("Reset Columns") {
-                    columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
-                }
+                contextMenuItems(for: column)
             }
         .background {
             GeometryReader { proxy in
@@ -605,28 +592,43 @@ struct TrackTableColumnHeader: View {
         )
     }
 
-    private var columnVisibilitySubmenu: some View {
-        Menu("Columns") {
-            ForEach(columnPrefs.sorted {
-                ($0.column?.label ?? $0.id).localizedCaseInsensitiveCompare($1.column?.label ?? $1.id)
-                    == .orderedAscending
-            }) { preference in
-                    if let column = preference.column, column.isSupported {
-                    Toggle(
-                        column.label,
-                        isOn: Binding(
-                            get: { column == .title || preference.visible },
-                            set: { isVisible in
-                                setColumnVisibility(column, isVisible: isVisible)
-                            }
-                        )
-                    )
-                    .disabled(column == .title)
-                }
-            }
+    @ViewBuilder
+    func contextMenuItems(for column: TrackSortColumn) -> some View {
+        Button("Move Left") { moveColumn(column, direction: -1) }
+            .disabled(!canMoveColumn(column, direction: -1))
+        Button("Move Right") { moveColumn(column, direction: 1) }
+            .disabled(!canMoveColumn(column, direction: 1))
+        if showsPlaylistOrderOption {
             Divider()
-            Button("Reset Columns") {
-                columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
+            Button("Playlist Order") { usePlaylistOrder = true }
+        }
+        Divider()
+        columnVisibilityItems
+        Divider()
+        Button("Reset Columns") {
+            columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
+        }
+    }
+
+    // Keep these controls in the root context menu. The nested SwiftUI Menu can
+    // appear as a non-opening "Columns" item inside the table header's menu.
+    @ViewBuilder
+    private var columnVisibilityItems: some View {
+        ForEach(columnPrefs.sorted {
+            ($0.column?.label ?? $0.id).localizedCaseInsensitiveCompare($1.column?.label ?? $1.id)
+                == .orderedAscending
+        }) { preference in
+            if let column = preference.column, column.isSupported {
+                Toggle(
+                    column.label,
+                    isOn: Binding(
+                        get: { column == .title || preference.visible },
+                        set: { isVisible in
+                            setColumnVisibility(column, isVisible: isVisible)
+                        }
+                    )
+                )
+                .disabled(column == .title)
             }
         }
     }

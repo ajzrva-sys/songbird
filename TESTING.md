@@ -1,5 +1,30 @@
 # Candidate Testing and Validation
 
+## Track column context menu — 2026-09-15
+
+The table-header context menu now lists the supported column checkboxes directly.
+This removes the nested Columns item reported as non-opening on macOS 26.
+Move Left/Right, playlist ordering, and one Reset Columns command are retained.
+The Title column remains visible; existing column order and widths are preserved
+when changing visibility.
+
+- Native `NSHostingMenu` regression tests inspect the rendered menu items and invoke
+  their actions to verify saved visibility, reopening, protected Title, and reset.
+  These tests require macOS 14.4+; production deployment remains macOS 14+.
+- Focused `TrackTableColumnMenuTests|TrackTableColumnPrefsTests`: 14 passed.
+- `./check.sh quick -j 4`, with an isolated home and test profile: 287 XCTest cases
+  (two optional-store skips) and 334 Swift Testing cases passed.
+- Logs and the incomplete UI report are retained locally under
+  `/Users/aji/project/songbird-public-verification/column-menu-fix-20260915/`.
+- `SONGBIRD_OFFLINE_DEPS=1 ./build.sh /private/tmp/songbird-columns-d0xlfo7f/Songbird.app`
+  passed, including optimized compilation, packaging, and signature verification.
+- The disposable UI run reached album detail, but window-only captures did not
+  expose the popup menu and the rebuilt run's accessibility inspector timed out.
+  Visual menu behavior and twice-replayed UI verification remain unverified;
+  native menu action tests are the current regression evidence. The probe timeout
+  alone is not evidence of an application hang. Both disposable processes stopped.
+- Audio TSan and physical-device tests are not repeated for this menu-only change.
+
 ## Owner-selected missing-artwork update, 2026-09-15
 
 The owner supplied songbirdimage.png for the placeholder. The exact 1254×1254
