@@ -1,14 +1,14 @@
 # README screenshots
 
-Status: **pending recapture**. The old four-image README gallery remains excluded.
-Current bounded visual evidence is supplied with the companion release receipt.
-The owner approved restoring the existing bird artwork; exact runtime images and
-source hashes are in [asset provenance](../../Sources/Resources/asset-provenance.json).
+Existing window-only captures from 2026-09-15, using the disposable demo library with 14 fictional tracks, 5 albums, and 5 playlists. The PNG files are copied unchanged.
 
-[manifest.json](manifest.json) describes the empty README gallery. The remaining
-excluded image hashes are in [the retired-asset list](../../publication/retired-asset-hashes.json).
+| Image | View | Pixels |
+| --- | --- | --- |
+| [library-blue-monday.png](library-blue-monday.png) | Library, Blue Monday theme | 1456 × 924 |
+| [library-terminal.png](library-terminal.png) | Library, Terminal theme | 1456 × 924 |
+| [mini-player.png](mini-player.png) | Mini player, Blue Monday theme | 1252 × 128 |
+| [albums.png](albums.png) | Albums with the headphone bird placeholder | 2316 × 1592 |
 
-For future screenshots, use the existing disposable harness, synthetic fixture,
-window-only captures and [privacy contract](../../Usability/AI_TESTER.md). Record
-actual build identity, dimensions, hashes and cleanup. A few screenshots do not
-establish full usability, accessibility, performance or device coverage.
+The library and mini-player images come from the earlier demo session; the album image comes from the later missing-artwork update. These are existing captures, not a new test of the current checkout. The demo audio uses silent 30-second clips and fictional catalog durations.
+
+[manifest.json](manifest.json) records capture identifiers, dimensions, file sizes, and SHA-256 checksums. Future captures should use the existing [disposable UI harness](../../Usability/AI_TESTER.md).

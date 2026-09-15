@@ -20,6 +20,32 @@ This is a hobby project. Builds are ad-hoc signed and are not notarized by Apple
 
 Recognized local-file extensions: `mp3`, `m4a`, `aac`, `flac`, `wav`, `aiff`, and `aif`. Playback of non-FLAC files uses the system audio APIs; a recognized extension does not guarantee every codec/container combination.
 
+## Screenshots
+
+### Library — Blue Monday
+
+![Songbird library in the Blue Monday theme, with track browsing, playlists, and playback controls](docs/screenshots/library-blue-monday.png)
+
+### Mini player
+
+![Songbird mini player showing First Light by The Skylarks and playback controls](docs/screenshots/mini-player.png)
+
+<details>
+<summary>Terminal theme</summary>
+
+![Songbird library in the dark Terminal theme](docs/screenshots/library-terminal.png)
+
+</details>
+
+<details>
+<summary>Album browser</summary>
+
+![Songbird album browser with the headphone bird artwork placeholder](docs/screenshots/albums.png)
+
+</details>
+
+All screenshots use a fictional demo library.
+
 ## Requirements
 
 - **macOS 14 or later.** The current build was tested on macOS 26; macOS 14 has not been tested separately.

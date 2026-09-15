@@ -6,8 +6,8 @@
       "evidence_files": [
         {
           "path": "docs/LICENSE_SCOPE.md",
-          "sha256": "b63c255be9df0a0a1202f804ec585cf059c3fe51f0e93cb3753e19ed26649e9b",
-          "bytes": 4449,
+          "sha256": "9231d8d686b38b5351235918d82d16665c8cd4a904109dfa044529570f9bb327",
+          "bytes": 4493,
           "mode": 420
         },
         {
@@ -232,8 +232,8 @@
         },
         {
           "path": "publication/retired-asset-hashes.json",
-          "sha256": "f9fb5828be4b062c44a2ac5dd2b8f12436f42e53eaf5f2044d4189acff54dc24",
-          "bytes": 891,
+          "sha256": "b1ece3315cd5cdef10101af7b8f35855485c604a102bf571c3048c256859ca37",
+          "bytes": 545,
           "mode": 420
         },
         {

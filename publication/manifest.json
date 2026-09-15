@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1774,
+  "payload_file_count_including_manifest": 1778,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -151,8 +151,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "867bf9115edb357fd92d2bab8d314a7bace7ad14ce7a38d8d0f483da2e5c65d2",
-      "bytes": 4417,
+      "sha256": "dc084b1d041af657b53174ad08e879fbfe15a10dc6dd22f0454c4e24785b3c83",
+      "bytes": 5086,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b40e7c0934fd74bf6a009f36de5409ff85f448da1b590fadfb9085299bfb570a"
@@ -2575,8 +2575,8 @@
     },
     {
       "path": "Tests/SongbirdTests/ArtworkProvenanceTests.swift",
-      "sha256": "f10f074566d0d7214d27042ac130c1c491de657d3249708ede5c4ba17744b8f4",
-      "bytes": 3722,
+      "sha256": "63734721cd60acd2bd5a4e4056c85b017a62f70f78d9962f573ce1d3695f4fdc",
+      "bytes": 4588,
       "mode": 420,
       "origin": "project-owned source/test changes for adopted A1\u2013A5 behavior"
     },
@@ -12499,8 +12499,8 @@
     },
     {
       "path": "docs/LICENSE_SCOPE.md",
-      "sha256": "b63c255be9df0a0a1202f804ec585cf059c3fe51f0e93cb3753e19ed26649e9b",
-      "bytes": 4449,
+      "sha256": "9231d8d686b38b5351235918d82d16665c8cd4a904109dfa044529570f9bb327",
+      "bytes": 4493,
       "mode": 420,
       "origin": "project-authored local legal delivery, focused regression or candidate control/documentation remediation"
     },
@@ -12586,19 +12586,47 @@
     },
     {
       "path": "docs/screenshots/README.md",
-      "sha256": "021da41864285039f9ae8921d27e05d40557520bbb4b9ca90dd80fd1e8393023",
-      "bytes": 852,
+      "sha256": "e648ae2cc9e8a604fd00361f8b4fd8f60062e8143f9fbac637969f00e9ed3c47",
+      "bytes": 1082,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "70a241dbcd82d30e15638d4349a9325927abaf75996409d5bbcd77edef0139a8"
     },
     {
+      "origin": "existing-demo-screenshot",
+      "path": "docs/screenshots/albums.png",
+      "sha256": "8b0b6328589a7a25f684ee6c950e4c1abf7a272a8b8d7b687d3b252aecb4ea0c",
+      "bytes": 904769,
+      "mode": 420
+    },
+    {
+      "origin": "existing-demo-screenshot",
+      "path": "docs/screenshots/library-blue-monday.png",
+      "sha256": "3bf65baabb27692acdc94847591f3d19f5b7a36cedb6527927ba3369c0808a63",
+      "bytes": 486313,
+      "mode": 420
+    },
+    {
+      "origin": "existing-demo-screenshot",
+      "path": "docs/screenshots/library-terminal.png",
+      "sha256": "8b551da095f797549e13f328e7afbc07d12ad28596d298c26f56f84ccc350deb",
+      "bytes": 525738,
+      "mode": 420
+    },
+    {
       "path": "docs/screenshots/manifest.json",
-      "sha256": "961e313eeece8fde42d18a734bbb92106dd0c2a8337ac4f11e007a520d408d9b",
-      "bytes": 295,
+      "sha256": "b18c6fe1358b80016ea7209a958a46d3d4add8358ba9d712449cfbfdffd6440b",
+      "bytes": 1551,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "8efdacde06606cf61e06dd52dd3b96b2864c6f3e34d82a129d686241f169d5cf"
+    },
+    {
+      "origin": "existing-demo-screenshot",
+      "path": "docs/screenshots/mini-player.png",
+      "sha256": "6d494f58204693d24a7fba092f29131f454d4c638ed4ed129de9ef41861ba7d5",
+      "bytes": 209451,
+      "mode": 420
     },
     {
       "path": "docs/vendor-rebuilds.md",
@@ -12700,15 +12728,15 @@
     },
     {
       "path": "publication/release-gates.json",
-      "sha256": "9b2e858f14312c20ace84883783fcb58b9ef1ce49c1ba9afacf6051e3528d0be",
+      "sha256": "4ea7a9019133860c74e961d6fc3cf405dd884c9925a284a73b49b827a095901d",
       "bytes": 12592,
       "mode": 420,
       "origin": "project-authored publication integrity/gate implementation, synthetic tests or actual gate evidence records"
     },
     {
       "path": "publication/retired-asset-hashes.json",
-      "sha256": "f9fb5828be4b062c44a2ac5dd2b8f12436f42e53eaf5f2044d4189acff54dc24",
-      "bytes": 891,
+      "sha256": "b1ece3315cd5cdef10101af7b8f35855485c604a102bf571c3048c256859ca37",
+      "bytes": 545,
       "mode": 420,
       "origin": "preparation-manifest and supplied legacy hash evidence only"
     },

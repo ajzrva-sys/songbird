@@ -23,9 +23,13 @@ final class ArtworkProvenanceTests: XCTestCase {
         let sha256: String
     }
 
-    func testRetiredScreenshotsAreAbsentWhileRecaptureIsPending() throws {
+    func testREADMEGalleryMatchesRecordedScreenshots() throws {
         struct ScreenshotManifest: Decodable {
-            struct Image: Decodable { let file: String }
+            struct Image: Decodable {
+                let file: String
+                let sha256: String
+                let bytes: Int
+            }
             let status: String?
             let images: [Image]
         }
@@ -33,14 +37,27 @@ final class ArtworkProvenanceTests: XCTestCase {
         let screenshots = root.appendingPathComponent("docs/screenshots")
         let metadata = try JSONDecoder().decode(ScreenshotManifest.self, from:
             Data(contentsOf: screenshots.appendingPathComponent("manifest.json")))
-        XCTAssertEqual(metadata.status, "pending-recapture")
-        XCTAssertTrue(metadata.images.isEmpty, "Old captures do not document the current build")
+        XCTAssertEqual(metadata.status, "captured")
+        XCTAssertFalse(metadata.images.isEmpty)
+        let names = Set(metadata.images.map(\.file))
+        XCTAssertEqual(names.count, metadata.images.count)
+        let actual = try FileManager.default.contentsOfDirectory(
+            at: screenshots, includingPropertiesForKeys: nil
+        ).filter { $0.pathExtension == "png" }
+        XCTAssertEqual(Set(actual.map(\.lastPathComponent)), names)
         let retired = try JSONDecoder().decode(RetiredAssets.self, from:
             Data(contentsOf: root.appendingPathComponent("publication/retired-asset-hashes.json")))
         let oldScreenshots = retired.before_paths.filter { $0.hasPrefix("docs/screenshots/") }
-        XCTAssertEqual(oldScreenshots.count, 4)
         let readme = try String(contentsOf: root.appendingPathComponent("README.md"), encoding: .utf8)
         let notes = try String(contentsOf: screenshots.appendingPathComponent("README.md"), encoding: .utf8)
+        for entry in metadata.images {
+            let data = try Data(contentsOf: screenshots.appendingPathComponent(entry.file))
+            let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(digest, entry.sha256, entry.file)
+            XCTAssertEqual(data.count, entry.bytes, entry.file)
+            XCTAssertTrue(readme.contains("](docs/screenshots/" + entry.file + ")"), entry.file)
+            XCTAssertTrue(notes.contains("](" + entry.file + ")"), entry.file)
+        }
         for path in oldScreenshots {
             XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent(path).path), path)
             XCTAssertFalse(readme.contains("](" + path + ")"), path)

@@ -1,9 +1,46 @@
 {
+  "captured_on": "2026-09-15",
+  "fixture": "standard: 14 fictional tracks, 5 albums, silent playback clips",
+  "capture": "Window-only native desktop capture; pixels unedited",
+  "images": [
+    {
+      "file": "library-blue-monday.png",
+      "caption": "All Tracks, Blue Monday theme",
+      "width": 1456,
+      "height": 924,
+      "bytes": 486313,
+      "sha256": "3bf65baabb27692acdc94847591f3d19f5b7a36cedb6527927ba3369c0808a63",
+      "capture_run": "20260915T141503Z-88348"
+    },
+    {
+      "file": "library-terminal.png",
+      "caption": "All Tracks, Terminal theme",
+      "width": 1456,
+      "height": 924,
+      "bytes": 525738,
+      "sha256": "8b551da095f797549e13f328e7afbc07d12ad28596d298c26f56f84ccc350deb",
+      "capture_run": "20260915T141503Z-88348"
+    },
+    {
+      "file": "mini-player.png",
+      "caption": "Modern mini player, Blue Monday theme",
+      "width": 1252,
+      "height": 128,
+      "bytes": 209451,
+      "sha256": "6d494f58204693d24a7fba092f29131f454d4c638ed4ed129de9ef41861ba7d5",
+      "capture_run": "20260915T141503Z-88348"
+    },
+    {
+      "file": "albums.png",
+      "caption": "Albums with the headphone bird placeholder, Blue Monday theme",
+      "width": 2316,
+      "height": 1592,
+      "bytes": 904769,
+      "sha256": "8b0b6328589a7a25f684ee6c950e4c1abf7a272a8b8d7b687d3b252aecb4ea0c",
+      "capture_run": "20260915T222744Z-66718",
+      "package_executable_sha256": "e6238a75edfcbae553270668196cad50595aa5de2b08b28b6c9f97f13ede74a0"
+    }
+  ],
   "schema": 1,
-  "status": "pending-recapture",
-  "captured_on": null,
-  "fixture": "standard synthetic fixture; future capture only",
-  "capture": null,
-  "reason": "README gallery not recaptured; current bounded UI evidence is supplied with the companion release receipt.",
-  "images": []
+  "status": "captured"
 }
