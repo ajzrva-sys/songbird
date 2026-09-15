@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_summary", "coverage", "findings", "new_requirements", "unvisited"],
+  "properties": {
+    "run_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "mode", "fixture", "tested_at", "notes"],
+      "properties": {
+        "verdict": { "enum": ["pass", "fail", "incomplete"] },
+        "mode": { "enum": ["audit", "repair"] },
+        "fixture": { "type": "string" },
+        "tested_at": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outcome", "status", "actions", "evidence"],
+        "properties": {
+          "outcome": { "type": "string" },
+          "status": { "enum": ["passed", "failed", "partial", "not_reached"] },
+          "actions": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "severity", "title", "requirement", "reproduction", "expected", "observed", "evidence", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "enum": ["P0", "P1", "P2", "P3"] },
+          "title": { "type": "string" },
+          "requirement": { "type": "string" },
+          "reproduction": { "type": "array", "items": { "type": "string" } },
+          "expected": { "type": "string" },
+          "observed": { "type": "string" },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "status": { "enum": ["open", "fixed", "not_reproduced"] }
+        }
+      }
+    },
+    "new_requirements": { "type": "array", "items": { "type": "string" } },
+    "unvisited": { "type": "array", "items": { "type": "string" } }
+  }
+}

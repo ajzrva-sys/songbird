@@ -1,0 +1,201 @@
+#!/bin/zsh
+set -euo pipefail
+
+ALLOW_FIRST_RUN=0
+if [[ "${1:-}" == "--allow-first-run" ]]; then
+  ALLOW_FIRST_RUN=1
+  shift
+fi
+if [[ "$#" -ne 2 ]]; then
+  echo "Usage: $0 [--allow-first-run] REAL_APP USABILITY_APP" >&2
+  exit 2
+fi
+
+REAL_APP="$1"
+USABILITY_APP="$2"
+for app in "$REAL_APP" "$USABILITY_APP"; do
+  [[ -d "$app/Contents" ]] || { echo "Missing app bundle: $app" >&2; exit 2; }
+  codesign --verify --deep --strict "$app"
+done
+
+TEMP_DIRECTORY="$(mktemp -d /private/tmp/songbird-app-parity.XXXXXX)"
+cleanup() {
+  rm -rf "$TEMP_DIRECTORY"
+}
+trap cleanup EXIT INT TERM
+
+cp "$REAL_APP/Contents/MacOS/Songbird" "$TEMP_DIRECTORY/real-Songbird"
+cp "$USABILITY_APP/Contents/MacOS/Songbird" "$TEMP_DIRECTORY/usability-Songbird"
+codesign --remove-signature "$TEMP_DIRECTORY/real-Songbird"
+codesign --remove-signature "$TEMP_DIRECTORY/usability-Songbird"
+cmp "$TEMP_DIRECTORY/real-Songbird" "$TEMP_DIRECTORY/usability-Songbird"
+
+diff -qr "$REAL_APP/Contents/Frameworks" "$USABILITY_APP/Contents/Frameworks"
+diff -qr "$REAL_APP/Contents/Resources" "$USABILITY_APP/Contents/Resources"
+
+for app in "$REAL_APP" "$USABILITY_APP"; do
+  for required_resource in songbird-logo.png missing-album-artwork.png; do
+    [[ -f "$app/Contents/Resources/$required_resource" ]] || {
+      echo "Missing packaged resource: $app/Contents/Resources/$required_resource" >&2
+      exit 1
+    }
+  done
+done
+
+PLUGIN_RELATIVE_PATH="Contents/PlugIns/SongbirdDockTilePlugin.docktileplugin"
+PLUGIN_EXECUTABLE_RELATIVE_PATH="$PLUGIN_RELATIVE_PATH/Contents/MacOS/SongbirdDockTilePlugin"
+PLUGIN_PLIST_RELATIVE_PATH="$PLUGIN_RELATIVE_PATH/Contents/Info.plist"
+for app in "$REAL_APP" "$USABILITY_APP"; do
+  [[ -x "$app/$PLUGIN_EXECUTABLE_RELATIVE_PATH" ]] || {
+    echo "Missing Dock tile plug-in executable: $app" >&2
+    exit 1
+  }
+  [[ -f "$app/$PLUGIN_PLIST_RELATIVE_PATH" ]] || {
+    echo "Missing Dock tile plug-in metadata: $app" >&2
+    exit 1
+  }
+done
+
+cp "$REAL_APP/$PLUGIN_EXECUTABLE_RELATIVE_PATH" "$TEMP_DIRECTORY/real-DockTilePlugin"
+cp "$USABILITY_APP/$PLUGIN_EXECUTABLE_RELATIVE_PATH" "$TEMP_DIRECTORY/usability-DockTilePlugin"
+codesign --remove-signature "$TEMP_DIRECTORY/real-DockTilePlugin"
+codesign --remove-signature "$TEMP_DIRECTORY/usability-DockTilePlugin"
+cmp "$TEMP_DIRECTORY/real-DockTilePlugin" "$TEMP_DIRECTORY/usability-DockTilePlugin"
+
+cp "$REAL_APP/$PLUGIN_PLIST_RELATIVE_PATH" "$TEMP_DIRECTORY/real-plugin.plist"
+cp "$USABILITY_APP/$PLUGIN_PLIST_RELATIVE_PATH" "$TEMP_DIRECTORY/usability-plugin.plist"
+
+cp "$REAL_APP/Contents/Info.plist" "$TEMP_DIRECTORY/real.plist"
+cp "$USABILITY_APP/Contents/Info.plist" "$TEMP_DIRECTORY/usability.plist"
+
+REAL_BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$TEMP_DIRECTORY/real.plist")"
+USABILITY_BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$TEMP_DIRECTORY/usability.plist")"
+REAL_DISPLAY_NAME="$(plutil -extract CFBundleDisplayName raw "$TEMP_DIRECTORY/real.plist")"
+USABILITY_DISPLAY_NAME="$(plutil -extract CFBundleDisplayName raw "$TEMP_DIRECTORY/usability.plist")"
+
+[[ "$REAL_BUNDLE_ID" == "com.songbird.player" ]] || {
+  echo "Unexpected real bundle identifier: $REAL_BUNDLE_ID" >&2
+  exit 1
+}
+[[ "$USABILITY_BUNDLE_ID" == com.songbird.player.usability.run* ]] || {
+  echo "Unexpected usability bundle identifier: $USABILITY_BUNDLE_ID" >&2
+  exit 1
+}
+[[ "$REAL_DISPLAY_NAME" == "Songbird" ]] || {
+  echo "Unexpected real display name: $REAL_DISPLAY_NAME" >&2
+  exit 1
+}
+[[ "$USABILITY_DISPLAY_NAME" == "Songbird" ]] || {
+  echo "Unexpected usability display name: $USABILITY_DISPLAY_NAME" >&2
+  exit 1
+}
+
+REAL_PLUGIN_BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$TEMP_DIRECTORY/real-plugin.plist")"
+USABILITY_PLUGIN_BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$TEMP_DIRECTORY/usability-plugin.plist")"
+[[ "$REAL_PLUGIN_BUNDLE_ID" == "$REAL_BUNDLE_ID.docktileplugin" ]] || {
+  echo "Unexpected real Dock tile plug-in identifier: $REAL_PLUGIN_BUNDLE_ID" >&2
+  exit 1
+}
+[[ "$USABILITY_PLUGIN_BUNDLE_ID" == "$USABILITY_BUNDLE_ID.docktileplugin" ]] || {
+  echo "Unexpected usability Dock tile plug-in identifier: $USABILITY_PLUGIN_BUNDLE_ID" >&2
+  exit 1
+}
+
+signing_identifier() {
+  codesign -dvv "$1" 2>&1 | /usr/bin/sed -n 's/^Identifier=//p' | /usr/bin/head -1
+}
+
+assert_signing_identifier() {
+  local target_path="$1"
+  local expected="$2"
+  local actual
+  actual="$(signing_identifier "$target_path")"
+  [[ "$actual" == "$expected" ]] || {
+    echo "Signing identifier mismatch for $target_path: expected $expected, found $actual" >&2
+    return 1
+  }
+}
+
+assert_signing_identifier "$REAL_APP" "$REAL_BUNDLE_ID"
+assert_signing_identifier "$USABILITY_APP" "$USABILITY_BUNDLE_ID"
+assert_signing_identifier "$REAL_APP/Contents/MacOS/Songbird" "$REAL_BUNDLE_ID"
+assert_signing_identifier \
+  "$USABILITY_APP/Contents/MacOS/Songbird" \
+  "$USABILITY_BUNDLE_ID"
+assert_signing_identifier "$REAL_APP/$PLUGIN_RELATIVE_PATH" "$REAL_PLUGIN_BUNDLE_ID"
+assert_signing_identifier "$USABILITY_APP/$PLUGIN_RELATIVE_PATH" "$USABILITY_PLUGIN_BUNDLE_ID"
+assert_signing_identifier \
+  "$REAL_APP/$PLUGIN_EXECUTABLE_RELATIVE_PATH" \
+  "$REAL_PLUGIN_BUNDLE_ID"
+assert_signing_identifier \
+  "$USABILITY_APP/$PLUGIN_EXECUTABLE_RELATIVE_PATH" \
+  "$USABILITY_PLUGIN_BUNDLE_ID"
+
+plutil -remove CFBundleIdentifier "$TEMP_DIRECTORY/real-plugin.plist"
+plutil -remove CFBundleIdentifier "$TEMP_DIRECTORY/usability-plugin.plist"
+plutil -convert xml1 "$TEMP_DIRECTORY/real-plugin.plist"
+plutil -convert xml1 "$TEMP_DIRECTORY/usability-plugin.plist"
+cmp "$TEMP_DIRECTORY/real-plugin.plist" "$TEMP_DIRECTORY/usability-plugin.plist"
+
+for key in SongbirdUITesting SongbirdUITestRoot SongbirdImportSetupCompleted; do
+  if plutil -extract "$key" raw "$TEMP_DIRECTORY/real.plist" >/dev/null 2>&1; then
+    echo "Real app unexpectedly contains usability metadata: $key" >&2
+    exit 1
+  fi
+done
+
+required_usability_value() {
+  local key="$1"
+  local value
+  if ! value="$(plutil -extract "$key" raw "$TEMP_DIRECTORY/usability.plist" 2>/dev/null)"; then
+    echo "Usability app is missing required isolation metadata: $key" >&2
+    return 1
+  fi
+  print -r -- "$value"
+}
+
+USABILITY_TESTING="$(required_usability_value SongbirdUITesting)"
+USABILITY_TEST_ROOT="$(required_usability_value SongbirdUITestRoot)"
+USABILITY_SETUP_COMPLETED="$(required_usability_value SongbirdImportSetupCompleted)"
+[[ "$USABILITY_TESTING" == "true" ]] || {
+  echo "Usability app is missing its testing-mode marker." >&2
+  exit 1
+}
+[[ "$USABILITY_TEST_ROOT" == /* && "$USABILITY_TEST_ROOT" != "/" ]] || {
+  echo "Usability app has an unsafe disposable root: $USABILITY_TEST_ROOT" >&2
+  exit 1
+}
+if [[ "$ALLOW_FIRST_RUN" -eq 1 ]]; then
+  [[ "$USABILITY_SETUP_COMPLETED" == "false" ]] || {
+    echo "First-run usability app must start before Setup." >&2
+    exit 1
+  }
+else
+  [[ "$USABILITY_SETUP_COMPLETED" == "true" ]] || {
+    echo "Standard usability app must start past first-run Setup." >&2
+    exit 1
+  }
+fi
+
+for key in \
+  CFBundleIdentifier \
+  SongbirdUITesting \
+  SongbirdUITestRoot \
+  SongbirdImportSetupCompleted
+do
+  plutil -remove "$key" "$TEMP_DIRECTORY/real.plist" 2>/dev/null || true
+  plutil -remove "$key" "$TEMP_DIRECTORY/usability.plist" 2>/dev/null || true
+done
+
+plutil -convert xml1 "$TEMP_DIRECTORY/real.plist"
+plutil -convert xml1 "$TEMP_DIRECTORY/usability.plist"
+cmp "$TEMP_DIRECTORY/real.plist" "$TEMP_DIRECTORY/usability.plist"
+
+REAL_ENTITLEMENTS="$(codesign -d --entitlements :- "$REAL_APP" 2>/dev/null)"
+USABILITY_ENTITLEMENTS="$(codesign -d --entitlements :- "$USABILITY_APP" 2>/dev/null)"
+[[ "$REAL_ENTITLEMENTS" == "$USABILITY_ENTITLEMENTS" ]] || {
+  echo "Real and usability app entitlements differ." >&2
+  exit 1
+}
+
+echo "Songbird app parity OK: only bundle identity and isolation metadata differ."

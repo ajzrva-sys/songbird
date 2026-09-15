@@ -1,0 +1,4 @@
+module AubioBridge {
+    header "SBAubioBPM.h"
+    export *
+}

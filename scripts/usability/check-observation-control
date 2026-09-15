@@ -1,0 +1,134 @@
+#!/bin/zsh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+CONTROL_RUN_ID="${1:-}"
+[[ -n "$CONTROL_RUN_ID" && "$CONTROL_RUN_ID" != *[^0-9A-Za-z-]* ]] || {
+  echo "Usage: $0 RUN_ID" >&2
+  exit 2
+}
+
+CONTROL_RUN="$ROOT/.build/usability/runs/$CONTROL_RUN_ID"
+CONTROL_APP="$CONTROL_RUN/Songbird-Usability.app"
+CONTROL_PROFILE="$CONTROL_RUN/profile"
+PROBE="$ROOT/.build/release/SongbirdUIProbe"
+[[ -x "$CONTROL_APP/Contents/MacOS/Songbird" && -d "$CONTROL_PROFILE" && -x "$PROBE" ]] || {
+  echo "The requested disposable control package is incomplete: $CONTROL_RUN" >&2
+  exit 2
+}
+
+BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$CONTROL_APP/Contents/Info.plist")"
+FIXTURE="$(/usr/bin/python3 - "$CONTROL_RUN/artifacts/run.json" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+print(json.loads(path.read_text()).get("fixture", "standard"))
+PY
+)"
+if "$PROBE" direct --bundle-id "$BUNDLE_ID" status \
+    | grep -Eq '"running"[[:space:]]*:[[:space:]]*true'; then
+  echo "The control bundle is already running; refusing to adopt or terminate it." >&2
+  exit 1
+fi
+
+GATE_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+ARTIFACTS="$ROOT/.build/usability/observation-gates/$GATE_ID-$CONTROL_RUN_ID"
+mkdir -p "$ARTIFACTS"
+APP_PID=""
+cleanup() {
+  if [[ -n "$APP_PID" ]]; then
+    kill "$APP_PID" 2>/dev/null || true
+    wait "$APP_PID" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT INT TERM
+
+"$PROBE" permission >"$ARTIFACTS/accessibility.txt"
+"$PROBE" screen-permission >"$ARTIFACTS/screen-recording.txt"
+APP_PID="$(
+  SONGBIRD_UI_TEST_ROOT="$CONTROL_PROFILE" \
+  SONGBIRD_UI_TESTING=1 \
+  SONGBIRD_UI_FIXTURE="$FIXTURE" \
+  "$PROBE" launch-detached \
+    --executable "$CONTROL_APP/Contents/MacOS/Songbird" \
+    --log "$ARTIFACTS/app.log" \
+    -ApplePersistenceIgnoreState YES
+)"
+
+registered=0
+for _ in {1..100}; do
+  if "$PROBE" direct --bundle-id "$BUNDLE_ID" status 2>/dev/null \
+      | grep -Eq '"running"[[:space:]]*:[[:space:]]*true'; then
+    registered=1
+    break
+  fi
+  kill -0 "$APP_PID" 2>/dev/null || break
+  sleep 0.1
+done
+[[ "$registered" -eq 1 ]] || {
+  echo "The control app did not register. Evidence: $ARTIFACTS" >&2
+  exit 1
+}
+
+"$PROBE" direct --bundle-id "$BUNDLE_ID" activate >/dev/null
+"$PROBE" direct --bundle-id "$BUNDLE_ID" observation-diagnostic \
+  "$CONTROL_APP/Contents/MacOS/Songbird" >"$ARTIFACTS/preflight.json"
+if ! "$PROBE" direct --bundle-id "$BUNDLE_ID" wait-window 30 \
+    >"$ARTIFACTS/wait-window.txt" 2>"$ARTIFACTS/wait-window-error.txt"; then
+  "$PROBE" direct --bundle-id "$BUNDLE_ID" observation-diagnostic \
+    "$CONTROL_APP/Contents/MacOS/Songbird" >"$ARTIFACTS/final.json" || true
+  /usr/bin/python3 - "$ARTIFACTS" "$CONTROL_RUN_ID" "$BUNDLE_ID" "$APP_PID" <<'PY'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+diagnostic = json.loads((root / "final.json").read_text())
+windows = next(
+    (item for item in diagnostic.get("attributes", [])
+     if item.get("attribute") == "AXWindows"),
+    {},
+)
+result = {
+    "schema_version": 1,
+    "control_run_id": sys.argv[2],
+    "bundle_identifier": sys.argv[3],
+    "app_pid": int(sys.argv[4]),
+    "passed": False,
+    "classification": "environment_or_harness_observation_blocker",
+    "active": diagnostic.get("active"),
+    "ax_windows_attribute_count": windows.get("valueCount", 0),
+    "ax_windows_attribute_value": windows.get("value"),
+    "cg_window_count": len(diagnostic.get("cgWindows", [])),
+}
+(root / "result.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+PY
+  echo "Control package failed the AX-window gate. Evidence: $ARTIFACTS" >&2
+  exit 1
+fi
+"$PROBE" direct --bundle-id "$BUNDLE_ID" screenshot "$ARTIFACTS/window.png" \
+  >"$ARTIFACTS/screenshot.txt"
+"$PROBE" direct --bundle-id "$BUNDLE_ID" observation-diagnostic \
+  "$CONTROL_APP/Contents/MacOS/Songbird" >"$ARTIFACTS/final.json"
+
+/usr/bin/python3 - "$ARTIFACTS" "$CONTROL_RUN_ID" "$BUNDLE_ID" "$APP_PID" <<'PY'
+import hashlib, json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+image = root / "window.png"
+diagnostic = json.loads((root / "final.json").read_text())
+result = {
+    "schema_version": 1,
+    "control_run_id": sys.argv[2],
+    "bundle_identifier": sys.argv[3],
+    "app_pid": int(sys.argv[4]),
+    "ax_window_count": next(
+        (item.get("valueCount", 0) for item in diagnostic.get("attributes", [])
+         if item.get("attribute") == "AXWindows"),
+        0,
+    ),
+    "cg_window_count": len(diagnostic.get("cgWindows", [])),
+    "screenshot_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
+    "passed": image.stat().st_size > 0,
+}
+(root / "result.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+assert result["ax_window_count"] >= 1, result
+assert result["cg_window_count"] >= 1, result
+PY
+
+echo "Observation control passed: $ARTIFACTS"

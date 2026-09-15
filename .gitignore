@@ -1,0 +1,27 @@
+# Local build and tool state; Package.resolved is intentionally retained.
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserdata/
+*.app/
+.DS_Store
+__pycache__/
+*.pyc
+*.o
+*.dSYM/
+.env
+.env.*
+*.p12
+*.pfx
+
+# Local sessions, private run reports, and excluded references.
+.hermes/
+.cursor/
+.mimocode/
+Usability/reports/
+Cog-main/
+museeks-*/
+Nightingale/
+nightingale-media-player-*/
+songbird-images/
+carousel/

@@ -1,0 +1,198 @@
+{
+  "schema": 1,
+  "method": "owner-approved-retained-artwork",
+  "license": "Per-file terms; no blanket relicensing of historical artwork",
+  "decision": "publication/artwork-decision.json",
+  "catalog": "Sources/DockIconSupport/SongbirdArtworkCatalog.swift",
+  "files": [
+    {
+      "name": "audio-cd-mark.svg",
+      "sha256": "8d2fa52cf1bc7217335e33f4d46a8814de1b609af0ec80223756773a266519dc",
+      "origin": "project-authored-geometric-renderer",
+      "license": "GPL-3.0-or-later",
+      "rights_status": "project-owned"
+    },
+    {
+      "name": "dock-icon-blackbird-amber.png",
+      "sha256": "5488dcc67e3b17a016807108f3ebdbba001bc85d3714e24d437ca5ee43674efa",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-blackbird-graphite.png",
+      "sha256": "2e3c31d2bf618e92f4a40860ed0506f540d84c2ce35013068f78fc0c3fdac08f",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-blue-outline.png",
+      "sha256": "6093346ddea302aba6614ae8bd2cc1a31baf9755d7428056071a82b659ece03d",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-blue-vinyl.png",
+      "sha256": "221fe8a079644180d7b29dbe3b26182acb3b8b3a3245c1cdb1db0da809b8f05c",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-bowie-prism.png",
+      "sha256": "13f939ab766dc85291958a635d04784e5ee682acc9646b2d6faedff2f75539fb",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-bowie-silver-blue.png",
+      "sha256": "cf7eed1176b4cad76ed2ead2315669afb92339b4a5f3e6815b146cf224b9dc78",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-dove-marble.png",
+      "sha256": "8d96e26864eb30cc5cb1517294d6090718e7991a3b2c7b007d2439986f1abd0f",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-dove-pearl.png",
+      "sha256": "2ddba43fcc520192ce2a3b4e6ada9ee533d3c4fdaeff2786092e2734a6edfe53",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-gonzo-dark.png",
+      "sha256": "fa81a4c0a73e5b36f7dbe3fcd47e2417f5fc30572ff1e0cb98b656ea54eb1ce4",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-gonzo-light.png",
+      "sha256": "e1b65479dbfc8e821dbf909664e25b49a0d93081269411cb23751cae78ce3999",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-music-dark-red.png",
+      "sha256": "8c7fecc96800c585b6f9cf5c35a807d4056535ddc6e069832ba06993dd1a20df",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-music-light-lacquer.png",
+      "sha256": "18a7b50c81ca4d0f5b036d3a6c24cab1d0bce5040dfdfb9b10f2e0009d890b16",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-nightingale-glass.png",
+      "sha256": "35f33cd3ee7b6de11e8cf73e455ffc916afb5c5c2011d9080c8e228188338e8a",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-nightingale-glow.png",
+      "sha256": "1ec7f16ccb29df843dd607957468acaef22f1db44c5338426f5cf4fd249d69c5",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-pink-burgundy.png",
+      "sha256": "b43535ed608ec642752789d80eac5120aa995607914ef2682e707ea45fe72b62",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-pink-lacquer.png",
+      "sha256": "e69af361caeefe0914c6a23446c2ff27b1e02ba263948ea8d9816c7c73f00612",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-pink-terrazzo.png",
+      "sha256": "7c7d2a3e996fe74b10272853bc323417b98266a44442e8d8124648f06361c494",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-purple-neon.png",
+      "sha256": "dcf4004e3bf7cbb32bc44d4d18a8f4774ac68c85d56fc0c323f08d39fe129265",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-purple-rim.png",
+      "sha256": "4aef9aea2fdc4f61196034679c0d218621ce3cba046db80c206a70433e19ac99",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-silverwing-frame.png",
+      "sha256": "8ae0ad1904f22a0b1da61b44e4244c394731de984124aed415fe4cff4387182f",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon-silverwing-graphite.png",
+      "sha256": "d5670d7333440c00dddb4d73bbd71908cca16730a468fac50355e092c2cbac9b",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "dock-icon.png",
+      "sha256": "6093346ddea302aba6614ae8bd2cc1a31baf9755d7428056071a82b659ece03d",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "logo.png",
+      "sha256": "c4e5ed46b28578790a732af899725526592be9224e837e259fe1d5cda017c2d8",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "missing-album-artwork.png",
+      "sha256": "475f9515cbd57fdd377f04fbc4332cdd9f9e04276145057f1b09d9342c76bc76",
+      "origin": "owner-provided-songbirdimage.png",
+      "license": "Owner-provided illustration, selected for inclusion; no additional license or authorship claim supplied.",
+      "rights_status": "owner-approved-inclusion"
+    },
+    {
+      "name": "songbird-logo.png",
+      "sha256": "c4e5ed46b28578790a732af899725526592be9224e837e259fe1d5cda017c2d8",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    },
+    {
+      "name": "transparent.png",
+      "sha256": "79cc0bed7e03d01c4a3ddd7a5c470f39881d8d8cb69e86c1f1e746bb4338e6a9",
+      "origin": "preserved-development-artwork",
+      "license": "Historical Songbird artwork; see THIRD_PARTY_NOTICES.txt and publication/artwork-decision.json",
+      "rights_status": "owner-approved-reuse; clearance-unconfirmed"
+    }
+  ]
+}

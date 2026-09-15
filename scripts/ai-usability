@@ -1,0 +1,386 @@
+#!/bin/zsh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+MODE="audit"
+FIXTURE="standard"
+LARGE_TRACK_COUNT=10000
+COUNT_WAS_SET=0
+PREPARE_ONLY=0
+KEEP=0
+REQUEST_PERMISSIONS=0
+VALIDATE_OPTIONS=0
+OBSERVATION_CONTROL_RUN=""
+FIRST_RUN=0
+
+usage() {
+  sed -n '2,36p' "$ROOT/scripts/ai-usability"
+}
+
+# Run Songbird's AI-directed, black-box usability sweep.
+#
+# Usage:
+#   ./scripts/ai-usability                         # exploratory audit
+#   ./scripts/ai-usability audit                   # exploratory audit
+#   ./scripts/ai-usability repair                  # reproduce + safe repair + replay
+#   ./scripts/ai-usability --fixture empty         # audit empty-library experience
+#   ./scripts/ai-usability --fixture health        # audit Library Health remediation
+#   ./scripts/ai-usability --fixture large         # audit a 10,000-track library
+#   ./scripts/ai-usability --fixture large --count 10000
+#   ./scripts/ai-usability --prepare-only --keep   # launch isolated app and driver only
+#   ./scripts/ai-usability --request-permissions   # ask for one-time macOS permissions
+#   ./scripts/ai-usability --validate-options      # parse options without build/package/launch
+#   ./scripts/ai-usability --observation-control RUN_ID
+#   ./scripts/ai-usability --first-run --fixture standard
+#
+# The run uses a disposable library and alternate bundle identifier. It never opens the normal
+# Songbird store. Accessibility and Screen Recording permission may be requested for the stable
+# `.build/release/SongbirdUIProbe` helper.
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    audit|repair) MODE="$1"; shift ;;
+    --fixture)
+      [[ "$#" -ge 2 ]] || { echo "--fixture needs a value" >&2; exit 2; }
+      FIXTURE="$2"; shift 2 ;;
+    --count)
+      [[ "$#" -ge 2 ]] || { echo "--count needs a value" >&2; exit 2; }
+      [[ "$2" == <-> ]] || { echo "--count must be a positive integer" >&2; exit 2; }
+      LARGE_TRACK_COUNT="$2"; COUNT_WAS_SET=1; shift 2 ;;
+    --prepare-only) PREPARE_ONLY=1; shift ;;
+    --keep) KEEP=1; shift ;;
+    --request-permissions) REQUEST_PERMISSIONS=1; shift ;;
+    --validate-options) VALIDATE_OPTIONS=1; shift ;;
+    --observation-control)
+      [[ "$#" -ge 2 ]] || { echo "--observation-control needs a run ID" >&2; exit 2; }
+      OBSERVATION_CONTROL_RUN="$2"; shift 2 ;;
+    --first-run) FIRST_RUN=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown argument: $1" >&2; usage; exit 2 ;;
+  esac
+done
+
+if [[ "$MODE" != "audit" && "$MODE" != "repair" ]]; then
+  echo "Mode must be audit or repair." >&2
+  exit 2
+fi
+if [[ "$FIXTURE" == "populated" ]]; then FIXTURE="standard"; fi
+if [[ "$FIXTURE" != "standard" && "$FIXTURE" != "empty" && "$FIXTURE" != "health" && "$FIXTURE" != "large" ]]; then
+  echo "Fixture must be empty, standard, health, or large." >&2
+  exit 2
+fi
+if [[ "$LARGE_TRACK_COUNT" -lt 1 || "$LARGE_TRACK_COUNT" -gt 50000 ]]; then
+  echo "Large fixture count must be between 1 and 50000." >&2
+  exit 2
+fi
+if [[ "$FIXTURE" != "large" && "$COUNT_WAS_SET" -eq 1 ]]; then
+  echo "--count is available only with --fixture large." >&2
+  exit 2
+fi
+if [[ "$FIRST_RUN" -eq 1 && "$FIXTURE" != "standard" ]]; then
+  echo "--first-run is available only with --fixture standard." >&2
+  exit 2
+fi
+if [[ "${SONGBIRD_USABILITY_PREPARED:-0}" == "1" ]]; then
+  echo "A Songbird usability session is already prepared; use ./scripts/usability/ui instead of starting another runner." >&2
+  exit 64
+fi
+if [[ -n "$OBSERVATION_CONTROL_RUN" ]]; then
+  exec "$ROOT/scripts/usability/check-observation-control" "$OBSERVATION_CONTROL_RUN"
+fi
+if [[ "$VALIDATE_OPTIONS" -eq 1 ]]; then
+  printf '{"mode":"%s","fixture":"%s","track_count":%d,"count_was_set":%s}\n' \
+    "$MODE" "$FIXTURE" "$LARGE_TRACK_COUNT" \
+    "$([[ "$COUNT_WAS_SET" -eq 1 ]] && echo true || echo false)"
+  exit 0
+fi
+
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+BASE="$ROOT/.build/usability"
+RUN="$BASE/runs/$RUN_ID"
+PROFILE="$RUN/profile"
+ARTIFACTS="$RUN/artifacts"
+SESSION="$RUN/driver"
+APP="$RUN/Songbird-Usability.app"
+PARITY_ROOT="$(mktemp -d /private/tmp/songbird-usability-parity.XXXXXX)"
+CONTROL_APP="$PARITY_ROOT/Songbird.app"
+BUNDLE_ID="com.songbird.player.usability.run${RUN_ID//-/}"
+APP_PID=""
+SERVER_PID=""
+RUN_PHASE="initialized"
+RUN_ERROR=""
+PACKAGE_PARITY=0
+SCREEN_CAPTURE=-1
+APP_SHA256=""
+FIXTURE_MANIFEST_SHA256=""
+SOURCE_HEAD="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+SOURCE_STATUS_SHA256="$(git -C "$ROOT" status --porcelain=v1 | shasum -a 256 | awk '{print $1}')"
+SOURCE_DIFF_SHA256="$(git -C "$ROOT" diff --binary --no-ext-diff | shasum -a 256 | awk '{print $1}')"
+
+mkdir -p "$PROFILE" "$ARTIFACTS/states" "$SESSION"
+
+write_run_manifest() {
+  RUN_MANIFEST_PATH="$ARTIFACTS/run.json" \
+  RUN_ID_VALUE="$RUN_ID" RUN_MODE_VALUE="$MODE" RUN_FIXTURE_VALUE="$FIXTURE" \
+  RUN_FIRST_RUN_VALUE="$FIRST_RUN" \
+  RUN_TRACK_COUNT_VALUE="$LARGE_TRACK_COUNT" RUN_PHASE_VALUE="$RUN_PHASE" \
+  RUN_ERROR_VALUE="$RUN_ERROR" RUN_BUNDLE_ID_VALUE="$BUNDLE_ID" \
+  RUN_APP_PID_VALUE="$APP_PID" RUN_BROKER_PID_VALUE="$SERVER_PID" \
+  RUN_SESSION_VALUE="$SESSION" RUN_ARTIFACTS_VALUE="$ARTIFACTS" \
+  RUN_PARITY_VALUE="$PACKAGE_PARITY" RUN_SCREEN_VALUE="$SCREEN_CAPTURE" \
+  RUN_SOURCE_HEAD_VALUE="$SOURCE_HEAD" RUN_SOURCE_STATUS_SHA_VALUE="$SOURCE_STATUS_SHA256" \
+  RUN_SOURCE_DIFF_SHA_VALUE="$SOURCE_DIFF_SHA256" RUN_APP_SHA_VALUE="$APP_SHA256" \
+  RUN_FIXTURE_SHA_VALUE="$FIXTURE_MANIFEST_SHA256" \
+  "$ROOT/scripts/usability/update-run-manifest"
+}
+
+write_run_manifest
+
+cleanup() {
+  local status=$?
+  if [[ "$status" -ne 0 && "$RUN_PHASE" != "prepared" ]]; then
+    if [[ -z "$RUN_ERROR" ]]; then
+      RUN_ERROR="Runner exited during $RUN_PHASE with status $status."
+    fi
+    RUN_PHASE="failed"
+    write_run_manifest 2>/dev/null || true
+  fi
+  if [[ "$KEEP" -eq 0 || "$RUN_PHASE" != "prepared" ]]; then
+    if [[ -n "$SERVER_PID" ]]; then kill "$SERVER_PID" 2>/dev/null || true; fi
+    if [[ -n "$APP_PID" ]]; then kill "$APP_PID" 2>/dev/null || true; fi
+  fi
+  if [[ -n "$PARITY_ROOT" && -d "$PARITY_ROOT" ]]; then
+    rm -rf "$PARITY_ROOT"
+  fi
+}
+trap cleanup EXIT INT TERM
+
+echo "→ Building Songbird, fixture builder, and semantic UI probe…"
+RUN_PHASE="building"
+write_run_manifest
+cd "$ROOT"
+swift build -c release
+RUN_PHASE="built"
+write_run_manifest
+
+PROBE="$ROOT/.build/release/SongbirdUIProbe"
+FIXTURE_BUILDER="$ROOT/.build/release/SongbirdUsabilityFixture"
+if [[ ! -x "$PROBE" || ! -x "$FIXTURE_BUILDER" ]]; then
+  echo "Usability helper products were not built." >&2
+  exit 1
+fi
+
+if ! "$PROBE" permission >/dev/null 2>&1; then
+  if [[ "$REQUEST_PERMISSIONS" -eq 1 ]]; then
+    "$PROBE" permission --prompt >/dev/null 2>&1 || true
+  fi
+  if "$PROBE" permission >/dev/null 2>&1; then
+    :
+  else
+  echo "Accessibility permission is required for:" >&2
+  echo "  $PROBE" >&2
+  echo "Run with --request-permissions once, or enable it in System Settings → Privacy & Security → Accessibility." >&2
+  exit 3
+  fi
+fi
+
+SCREEN_CAPTURE=1
+if ! "$PROBE" screen-permission >/dev/null 2>&1; then
+  if [[ "$REQUEST_PERMISSIONS" -eq 1 ]]; then
+    "$PROBE" screen-permission --prompt >/dev/null 2>&1 || true
+  fi
+  if ! "$PROBE" screen-permission >/dev/null 2>&1; then
+    SCREEN_CAPTURE=0
+    echo "Screen Recording permission is not enabled; this run will collect AX evidence only." >&2
+    echo "Enable $PROBE in System Settings → Privacy & Security → Screen Recording for visual judgment." >&2
+  fi
+fi
+
+echo "→ Packaging isolated usability app…"
+RUN_PHASE="packaging"
+write_run_manifest
+"$ROOT/scripts/package-songbird.sh" "$CONTROL_APP"
+usability_package_arguments=(
+  --bundle-identifier "$BUNDLE_ID"
+  --ui-test-root "$PROFILE"
+)
+parity_arguments=()
+if [[ "$FIRST_RUN" -eq 1 ]]; then
+  usability_package_arguments+=(--ui-test-first-run)
+  parity_arguments+=(--allow-first-run)
+fi
+"$ROOT/scripts/package-songbird.sh" "${usability_package_arguments[@]}" "$APP"
+"$ROOT/scripts/usability/validate-app-parity" "${parity_arguments[@]}" "$CONTROL_APP" "$APP"
+PACKAGE_PARITY=1
+APP_SHA256="$(shasum -a 256 "$APP/Contents/MacOS/Songbird" | awk '{print $1}')"
+RUN_PHASE="packaged"
+write_run_manifest
+rm -rf "$PARITY_ROOT"
+PARITY_ROOT=""
+
+echo "→ Creating disposable $FIXTURE library…"
+if [[ "$FIXTURE" == "large" ]]; then
+  SONGBIRD_UI_TEST_ROOT="$PROFILE" "$FIXTURE_BUILDER" \
+    --profile "$FIXTURE" --count "$LARGE_TRACK_COUNT" --configure-defaults "$BUNDLE_ID"
+else
+  SONGBIRD_UI_TEST_ROOT="$PROFILE" "$FIXTURE_BUILDER" \
+    --profile "$FIXTURE" --configure-defaults "$BUNDLE_ID"
+fi
+if [[ "$FIRST_RUN" -eq 1 ]]; then
+  /usr/bin/defaults write "$BUNDLE_ID" "songbird.importSetup.completed" -bool false
+fi
+FIXTURE_MANIFEST_SHA256="$(shasum -a 256 "$PROFILE/fixture-manifest.json" | awk '{print $1}')"
+RUN_PHASE="fixtureReady"
+write_run_manifest
+
+echo "→ Launching isolated app…"
+RUN_PHASE="launching"
+write_run_manifest
+if [[ "$KEEP" -eq 1 ]]; then
+  # Keep the disposable app in its own process session for the same reason as
+  # the broker: execution hosts may terminate a runner's remaining descendants.
+  APP_PID="$(
+    SONGBIRD_UI_TEST_ROOT="$PROFILE" SONGBIRD_UI_TESTING=1 SONGBIRD_UI_FIXTURE="$FIXTURE" \
+      "$PROBE" launch-detached \
+      --executable "$APP/Contents/MacOS/Songbird" \
+      --log "$ARTIFACTS/app.log" \
+      -ApplePersistenceIgnoreState YES
+  )"
+else
+  /usr/bin/open -n -F \
+    --env "SONGBIRD_UI_TEST_ROOT=$PROFILE" \
+    --env "SONGBIRD_UI_TESTING=1" \
+    --env "SONGBIRD_UI_FIXTURE=$FIXTURE" \
+    --stdout "$ARTIFACTS/app.log" \
+    --stderr "$ARTIFACTS/app.log" \
+    "$APP" \
+    --args -ApplePersistenceIgnoreState YES
+
+  for _ in {1..50}; do
+    APP_PID="$(/usr/bin/pgrep -f "$APP/Contents/MacOS/Songbird" | /usr/bin/head -1 || true)"
+    if [[ -n "$APP_PID" ]]; then break; fi
+    sleep 0.1
+  done
+fi
+if [[ -z "$APP_PID" ]] || ! kill -0 "$APP_PID" 2>/dev/null; then
+  echo "The isolated Songbird app did not launch. See $ARTIFACTS/app.log" >&2
+  exit 1
+fi
+RUN_PHASE="launched"
+write_run_manifest
+
+# The detached process can exist before LaunchServices exposes its bundle ID.
+# Starting the broker during that gap makes an otherwise healthy run fail with
+# "No running app has bundle identifier …". Wait for the same read-only status
+# lookup the broker uses instead of relying on a fixed startup delay.
+APP_REGISTERED=0
+for _ in {1..100}; do
+  if "$PROBE" direct --bundle-id "$BUNDLE_ID" status 2>/dev/null \
+      | /usr/bin/grep -Eq '"running"[[:space:]]*:[[:space:]]*true'; then
+    APP_REGISTERED=1
+    break
+  fi
+  if ! kill -0 "$APP_PID" 2>/dev/null; then break; fi
+  sleep 0.1
+done
+if [[ "$APP_REGISTERED" -ne 1 ]]; then
+  echo "The isolated Songbird app did not register for UI testing. See $ARTIFACTS/app.log" >&2
+  exit 1
+fi
+RUN_PHASE="registered"
+write_run_manifest
+
+echo "→ Starting out-of-sandbox accessibility/screenshot broker…"
+RUN_PHASE="observing"
+write_run_manifest
+if [[ "$KEEP" -eq 1 ]]; then
+  # The probe spawns into a new process session. Shell-only detachment
+  # is insufficient in execution hosts that reap the runner's process group,
+  # while a launch service loses the caller's Accessibility authorization.
+  "$PROBE" serve --detached --safe --directory "$SESSION" --bundle-id "$BUNDLE_ID" \
+    --test-root "$PROFILE" \
+    >"$ARTIFACTS/probe.log" 2>&1
+  for _ in {1..50}; do
+    if [[ -s "$SESSION/server.pid" ]]; then
+      SERVER_PID="$(<"$SESSION/server.pid")"
+      break
+    fi
+    sleep 0.1
+  done
+  if [[ -z "$SERVER_PID" ]] || ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo "The kept Songbird UI broker did not start. See $ARTIFACTS/probe.log" >&2
+    exit 1
+  fi
+else
+  "$PROBE" serve --safe --directory "$SESSION" --bundle-id "$BUNDLE_ID" \
+    --test-root "$PROFILE" \
+    >"$ARTIFACTS/probe.log" 2>&1 &
+fi
+if [[ "$KEEP" -eq 0 ]]; then
+  SERVER_PID=$!
+fi
+sleep 0.25
+
+export SONGBIRD_USABILITY_SESSION="$SESSION"
+export SONGBIRD_USABILITY_ARTIFACTS="$ARTIFACTS"
+export SONGBIRD_USABILITY_PREPARED=1
+export SONGBIRD_UI_TEST_ROOT="$PROFILE"
+
+"$ROOT/scripts/usability/ui" activate >/dev/null
+"$ROOT/scripts/usability/ui" observation-diagnostic "$APP/Contents/MacOS/Songbird" \
+  >"$ARTIFACTS/preflight-before-window.json"
+if ! "$ROOT/scripts/usability/ui" wait-window 30 >/dev/null; then
+  "$ROOT/scripts/usability/ui" observation-diagnostic "$APP/Contents/MacOS/Songbird" \
+    >"$ARTIFACTS/preflight.json" || true
+  RUN_ERROR="Songbird did not expose a usable AX window during the observation gate."
+  RUN_PHASE="failed"
+  write_run_manifest
+  echo "$RUN_ERROR See $ARTIFACTS/preflight.json and $ARTIFACTS/app.log" >&2
+  exit 1
+fi
+"$ROOT/scripts/usability/ui" observation-diagnostic "$APP/Contents/MacOS/Songbird" \
+  >"$ARTIFACTS/preflight.json"
+"$ROOT/scripts/usability/ui" window-snapshot 10 >"$ARTIFACTS/states/000-initial.ax.json"
+if [[ "$SCREEN_CAPTURE" -eq 1 ]]; then
+  "$ROOT/scripts/usability/ui" screenshot "000-initial.png" >/dev/null
+else
+  echo "Visual evidence unavailable: grant Screen Recording permission to $PROBE." \
+    >"$ARTIFACTS/states/000-initial.screenshot-unavailable.txt"
+fi
+"$ROOT/scripts/usability/validate-ax" "$ARTIFACTS/states/000-initial.ax.json" \
+  >"$ARTIFACTS/states/000-initial.validation.json" || true
+RUN_PHASE="prepared"
+write_run_manifest
+
+echo "Prepared isolated Songbird usability run:"
+echo "  Run:       $RUN_ID"
+echo "  Fixture:   $FIXTURE"
+echo "  Client:    ./scripts/usability/ui"
+echo "  Artifacts: $ARTIFACTS"
+
+if [[ "$PREPARE_ONLY" -eq 1 ]]; then
+  if [[ "$KEEP" -eq 1 ]]; then
+    trap - EXIT INT TERM
+    echo "The app and broker will remain running. Stop PIDs $APP_PID and $SERVER_PID when done."
+  fi
+  exit 0
+fi
+
+command -v codex >/dev/null 2>&1 || {
+  echo "Codex CLI is required for AI judgment." >&2
+  exit 1
+}
+
+PROMPT="Run the Songbird whole-product usability sweep in $MODE mode. This session is already prepared (SONGBIRD_USABILITY_PREPARED=1): do not run scripts/ai-usability, build or launch another app, or start another broker. Read $ARTIFACTS/run.json, Usability/PRODUCT_REQUIREMENTS.md, and Usability/AI_TESTER.md completely, then run ./scripts/usability/ui policy once. The disposable fixture is '$FIXTURE'. Visual screenshot evidence available: $SCREEN_CAPTURE. Use ./scripts/usability/ui for every UI observation/action and save evidence under $ARTIFACTS. Run exactly one UI command at a time. Use window-snapshot only, never snapshot. Do not activate filesystem/Finder, system Open/Save, external-authentication, or external-search surfaces; report them as intentionally unvisited. A probe timeout alone is not an app hang; retry status after the client is idle and require independent visual/AX evidence. Stop after 60 UI actions or 10 minutes and prioritize Songbird UI features. If screenshots are unavailable, mark visual coverage incomplete rather than inferring it from code. Do not interact with the user's normal Songbird app or files. Return only JSON matching Usability/report.schema.json."
+
+echo "→ Starting AI-directed exploration…"
+codex exec \
+  --ephemeral \
+  --cd "$ROOT" \
+  --sandbox workspace-write \
+  --output-schema "$ROOT/Usability/report.schema.json" \
+  --output-last-message "$ARTIFACTS/report.json" \
+  "$PROMPT" \
+  2>&1 | tee "$ARTIFACTS/agent.log"
+
+echo "Usability report: $ARTIFACTS/report.json"

@@ -1,0 +1,31 @@
+--- a/Package.swift
++++ b/Package.swift
+@@ -56,28 +56,6 @@
+             resources: [.copy("PrivacyInfo.xcprivacy")],
+             cSettings: cSettings,
+             swiftSettings: swiftSettings),
+-        .testTarget(
+-            name: "GRDBTests",
+-            dependencies: ["GRDB"],
+-            path: "Tests",
+-            exclude: [
+-                "CocoaPods",
+-                "Crash",
+-                "CustomSQLite",
+-                "GRDBTests/getThreadsCount.c",
+-                "Info.plist",
+-                "Performance",
+-                "SPM",
+-                "generatePerformanceReport.rb",
+-                "parsePerformanceTests.rb",
+-            ],
+-            resources: [
+-                .copy("GRDBTests/Betty.jpeg"),
+-                .copy("GRDBTests/InflectionsTests.json"),
+-                .copy("GRDBTests/Issue1383.sqlite"),
+-            ],
+-            cSettings: cSettings,
+-            swiftSettings: swiftSettings)
+     ],
+     swiftLanguageVersions: [.v5]
+ )

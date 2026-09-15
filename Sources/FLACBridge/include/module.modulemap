@@ -1,0 +1,4 @@
+module FLACBridge {
+    header "SBFLACDecoder.h"
+    export *
+}

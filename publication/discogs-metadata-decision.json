@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "gate": "discogs-persistent-metadata-policy",
+  "decision": "nonblocking",
+  "provider_permission": "unconfirmed",
+  "date": "2026-09-15",
+  "owner_instruction": "The owner agreed that imported information such as an album year must remain, accepting permanent imported metadata, saved filenames, maintenance reports and Undo history, with retention nonblocking for release.",
+  "scope": "Successfully imported Discogs metadata, including year, genre, track numbers and CD catalogue fields, plus saved metadata-derived filenames, maintenance reports and metadata Undo history. Retain these until the user changes or removes them; lookup expiry, restart and offline use must not delete or revert them.",
+  "rationale": "Preserve durable personal-library information and the record of changes. The owner elects to keep this workflow without making unresolved provider-permission interpretation a prerequisite for release. This records a product and release decision, not confirmed provider permission.",
+  "outside_scope": [
+    "Freshness validation of new imports and temporary search results/previews",
+    "Unsaved transient CD content in system Now Playing",
+    "Source correspondence, branding, notice delivery and privacy review",
+    "Library schema migration or historical-provider backfill",
+    "Vendor binary adoption, initial commit, publication, installed-app updates and provider communication"
+  ]
+}

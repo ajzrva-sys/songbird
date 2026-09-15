@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "gate": "discogs-permanent-artwork-policy",
+  "decision": "nonblocking",
+  "provider_permission": "unconfirmed",
+  "date": "2026-09-15",
+  "owner_instruction": "The owner confirmed that permanent Discogs cover importing should not be a release blocker.",
+  "scope": "User-selected Discogs album covers saved permanently in the local music library, including offline rendering and existing artwork Undo. Temporary search results may expire.",
+  "rationale": "The owner elects to retain this workflow without making unresolved provider-permission interpretation a prerequisite for release. This records the owner's release decision and does not establish legal clearance or Discogs permission.",
+  "outside_scope": [
+    "Persistent genre, year and track-number import policy",
+    "CD filename/catalogue metadata and maintenance-report retention policy",
+    "Unsaved transient CD content in system Now Playing",
+    "Source correspondence, branding, notice delivery and privacy review",
+    "Initial commit, publication, installed-app updates and communication with providers"
+  ]
+}

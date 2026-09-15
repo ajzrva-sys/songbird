@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "purpose": "S6/current-source offline build proof; not final C-vendor correspondence or release clearance",
+  "grdb_revision": "2cf6c756e1e5ef6901ebae16576a7e4e4b834622",
+  "source_file_count": 750,
+  "input_manifest_sha256": "2f12446b812278c96f4c312f14abbaf3e9aa81d22258c726e3cdf7bd699c64b4",
+  "builds": [
+    {
+      "mode": "offline",
+      "exit_code": 0,
+      "grdb_compiled_swift_count": 164,
+      "dependency_kind": "fileSystem",
+      "checkouts": 0,
+      "repositories": 0,
+      "privacy_sha256": "17784da62e51f74c5859df32fe402e01e25cdf6f797a4add06e2a3ce15c911f4",
+      "grdb_symbol_lines": 5008,
+      "log_sha256": "833b82880631935d1a6e966684cb087937bcd273a9aadc35f4a1c613a189b1e2",
+      "network_policy": null,
+      "ordinary_lockfile_preserved": true
+    },
+    {
+      "mode": "network-offline",
+      "exit_code": 0,
+      "grdb_compiled_swift_count": 164,
+      "dependency_kind": "fileSystem",
+      "checkouts": 0,
+      "repositories": 0,
+      "privacy_sha256": "17784da62e51f74c5859df32fe402e01e25cdf6f797a4add06e2a3ce15c911f4",
+      "grdb_symbol_lines": 5008,
+      "log_sha256": "10d663464ef3e66c080537bbe85cfdcf4f28218c41cbfd4b0a5f01d2b1a6a93a",
+      "network_policy": "OS deny network*; EPERM socket probe confirmed; outer policy retained during build",
+      "ordinary_lockfile_preserved": true
+    }
+  ]
+}

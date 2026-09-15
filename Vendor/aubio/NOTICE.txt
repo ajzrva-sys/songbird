@@ -1,0 +1,7 @@
+aubio - library for audio labelling
+Copyright (C) 2003-2015 Paul Brossier <piem@aubio.org>
+
+Licensed under the GNU General Public License v3.0.
+See <http://www.gnu.org/licenses/> for details.
+
+Source: https://github.com/aubio/aubio

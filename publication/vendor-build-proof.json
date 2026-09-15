@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "status": "controlled outputs built, regression-tested and adopted under owner implementation authorization",
+  "architecture": "arm64",
+  "minimum_macos": "14.0",
+  "source_imports": {
+    "path": "publication/vendor-source-imports.json",
+    "sha256": "5afdd28bcfbce88b9e072179e4761f6451e1fd6ed7dfcb00ec9da06ce3ac7b94",
+    "bytes": 255192,
+    "mode": 420
+  },
+  "build_scripts": [
+    {
+      "path": "scripts/rebuild-aubio.sh",
+      "sha256": "ad5d08738d94ae8036c7ef161b736860c8f1a3e8cb70d23c965532a26b855abd",
+      "bytes": 208,
+      "mode": 493
+    },
+    {
+      "path": "scripts/rebuild-flac-ogg.sh",
+      "sha256": "f7b6de7aa98d5b55064832c23b75d3d174c3a3a7a9b83f739ae8b2536ddfd50f",
+      "bytes": 206,
+      "mode": 493
+    },
+    {
+      "path": "scripts/vendor_rebuild.py",
+      "sha256": "b5b4fdc0c3a61045191207cc6885a3e9b7550b81cfff3ee2dda6b1c8e3527ab4",
+      "bytes": 18073,
+      "mode": 420
+    }
+  ],
+  "outputs": [
+    {
+      "target_path": "Vendor/aubio/libaubio.5.dylib",
+      "reviewed_output_sha256": "ff371b8123f1d9e6985e5d096324e37caa9d1cfc746d8f2e34c93ec4f124ff9c",
+      "reviewed_output_bytes": 210160,
+      "candidate_adopted": true,
+      "source_inputs_receipt_sha256": "1b7e6550fa915b5a6c068accaec1622411f6e54adcfce794840dd1da26964d64",
+      "build_receipt_sha256": "a2f86159181ace387010e1f9416c7163eb56414a1572560ed19c490cc143b837",
+      "previous_candidate_sha256": "39de25aa957e49d21d746ff9744c96dff6f8a2a0d3b1307225108b67c64a6345",
+      "current_candidate_sha256": "ff371b8123f1d9e6985e5d096324e37caa9d1cfc746d8f2e34c93ec4f124ff9c"
+    },
+    {
+      "target_path": "Vendor/FLAC/libogg.0.dylib",
+      "reviewed_output_sha256": "6c79d0c7fd244e0dd329fcb172b3b9722251c5bc689d88228e1b954754a6c696",
+      "reviewed_output_bytes": 53872,
+      "candidate_adopted": true,
+      "source_inputs_receipt_sha256": "f72a1beb5171b76c06111f47ed3bc604fc82b10f14a550921655f88b43a8ae48",
+      "build_receipt_sha256": "85dcbbf3e09c1bf6863ebfd730a949e97d62eeaac224e0f72ed640898a4117c8",
+      "previous_candidate_sha256": "3fb1da4c038575d2f13b713e15138fb388cb6133356c44ec32f4a6ec19b8faf3",
+      "current_candidate_sha256": "6c79d0c7fd244e0dd329fcb172b3b9722251c5bc689d88228e1b954754a6c696"
+    },
+    {
+      "target_path": "Vendor/FLAC/libFLAC.14.dylib",
+      "reviewed_output_sha256": "59475d5011cda5a09e9a0486181273a0a348273c680af812cfe14e2c2bc27a64",
+      "reviewed_output_bytes": 324168,
+      "candidate_adopted": true,
+      "source_inputs_receipt_sha256": "f72a1beb5171b76c06111f47ed3bc604fc82b10f14a550921655f88b43a8ae48",
+      "build_receipt_sha256": "85dcbbf3e09c1bf6863ebfd730a949e97d62eeaac224e0f72ed640898a4117c8",
+      "previous_candidate_sha256": "5ae7419f802000fe063c4980332db4fce0da62e81f37a8b5c0aefa6fb0ed4e18",
+      "current_candidate_sha256": "59475d5011cda5a09e9a0486181273a0a348273c680af812cfe14e2c2bc27a64"
+    }
+  ],
+  "tests": {
+    "build_tests": 10,
+    "focused_xctest_with_identity_probe": 12,
+    "focused_swift_testing": 11,
+    "quick_xctest_with_identity_probe": 244,
+    "optional_store_skips": 2,
+    "quick_swift_testing": 284,
+    "audio_tsan_xctest": 25,
+    "codec_roundtrip_stereo_frames_per_container": 8192,
+    "codec_containers": [
+      "native FLAC",
+      "Ogg FLAC"
+    ]
+  },
+  "evidence_log_sha256": {
+    "vendor-regression-focused/run.log": "018f5a4dafe421d657707c70882ca4712f39a9436aeb47121200f38c149248ba",
+    "vendor-regression-quick/run.log": "5ca141c6453259f8627caffe41ab09a011c6ed9eb1cb5bd41c2cf8125dbffc18",
+    "vendor-regression-release/run.log": "0a68723042b16228477fdfc95969490fe40cd6545d6352c762bcdab3e0d0a6f0",
+    "vendor-regression-tsan/run.log": "abd078f1ddf449ac04ad375ba9fc54ca6af32836a90f3c6adbbeb7569a36933e",
+    "logs/parent-codec-smoke.log": "9c69903e6b3329242259a7a28483577f7f8d7275cf6165d0ca8661c762046509"
+  },
+  "limits": [
+    "No app launch/signing/UI or hardware acceptance",
+    "C vendor outputs are Release libraries, not separately TSan-instrumented",
+    "Not a public release or final source-archive receipt"
+  ],
+  "adoption": "2026-09-15; exact reviewed outputs, previous bytes and installer receipts retained externally"
+}

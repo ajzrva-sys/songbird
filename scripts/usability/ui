@@ -1,0 +1,143 @@
+#!/bin/zsh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SESSION="${SONGBIRD_USABILITY_SESSION:-}"
+ARTIFACTS="${SONGBIRD_USABILITY_ARTIFACTS:-}"
+PROBE="$ROOT/.build/release/SongbirdUIProbe"
+
+deny() {
+  echo "Blocked by Songbird usability safety policy: $1" >&2
+  exit 77
+}
+
+approved_disposable_folder_selector() {
+  local selector="$1"
+  local test_root="${SONGBIRD_UI_TEST_ROOT:-}"
+  [[ "${SONGBIRD_USABILITY_PREPARED:-0}" == "1" ]] || return 1
+  [[ "$test_root" == "$ROOT/.build/usability/runs/"*"/profile" ]] || return 1
+  case "$selector" in
+    id=usability.folder.addAndScan|id=usability.folder.addWithoutScanning|\
+    id=usability.folder.initialImport)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+blocked_selector() {
+  case "$1" in
+    id=usability.folder.addAndScan|id=usability.folder.addWithoutScanning|\
+    id=usability.folder.initialImport)
+      approved_disposable_folder_selector "$1" && return 1
+      return 0
+      ;;
+  esac
+  local value="${1:l}"
+  case "$value" in
+    *"scan folder"*|*"scan other folder"*|*"import files"*|*"import library"*|\
+    *"show in finder"*|*"reveal in finder"*|*"open file"*|*"choose folder"*|\
+    *"select folder"*|*"log in"*|*"sign in"*|*"connect account"*|*authenticate*|\
+    *authorize*|*"search album art"*|*"search artwork"*|*"find album art"*|\
+    *"find missing artwork"*|*"add artwork"*|*"replace artwork"*|*"add folder"*|\
+    *"relocate folder"*|*"export m3u"*|*"test connection"*|\
+    *"personal access token"*|browse*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+guard_sensitive_window() {
+  local windows
+  windows="$("$PROBE" client --directory "$SESSION" windows 2>/dev/null || true)"
+  case "$windows" in
+    *'"title" : "Open"'*|*'"title" : "Save"'*|*'"title" : "Choose"'*|\
+    *'"title" : "Select Folder"'*|*'"title" : "Choose Folder"'*)
+      deny "system file dialogs may expose real filenames; cancel without inspecting them"
+      ;;
+  esac
+}
+
+if [[ "${1:-}" == "validate-selector" ]]; then
+  if blocked_selector "${2:-}"; then
+    echo "blocked"
+    exit 77
+  fi
+  echo "allowed"
+  exit 0
+fi
+
+if [[ -z "$SESSION" || -z "$ARTIFACTS" ]]; then
+  echo "SONGBIRD_USABILITY_SESSION and SONGBIRD_USABILITY_ARTIFACTS are required." >&2
+  exit 2
+fi
+if [[ ! -x "$PROBE" ]]; then
+  echo "SongbirdUIProbe is not built. Run ./scripts/ai-usability --prepare-only first." >&2
+  exit 2
+fi
+
+case "${1:-}" in
+  policy)
+    echo "Window-only evidence is allowed. Full-app snapshots, filesystem pickers/Finder reveals, external authentication or artwork searches, and their shortcuts are blocked. Report blocked flows as intentionally unvisited."
+    exit 0
+    ;;
+  snapshot)
+    deny "full-app snapshots can expose macOS Recent Items; use window-snapshot"
+    ;;
+  press|click|double-click|right-click|action|set-value|activate-menu-item)
+    if blocked_selector "${2:-}"; then
+      deny "'${2:-}' can leave the disposable profile or contact an external service"
+    fi
+    ;;
+  window-press|window-click|window-set-value)
+    if blocked_selector "${3:-}"; then
+      deny "'${3:-}' can leave the disposable profile or contact an external service"
+    fi
+    ;;
+  key)
+    key_value="${2:-}"
+    key_modifiers="${3:-}"
+    key_value="${key_value:l}"
+    key_modifiers="${key_modifiers:l}"
+    if [[ "$key_value" == "o" && "$key_modifiers" == *command* ]]; then
+      deny "Command-O variants can open a filesystem picker"
+    fi
+    ;;
+esac
+
+CLIENT_LOCK="$SESSION/client.lock"
+if ! mkdir "$CLIENT_LOCK" 2>/dev/null; then
+  echo "Songbird UI probe is busy; wait for the current command before issuing another." >&2
+  exit 75
+fi
+release_lock() { rmdir "$CLIENT_LOCK" 2>/dev/null || true; }
+trap release_lock EXIT INT TERM
+
+case "${1:-}" in
+  windows|window-snapshot|window-snapshot-title|screenshot|screenshot-window|click-point|double-click-point|right-click-point|drag-point|scroll-point|focus-window|set-window-frame|window-press|window-click|window-set-value|measure-window-action)
+    guard_sensitive_window
+    ;;
+esac
+
+if [[ "${1:-}" == "screenshot" ]]; then
+  if [[ "$#" -ne 2 || "$2" == */* ]]; then
+    echo "Usage: ./scripts/usability/ui screenshot NAME.png" >&2
+    exit 2
+  fi
+  mkdir -p "$ARTIFACTS/states"
+  "$PROBE" client --directory "$SESSION" screenshot "$ARTIFACTS/states/$2"
+  exit $?
+fi
+
+if [[ "${1:-}" == "screenshot-window" ]]; then
+  if [[ "$#" -ne 3 || "$3" == */* ]]; then
+    echo "Usage: ./scripts/usability/ui screenshot-window TITLE NAME.png" >&2
+    exit 2
+  fi
+  mkdir -p "$ARTIFACTS/states"
+  "$PROBE" client --directory "$SESSION" screenshot-window "$2" "$ARTIFACTS/states/$3"
+  exit $?
+fi
+
+"$PROBE" client --directory "$SESSION" "$@"

@@ -1,0 +1,1226 @@
+{
+  "schema": 1,
+  "review_date": "2026-09-15",
+  "status": "source-identities-reviewed; build/output correspondence pending",
+  "downloads": [
+    {
+      "url": "https://aubio.org/download",
+      "final_url": "https://aubio.org/download",
+      "sha256": "9affc9edf306be6c054a11586866ac45ed6e358548bfa7a32a661b5e55e2ca74",
+      "bytes": 10140,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://api.github.com/repos/aubio/aubio/commits/master",
+      "final_url": "https://api.github.com/repos/aubio/aubio/commits/master",
+      "sha256": "bb76667ae777f5168ced2d9bdfa02ecd4ac2404feb4323da36b6be10f28e1e7d",
+      "bytes": 6034,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html",
+      "final_url": "https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html",
+      "sha256": "eae15b224b9c213c1c6a2fd9f54b96196ecc2d02dac28b1600d34bcfc364e11a",
+      "bytes": 12267,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://xiph.org/downloads/",
+      "final_url": "https://xiph.org/downloads/",
+      "sha256": "7afb7ea88ae9bbbacb12a98f8e9642f675a48a8fb581c164a61300e452b4a982",
+      "bytes": 11687,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://xiph.org/flac/download.html",
+      "final_url": "https://xiph.org/flac/download.html",
+      "sha256": "d568a0e0cca8d69b7578401b6748f1a2697d790f1e8b8d393b19d3570d0fdd8b",
+      "bytes": 8261,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://codeload.github.com/aubio/aubio/tar.gz/ad5cf975aed08cc4562dd008cf9f83b12b82ffb8",
+      "final_url": "https://codeload.github.com/aubio/aubio/tar.gz/ad5cf975aed08cc4562dd008cf9f83b12b82ffb8",
+      "sha256": "00d644c832cb13979e59abd11b7849f8f9a3e2a8ed6a6faefb83f7a7d135b759",
+      "bytes": 368313,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://www.kurims.kyoto-u.ac.jp/~ooura/fft.tgz",
+      "final_url": "https://www.kurims.kyoto-u.ac.jp/~ooura/fft.tgz",
+      "sha256": "52bb637c70b971958ec79c9c8752b1df5ff0218a4db4510e60826e0cb79b5296",
+      "bytes": 72213,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://downloads.xiph.org/releases/flac/flac-1.5.0.tar.xz",
+      "final_url": "https://ftp.osuosl.org/pub/xiph/releases/flac/flac-1.5.0.tar.xz",
+      "sha256": "f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920",
+      "bytes": 1078872,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://downloads.xiph.org/releases/ogg/libogg-1.3.6.tar.xz",
+      "final_url": "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.6.tar.xz",
+      "sha256": "5c8253428e181840cd20d41f3ca16557a9cc04bad4a3d04cce84808677fa1061",
+      "bytes": 439952,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/groue/GRDB.swift/2cf6c756e1e5ef6901ebae16576a7e4e4b834622/LICENSE",
+      "final_url": "https://raw.githubusercontent.com/groue/GRDB.swift/2cf6c756e1e5ef6901ebae16576a7e4e4b834622/LICENSE",
+      "sha256": "b9ce5b40c859a62fa6998995a9d284565aba72e92ca7c655f64777948f885139",
+      "bytes": 1062,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://api.github.com/repos/groue/GRDB.swift/git/ref/tags/v6.29.3",
+      "final_url": "https://api.github.com/repos/groue/GRDB.swift/git/ref/tags/v6.29.3",
+      "sha256": "a0aa5022b23d7f0776404d773bad25fedd906df9d2a652cf186833c208c50a29",
+      "bytes": 382,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    },
+    {
+      "url": "https://www.swift.org/LICENSE.txt",
+      "final_url": "https://www.swift.org/LICENSE.txt",
+      "sha256": "167beb36f181bd163c93c6feb45c68e5f9462fe1af55b278f7bfd1df20e673a3",
+      "bytes": 11753,
+      "transport": "HTTPS with TLS verification; no author-signature claim"
+    }
+  ],
+  "aubio": {
+    "upstream_equivalent_revision": "ad5cf975aed08cc4562dd008cf9f83b12b82ffb8",
+    "historical_download_revision": null,
+    "retained_source_files": [
+      {
+        "path": "Vendor/aubio/src/CMakeLists.txt",
+        "sha256": "cbb46c23aa7ba6e29432b37aef992daf0854ae10e733a4006101e79400b54a56",
+        "bytes": 200,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/COPYING",
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+        "bytes": 35147,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/VERSION",
+        "sha256": "4a7bca85ef82a29d2121a0ea63ee19860c3da95039115c326f69c8ba24237b9f",
+        "bytes": 150,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/CMakeLists.txt",
+        "sha256": "2a78130a586276f1de0b91e03669b791186f57cbdcda9e9f35d07fe8b2df0c1c",
+        "bytes": 3745,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/aubio.h",
+        "sha256": "985ba326077982e2286d813f875e2bfee1d401e45fd8f08f87fa93f2669cb6cf",
+        "bytes": 6623,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/aubio_priv.h",
+        "sha256": "5c52ce757fd438924252a0a6e3ceee4a1eee001dc1ca63f913f61b06f547efc4",
+        "bytes": 11520,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/config.h.cmake.in",
+        "sha256": "45cea6c578d8ace0fd3bdf52155aba1e0ef15d1218458aeb0dc480a0f857aebc",
+        "bytes": 484,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/cvec.c",
+        "sha256": "fe6edbdef0e2b9797e76520d702cb19725883b98a176e11118cf8f6b5b0a6ef2",
+        "bytes": 3973,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/cvec.h",
+        "sha256": "4a67f0b759b351bf49dcbbac508917ebc86ebcdf3b15f879c81b8bf973a2b507",
+        "bytes": 5194,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/pitchshift.h",
+        "sha256": "c3e23ff10d9650f756bdd53ed9df793102b4fbdcd4a4837bdbd88b4f545e4d06",
+        "bytes": 3636,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/pitchshift_dummy.c",
+        "sha256": "0123b64b9ca77d9b2d9424da0e0a659d79721e7c715faf68f75973f6ec2763c9",
+        "bytes": 1874,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/pitchshift_rubberband.c",
+        "sha256": "f8936afa29ee609167f6f33e045d2867bdadd57bf9d2b6f82e144c3dc271a3bc",
+        "bytes": 4504,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/rubberband_utils.c",
+        "sha256": "e22cc847e4a506534ae857e1a4698ce70a6e15dacd0ce5cf5bab65225e308ce4",
+        "bytes": 7034,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/timestretch.h",
+        "sha256": "d1e6d694f4fa8d3064226774fcb7be493ddbedfa5af608bab3863b47305c728f",
+        "bytes": 5898,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/timestretch_dummy.c",
+        "sha256": "194a7cc190bce18c09eb8f3eaaad34859520c49977241d8a98c82f43ae160559",
+        "bytes": 2518,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/effects/timestretch_rubberband.c",
+        "sha256": "78b640a4ccd594a4efc80380d178ca8ce9f67d7b8959f29272bb39a0de59782a",
+        "bytes": 6949,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/fmat.c",
+        "sha256": "e8b567fe3f247fcbd9f81b883b91ba40f4b2935be797974702d177fcb72c9d32",
+        "bytes": 4578,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/fmat.h",
+        "sha256": "c9f1d19625a18d9daf9ba5ae50f1cb58bb5add875fc294cd2416b0cfa197c2fa",
+        "bytes": 3799,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/fvec.c",
+        "sha256": "bdded95042359bd03f000fc519d7b618bd097599b2c4007fa2d1b076ef660abc",
+        "bytes": 3806,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/fvec.h",
+        "sha256": "ad78d11c7ca4dde85026bbe3d1e0d2a4deedad36989bdd4486a65d200349a74f",
+        "bytes": 3654,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/audio_unit.c",
+        "sha256": "2e6d5b35f22ee88c1a506668834ca7e28337510f41f69604010aa2ce428dad00",
+        "bytes": 28200,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/audio_unit.h",
+        "sha256": "0ff9a8ef64071f63c88b2217876516b920e4e8acd43f1f254ad52f6fcfd4fa6c",
+        "bytes": 1803,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/ioutils.c",
+        "sha256": "cdadce87966b249acf40de92cac1e65088fc62ad343195a36a77b28dd47f9a0d",
+        "bytes": 5116,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/ioutils.h",
+        "sha256": "d177262a80dd981d72e107c445a8a56ff9a19401b94fa813f1e81ed2c5a0027e",
+        "bytes": 3957,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink.c",
+        "sha256": "434a31a956d0621fc06533e9507fbb9eff9b141763e889764cc63d9cbdf0f616",
+        "bytes": 9306,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink.h",
+        "sha256": "0274674b80b444bcc68308527f21da880878f906faf1f414e8d83216d000937e",
+        "bytes": 4463,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_apple_audio.c",
+        "sha256": "84e8ae1db7a252120e86676ec2fc63d0488bbaf05cddcf56e6cdb1564af3e9a9",
+        "bytes": 12586,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_apple_audio.h",
+        "sha256": "bca97892f196cce8473b1861e244f83c1d9357ef3d3d6f74d9b988c881f8aaf6",
+        "bytes": 4969,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_flac.c",
+        "sha256": "e559ddec1747dfff3c80868ad3cebf22516be02d58a11656d941bbcdc68e6279",
+        "bytes": 10594,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_sndfile.c",
+        "sha256": "0f4c0c815fcc2107fa38318de6be56d5e175123f51d0518b2bc691718bf9c9bd",
+        "bytes": 7435,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_sndfile.h",
+        "sha256": "ff06a5cf59abf39a2c445fc68a4f6bea280bfa69562c96a9f089274530c03c71",
+        "bytes": 4857,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_vorbis.c",
+        "sha256": "9e55ec6f9b016359a27e0ae6af9805bbdf460e3c1b1f9b714c8651b0543821d8",
+        "bytes": 8285,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_wavwrite.c",
+        "sha256": "d6d0cb4decfac21aed8072355a98355becf95cf11edebd1e21d7e15238603e92",
+        "bytes": 8959,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/sink_wavwrite.h",
+        "sha256": "844d748fe8ec98a6d6ec4198f60471050768f76a9855105c54ecee960634adc7",
+        "bytes": 3984,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source.c",
+        "sha256": "5b3c0ec1e4d2a325903ed267da871b13ff43354dfa3b785e5cd7bf679bffa1b2",
+        "bytes": 6528,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source.h",
+        "sha256": "960f5d44a40df3a5adc9aa41a557c32b795d1c5d7aadeb4482230d04cffd425e",
+        "bytes": 4955,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_apple_audio.c",
+        "sha256": "7b04b556aceebfdb5fff3965bdfb57dd5027cf2cae9a06ea48f79c467ede5aa1",
+        "bytes": 12754,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_apple_audio.h",
+        "sha256": "e2f582e2dbe0fff040f98b22a047f79a8e10d0be6db4351d326236e93a1aae0d",
+        "bytes": 4342,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_avcodec.c",
+        "sha256": "47a188cd74d3e188ab5e449c4502f609f444dfaa9c55da6b97a5bfc2023f62b6",
+        "bytes": 20354,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_avcodec.h",
+        "sha256": "9c0de2810c3451712466e05e7a6b62f0461e83301528bf50b4059d91b0f3a712",
+        "bytes": 4055,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_sndfile.c",
+        "sha256": "5b42183ce0cb5cca664f522b7646d9cebed23860ae89e173fd1259a7b503c610",
+        "bytes": 10314,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_sndfile.h",
+        "sha256": "617ede1b54a1149a146e306690740d83bd594ea73840cc2107f4b85b716fa53c",
+        "bytes": 4067,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_wavread.c",
+        "sha256": "6005ba3224c70ce74f925ec1da536a5c9e13ecadc71f5e3c58794cb013af3732",
+        "bytes": 14074,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/source_wavread.h",
+        "sha256": "6eec7ca13a4b30923542d65a5a9eed247da5ee73d09155a7fef62b5abe6fc2bf",
+        "bytes": 4191,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/io/utils_apple_audio.c",
+        "sha256": "3f6ee135ca1e0968e6a542308082518e2ca5282778393a73cd8f531c64840639",
+        "bytes": 2046,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/lvec.c",
+        "sha256": "b54d99cd855aa8bcf4a25a5e29fbf2556a2e462027ef0b778a7befae708d40a5",
+        "bytes": 1759,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/lvec.h",
+        "sha256": "6f0281354d95e143551ac99c307e9b4fc83abef378206068e24bc23e70737f8c",
+        "bytes": 2517,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/mathutils.c",
+        "sha256": "25b49aa7bc471869bb5590ba810af1304fac09619ddc0a8519b57d61bb458b1b",
+        "bytes": 15758,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/mathutils.h",
+        "sha256": "412bf4b4c80a8c9050a3d08991a2ec4d0f5c56760f736bb275b674eb99187d4d",
+        "bytes": 8836,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/meson.build",
+        "sha256": "fcc7b50e3216c405cf26eb6937a522f93d9da92ef5b79c31dd288407df0d2d79",
+        "bytes": 4775,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/musicutils.c",
+        "sha256": "c0f0053780d539faa6d142be63306088a97c7f3e93d6637d596ae990c28e0373",
+        "bytes": 2127,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/musicutils.h",
+        "sha256": "ca445f0759aef4fb7903b9f3225851ee6effe00a7a071654ac93c48747bc6ebe",
+        "bytes": 6886,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/notes/notes.c",
+        "sha256": "7b43a2ebe6ad41676e51a094b419c2c7b30b1cf4ddf074115db1ed354f7e3629",
+        "bytes": 7892,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/notes/notes.h",
+        "sha256": "054b5d361357a71167cd669007775ace98c63f1bf1a9e7772ad0445eb5599969",
+        "bytes": 3986,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/onset/onset.c",
+        "sha256": "c792d92e2de9eae9c2f642cb4dbc90228ac269930596c7b6946a3d633411ca63",
+        "bytes": 11169,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/onset/onset.h",
+        "sha256": "d0c987229ec37d8b15e8ace9fedd9a60dac6907bedcf39919784fe60fc89f1ea",
+        "bytes": 9712,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/onset/peakpicker.c",
+        "sha256": "03d797024a4ede311ecfb626d8347994bc4b85104abbabe1249e908733e499bb",
+        "bytes": 5946,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/onset/peakpicker.h",
+        "sha256": "63eb21ee9331f79e2d307fbe6a0bf065878c1c1c35784a199fbee92dd4c33e68",
+        "bytes": 1636,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitch.c",
+        "sha256": "7ba4ce519c9a9081e384dd8076de5c01700a5999cb1f4b41788a0f2038344980",
+        "bytes": 16286,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitch.h",
+        "sha256": "d579a92fac28a6e455d9b842ff9e2990af3c868534fe965ae1d1c446db3f434d",
+        "bytes": 6002,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchfcomb.c",
+        "sha256": "ff36b3f0a71a71b341a734141bdc66d0ff57d2bca2518144ed51cf000c0bc322",
+        "bytes": 3799,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchfcomb.h",
+        "sha256": "fbf651e53cf2936ae2d4512d52c20b86259f75635a9706c1100796eaeb544b5f",
+        "bytes": 2106,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchmcomb.c",
+        "sha256": "01631e77b8d93661d2f2c35ccf5832354dacb2acd32142b77be6109d41cfa7a2",
+        "bytes": 14837,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchmcomb.h",
+        "sha256": "05e419f3298ea3804251f719ba954a05c8639b6d42123a76098d4fd7b1449c31",
+        "bytes": 2201,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchschmitt.c",
+        "sha256": "2fbebc9d41bffab054ce16bae0f11a23c6e9c2a79b125efb2fc9aa1d713ced91",
+        "bytes": 3529,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchschmitt.h",
+        "sha256": "3a24c676047e134e8e9a89062676ac3283362fbdbdac237736760dad4dd4ed87",
+        "bytes": 2030,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchspecacf.c",
+        "sha256": "811c5f9373227f2844e28cf68e648dcdba221fc940a74a10461dd61282ba50af",
+        "bytes": 3186,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchspecacf.h",
+        "sha256": "556ae82f20176c8d2185991a7f580ebbd6ab781acf19749c56c4d4a39499e1f2",
+        "bytes": 3105,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyin.c",
+        "sha256": "99fe4789c452f268366f1bd9d2bd4365732cdec9e16c5295b07233e3383c932f",
+        "bytes": 4454,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyin.h",
+        "sha256": "8a87fec3cb4c72e9a794bab13e3e729a57edd92722e4b7d778a4c5c8c9a5831f",
+        "bytes": 2714,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyinfast.c",
+        "sha256": "31f3edfdea07656b189736850faff7d97317e3ea56789fc989004837f9e77718",
+        "bytes": 5802,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyinfast.h",
+        "sha256": "d41f944b0f564d762aec414afa44fa9111d591330171d38f6a6975738561c584",
+        "bytes": 2892,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyinfft.c",
+        "sha256": "7606cbe919f83749f158fba71fa2253d72299ab448dc73b10642842ad9d8dda4",
+        "bytes": 6742,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/pitch/pitchyinfft.h",
+        "sha256": "25403333dfad8c31b1e76cd75d589bad44600642bf646afaf7a2b8dc747ae0fc",
+        "bytes": 2999,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/awhitening.c",
+        "sha256": "e1eae70a001850fb9db4bc986dc80d74a514cd49cc2225cf75a33eee6159f042",
+        "bytes": 3567,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/awhitening.h",
+        "sha256": "63b195a4b4f26a99e6fc05a9b55e116ea86125f0163dea6ea7003bb05d0abc88",
+        "bytes": 3969,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct.c",
+        "sha256": "7ac876bab99c52ad3e8f4dcc772b628919699681ac081cccf61b535bec34332f",
+        "bytes": 6257,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct.h",
+        "sha256": "519761556e9a2dc55393cef0fb2ab7362055e3bbecf14ceedd0d608c1aeab59f",
+        "bytes": 1960,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct_accelerate.c",
+        "sha256": "f54d3238943df2ad1a3e543638f573160fa7c0ffa8aed80e860ba82593fc1033",
+        "bytes": 2863,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct_fftw.c",
+        "sha256": "82bd94cb9c1c9b596d7e7b321ef194b51a3d570d6baa4ba8b46eaf786b2d7201",
+        "bytes": 3750,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct_ipp.c",
+        "sha256": "be87c54d432f12e569acd63c4dece5e74e86b8c68ea590f3e879ce51cfb39445",
+        "bytes": 4643,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct_ooura.c",
+        "sha256": "1e71e73809e67d9238cd59cb69d141b4e976b8a82fe8308b39ec8284944735b2",
+        "bytes": 2867,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/dct_plain.c",
+        "sha256": "e1e3c078385deef6179b7eb9ef7671194cf070d3ee49bf8dc1880a2e1a901f07",
+        "bytes": 3277,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/fft.c",
+        "sha256": "adbc3ba1835c33ad49137ddb9a1bc6742001513abda5d04f7a2a9e3c3ffa293f",
+        "bytes": 19524,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/fft.h",
+        "sha256": "2f4d4880762aa57f682639dc3df9ba66e52dfa83fda005ebd7a6764b422f6948",
+        "bytes": 3809,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/filterbank.c",
+        "sha256": "cb8e2b28dd7d1f447dcd9ea161049b44f14328445907571e9da7fda17c4c40a5",
+        "bytes": 3086,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/filterbank.h",
+        "sha256": "043f6210a116760f0b394751729c2af5fa09f8ed2613daea5decb4f2f79991ae",
+        "bytes": 3710,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/filterbank_mel.c",
+        "sha256": "b6e73f9b5e47d06b436b0cdee916ad2af3e56e18fdb8af79ba72a679664f4e90",
+        "bytes": 8749,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/filterbank_mel.h",
+        "sha256": "2333e9af299ff5e06e8b2c21ac3ad2d5521b99914949102449df0dcba0b7e091",
+        "bytes": 3501,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/mfcc.c",
+        "sha256": "2a1c1fdd25b46d2b1959eb1a844b4639d0957ba02b1768fb4f2007104810331b",
+        "bytes": 4434,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/mfcc.h",
+        "sha256": "3641e65139880741ead2bc3a86be707f7be334612fc743619baafe4a72532718",
+        "bytes": 4359,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/ooura_fft8g.c",
+        "sha256": "da70d1cd4cc9bd1ba387cdf2c3409cdcd4cc0af7e65917896a08b9b3e128c109",
+        "bytes": 49426,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/phasevoc.c",
+        "sha256": "48040023c3dec6f60bd6585f9a5f4c6943a2f8ea3016b61e3588342807015a54",
+        "bytes": 6240,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/phasevoc.h",
+        "sha256": "6f170b91b3f0c2fe97dca7cbeeb19e39785ff207055a8e2a9361fc470070c865",
+        "bytes": 3120,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/specdesc.c",
+        "sha256": "5daf0b194ee36ddfd8bc7d3a28ac825ac95c34727977c0e0c1eb604bfaae3db2",
+        "bytes": 14954,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/specdesc.h",
+        "sha256": "7f05839a26ad2ed5f314868a6ab648385f0ff2ec78f516df8e0c275bcb181694",
+        "bytes": 6816,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/statistics.c",
+        "sha256": "4de5d69e443a159aa0b873ede32fb0a3ac371dca75e18ba38431c0de39dcdbed",
+        "bytes": 4896,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/tss.c",
+        "sha256": "1aba9ab02fa9aba442b990e9183c838f7ba6bfe45d1176dd84cf021c2eb22c2c",
+        "bytes": 3484,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/spectral/tss.h",
+        "sha256": "7e0b8cb2c89f0d32127a1cbdf9e0cdb27bc6e0e8a7195f57f9e0c20400aa77f0",
+        "bytes": 2665,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/synth/sampler.c",
+        "sha256": "eb1d0709eb03c1c73b8f2855d4b0e5b57b89ff52fdbf3a91d3aef7edb8c2235b",
+        "bytes": 3681,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/synth/sampler.h",
+        "sha256": "feac6d346b41f71f82949daeb1fcc1e3858cb6d4430e751f18dcbc921478f431",
+        "bytes": 3523,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/synth/wavetable.c",
+        "sha256": "3d4ee6077f544c8267f5e1f3e18799545e6b03e328f7f86f1ceeb5eb09a87c19",
+        "bytes": 5713,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/synth/wavetable.h",
+        "sha256": "3560a823b1075f0cec1e27afcc21dd3aed90f22a6cb5e5a815bd5e760fb95852",
+        "bytes": 4596,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/tempo/beattracking.c",
+        "sha256": "a408e4f1fff1b2fba90038cb830816dab25ce4910a0ba6f2fedab0f288bc84b6",
+        "bytes": 12827,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/tempo/beattracking.h",
+        "sha256": "c4ecc62b4a6c94ce65fc6d46a75c851e82b6d87d9fc1affc0e8f4f07d6f78516",
+        "bytes": 3336,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/tempo/tempo.c",
+        "sha256": "7c412209984e991d642d30a24f2f7cc12e03146e79b74342f515ecd21cfbb967",
+        "bytes": 9426,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/tempo/tempo.h",
+        "sha256": "8547ce9f2e104f6afff67f39abf65079ba4cd80e5aaae3dc1031749ea4a175e8",
+        "bytes": 5967,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/a_weighting.c",
+        "sha256": "1c20eb1d5bdd3ea76f0906acdd21ed1396537c402b725272f15661de61a86b66",
+        "bytes": 14164,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/a_weighting.h",
+        "sha256": "1cfa445ea552fa9970686d23caa96ed59e7ddd14bcce4137bac8439036f62f48",
+        "bytes": 2777,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/biquad.c",
+        "sha256": "6cdd3a2dc495038a92bd05197c60612c0bfd7f07f517deff2c14c76e7069044d",
+        "bytes": 1549,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/biquad.h",
+        "sha256": "2e4ed40965b65f369f4c02c7c73255a51798d26b9a8289193c66cb6a6c4e8a62",
+        "bytes": 2151,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/c_weighting.c",
+        "sha256": "9932329ba562288d3aec644474ad0c9d3b89e4cb4fbbeafa638bd2322017b540",
+        "bytes": 10826,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/c_weighting.h",
+        "sha256": "f5a3dfc76ea895e30d2322cd243982cbed836cb39e90085ac905d779c46fe30a",
+        "bytes": 2776,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/filter.c",
+        "sha256": "235f20cece8bb24bd3b87df17241936bcea6c44f630034972441238ce68ce1ce",
+        "bytes": 3482,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/filter.h",
+        "sha256": "0a757936a9670b7c22536c506328592081e842b62a4f1a78413791f4aed45608",
+        "bytes": 4707,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/resampler.c",
+        "sha256": "8d175be3174236fd54d205112a4481e6f9b6122e447935685a5b4ce4d49050d7",
+        "bytes": 2441,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/temporal/resampler.h",
+        "sha256": "88f97a50a3e16da2d67c72df15a78fd3b470c0f09f22ad22fc7dd6c62b48aac6",
+        "bytes": 1672,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/types.h",
+        "sha256": "25d5d902a3ce7a2c6c400f34b7b9fd4ba26311527c66c1ff6baddec7704068bd",
+        "bytes": 1774,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/hist.c",
+        "sha256": "53f306b7a79fe38c1751f118165a2bfb1737aef6c4df2e76136a376f4dfc55c2",
+        "bytes": 3646,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/hist.h",
+        "sha256": "a0dc4e83742afd0a46fce99904861cb3ff5f78805d55997f3f0dfe2a0fd14608",
+        "bytes": 1730,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/log.c",
+        "sha256": "2088d3b7d75513ed5d75f048ecc20ce398bc0ab841c2242e35561fde7254b1ee",
+        "bytes": 2591,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/log.h",
+        "sha256": "d14444bdeaf05fc29e0587c56b6cda5fa5324379998df4ed95b484bfec8d0c67",
+        "bytes": 2889,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/parameter.c",
+        "sha256": "51f282637cd9dd6f7ce6bd5898cbd858276c46a03c6de48bdbef3b8263b2b944",
+        "bytes": 3631,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/parameter.h",
+        "sha256": "e04a275414f7d00b6d828476de44f9a443250f2ecca6d64b3908fdf6afe51073",
+        "bytes": 4093,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/scale.c",
+        "sha256": "23cfe566c1c68820f7d976c1ac644fd9cf6d61a0d47b269cc70177a5caf36717",
+        "bytes": 1908,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/scale.h",
+        "sha256": "25d0eca2204cafded46e253733cdf86c7bee4927725970c0b2942e439488d3eb",
+        "bytes": 2158,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/strutils.c",
+        "sha256": "f778fd806912458da54a317012561de97ca59dc37e3fb9102e5dd518089c4c37",
+        "bytes": 1398,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/utils/windll.c",
+        "sha256": "78e79412d2b632ec613b1d851a3f47be1f0c7ee853deda3e654c1742ef650829",
+        "bytes": 1411,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/vecutils.c",
+        "sha256": "28ea0418517e82b2925d2bb0feca77b0223ba7f767351da0eee423b1310a0818",
+        "bytes": 729,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/vecutils.h",
+        "sha256": "341823b8b9e7546ae09c88689d0069f6de084cd7102429abb5dfa2586de50ee5",
+        "bytes": 2201,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/src/wscript_build",
+        "sha256": "dca20b6b1fab843fcd9f544e871cb2aca0a925f044778df747c066787627f5ce",
+        "bytes": 1590,
+        "mode": 420
+      },
+      {
+        "path": "Vendor/aubio/src/this_version.py",
+        "sha256": "c0b4471c95659ae6e060b60d40fd22a201f7a026bc648ca980c24f30bfa626f3",
+        "bytes": 4264,
+        "mode": 420
+      }
+    ],
+    "snapshot_sha256": "d0a47d0f6673cde40763cc8d4f558bff08fa24eaa363896dc58f36bb0b617e45",
+    "retained_bridge_headers": [
+      {
+        "path": "Sources/AubioBridge/include/aubio/aubio.h",
+        "sha256": "985ba326077982e2286d813f875e2bfee1d401e45fd8f08f87fa93f2669cb6cf",
+        "bytes": 6623,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/cvec.h",
+        "sha256": "4a67f0b759b351bf49dcbbac508917ebc86ebcdf3b15f879c81b8bf973a2b507",
+        "bytes": 5194,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/fmat.h",
+        "sha256": "c9f1d19625a18d9daf9ba5ae50f1cb58bb5add875fc294cd2416b0cfa197c2fa",
+        "bytes": 3799,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/fvec.h",
+        "sha256": "ad78d11c7ca4dde85026bbe3d1e0d2a4deedad36989bdd4486a65d200349a74f",
+        "bytes": 3654,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/lvec.h",
+        "sha256": "6f0281354d95e143551ac99c307e9b4fc83abef378206068e24bc23e70737f8c",
+        "bytes": 2517,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/mathutils.h",
+        "sha256": "412bf4b4c80a8c9050a3d08991a2ec4d0f5c56760f736bb275b674eb99187d4d",
+        "bytes": 8836,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/musicutils.h",
+        "sha256": "ca445f0759aef4fb7903b9f3225851ee6effe00a7a071654ac93c48747bc6ebe",
+        "bytes": 6886,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/tempo/beattracking.h",
+        "sha256": "c4ecc62b4a6c94ce65fc6d46a75c851e82b6d87d9fc1affc0e8f4f07d6f78516",
+        "bytes": 3336,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/tempo/tempo.h",
+        "sha256": "8547ce9f2e104f6afff67f39abf65079ba4cd80e5aaae3dc1031749ea4a175e8",
+        "bytes": 5967,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/types.h",
+        "sha256": "25d5d902a3ce7a2c6c400f34b7b9fd4ba26311527c66c1ff6baddec7704068bd",
+        "bytes": 1774,
+        "mode": 420
+      },
+      {
+        "path": "Sources/AubioBridge/include/aubio/vecutils.h",
+        "sha256": "341823b8b9e7546ae09c88689d0069f6de084cd7102429abb5dfa2586de50ee5",
+        "bytes": 2201,
+        "mode": 420
+      }
+    ],
+    "omitted_upstream_paths": [
+      ".appveyor.yml",
+      ".circleci/config.yml",
+      ".coveragerc",
+      ".gitignore",
+      ".readthedocs.yaml",
+      ".travis.yml",
+      "AUTHORS",
+      "ChangeLog",
+      "MANIFEST.in",
+      "Makefile",
+      "README.md",
+      "aubio.pc.in",
+      "azure-pipelines.yml",
+      "doc/Makefile",
+      "doc/about.rst",
+      "doc/android.rst",
+      "doc/aubio.txt",
+      "doc/aubiocut.txt",
+      "doc/aubiomfcc.txt",
+      "doc/aubionotes.txt",
+      "doc/aubioonset.txt",
+      "doc/aubiopitch.txt",
+      "doc/aubioquiet.txt",
+      "doc/aubiotrack.txt",
+      "doc/binaries.rst",
+      "doc/building.rst",
+      "doc/cli.rst",
+      "doc/cli_features.rst",
+      "doc/conf.py",
+      "doc/debian_packages.rst",
+      "doc/develop.rst",
+      "doc/download.rst",
+      "doc/full.cfg",
+      "doc/index.rst",
+      "doc/installing.rst",
+      "doc/make.bat",
+      "doc/py_analysis.rst",
+      "doc/py_datatypes.rst",
+      "doc/py_examples.rst",
+      "doc/py_io.rst",
+      "doc/py_spectral.rst",
+      "doc/py_synth.rst",
+      "doc/py_temporal.rst",
+      "doc/py_utils.rst",
+      "doc/python.rst",
+      "doc/python_module.rst",
+      "doc/requirements.rst",
+      "doc/statuslinks.rst",
+      "doc/web.cfg",
+      "doc/xcode_frameworks.rst",
+      "examples/CMakeLists.txt",
+      "examples/aubiomfcc.c",
+      "examples/aubionotes.c",
+      "examples/aubioonset.c",
+      "examples/aubiopitch.c",
+      "examples/aubioquiet.c",
+      "examples/aubiotrack.c",
+      "examples/jackio.c",
+      "examples/jackio.h",
+      "examples/meson.build",
+      "examples/parse_args.h",
+      "examples/utils.c",
+      "examples/utils.h",
+      "examples/wscript_build",
+      "meson.build",
+      "python/README.md",
+      "python/demos/__init__.py",
+      "python/demos/demo_alsa.py",
+      "python/demos/demo_bench_yin.py",
+      "python/demos/demo_bpm_extract.py",
+      "python/demos/demo_create_test_sounds.py",
+      "python/demos/demo_filter.py",
+      "python/demos/demo_filterbank.py",
+      "python/demos/demo_filterbank_slaney.py",
+      "python/demos/demo_filterbank_triangle_bands.py",
+      "python/demos/demo_keyboard.py",
+      "python/demos/demo_mel-energy.py",
+      "python/demos/demo_mfcc.py",
+      "python/demos/demo_miditofreq.py",
+      "python/demos/demo_notes.py",
+      "python/demos/demo_onset.py",
+      "python/demos/demo_onset_plot.py",
+      "python/demos/demo_pitch.py",
+      "python/demos/demo_pitch_sinusoid.py",
+      "python/demos/demo_pitchshift.py",
+      "python/demos/demo_pyaudio.py",
+      "python/demos/demo_pysoundcard_play.py",
+      "python/demos/demo_pysoundcard_record.py",
+      "python/demos/demo_reading_speed.py",
+      "python/demos/demo_simple_robot_voice.py",
+      "python/demos/demo_simple_spectral_weighting.py",
+      "python/demos/demo_sink.py",
+      "python/demos/demo_sink_create_woodblock.py",
+      "python/demos/demo_sink_multi.py",
+      "python/demos/demo_slicing.py",
+      "python/demos/demo_source.py",
+      "python/demos/demo_source_simple.py",
+      "python/demos/demo_specdesc.py",
+      "python/demos/demo_spectrogram.py",
+      "python/demos/demo_tapthebeat.py",
+      "python/demos/demo_tempo.py",
+      "python/demos/demo_tempo_plot.py",
+      "python/demos/demo_timestretch.py",
+      "python/demos/demo_timestretch_online.py",
+      "python/demos/demo_tss.py",
+      "python/demos/demo_wav2midi.py",
+      "python/demos/demo_waveform_plot.py",
+      "python/demos/demo_yin_compare.py",
+      "python/ext/aubio-docstrings.h",
+      "python/ext/aubio-types.h",
+      "python/ext/aubiomodule.c",
+      "python/ext/aubioproxy.c",
+      "python/ext/py-cvec.c",
+      "python/ext/py-fft.c",
+      "python/ext/py-filter.c",
+      "python/ext/py-filterbank.c",
+      "python/ext/py-musicutils.c",
+      "python/ext/py-musicutils.h",
+      "python/ext/py-phasevoc.c",
+      "python/ext/py-sink.c",
+      "python/ext/py-source.c",
+      "python/ext/ufuncs.c",
+      "python/lib/aubio/__init__.py",
+      "python/lib/aubio/cmd.py",
+      "python/lib/aubio/cut.py",
+      "python/lib/aubio/midiconv.py",
+      "python/lib/aubio/slicing.py",
+      "python/lib/gen_code.py",
+      "python/lib/gen_external.py",
+      "python/lib/moresetuptools.py",
+      "python/tests/_tools.py",
+      "python/tests/a_weighting_test_simple.expected",
+      "python/tests/c_weighting_test_simple.expected",
+      "python/tests/c_weighting_test_simple_8000.expected",
+      "python/tests/eval_pitch",
+      "python/tests/filterbank_mfcc_16000_512.expected",
+      "python/tests/test_aubio.py",
+      "python/tests/test_aubio_cmd.py",
+      "python/tests/test_aubio_cut.py",
+      "python/tests/test_cvec.py",
+      "python/tests/test_dct.py",
+      "python/tests/test_fft.py",
+      "python/tests/test_filter.py",
+      "python/tests/test_filterbank.py",
+      "python/tests/test_filterbank_mel.py",
+      "python/tests/test_fvec.py",
+      "python/tests/test_fvec_shift.py",
+      "python/tests/test_hist.py.old",
+      "python/tests/test_hztomel.py",
+      "python/tests/test_mathutils.py",
+      "python/tests/test_mfcc.py",
+      "python/tests/test_midi2note.py",
+      "python/tests/test_musicutils.py",
+      "python/tests/test_note2midi.py",
+      "python/tests/test_notes.py",
+      "python/tests/test_onset.py",
+      "python/tests/test_peakpicker.py.old",
+      "python/tests/test_phasevoc.py",
+      "python/tests/test_pitch.py",
+      "python/tests/test_pitchshift.py",
+      "python/tests/test_scale.py.old",
+      "python/tests/test_sink.py",
+      "python/tests/test_slicing.py",
+      "python/tests/test_source.py",
+      "python/tests/test_source_channels.py",
+      "python/tests/test_specdesc.py",
+      "python/tests/test_tempo.py",
+      "python/tests/test_zero_crossing_rate.py",
+      "python/tests/utils.py",
+      "requirements.txt",
+      "scripts/apple/Info.plist",
+      "scripts/apple/Modules/module.modulemap",
+      "scripts/build_android",
+      "scripts/build_apple_frameworks",
+      "scripts/build_cmake",
+      "scripts/build_emscripten",
+      "scripts/build_meson",
+      "scripts/build_mingw",
+      "scripts/get_waf.sh",
+      "scripts/setenv_local.sh",
+      "setup.py",
+      "tests/CMakeLists.txt",
+      "tests/create_tests_source.py",
+      "tests/meson.build",
+      "tests/src/effects/test-pitchshift.c",
+      "tests/src/effects/test-timestretch.c",
+      "tests/src/io/base-sink_custom.h",
+      "tests/src/io/base-source_custom.h",
+      "tests/src/io/test-sink.c",
+      "tests/src/io/test-sink_apple_audio.c",
+      "tests/src/io/test-sink_flac.c",
+      "tests/src/io/test-sink_sndfile.c",
+      "tests/src/io/test-sink_vorbis.c",
+      "tests/src/io/test-sink_wavwrite.c",
+      "tests/src/io/test-source.c",
+      "tests/src/io/test-source_apple_audio.c",
+      "tests/src/io/test-source_avcodec.c",
+      "tests/src/io/test-source_sndfile.c",
+      "tests/src/io/test-source_wavread.c",
+      "tests/src/notes/test-notes.c",
+      "tests/src/onset/test-onset.c",
+      "tests/src/onset/test-peakpicker.c",
+      "tests/src/pitch/test-pitch.c",
+      "tests/src/pitch/test-pitchfcomb.c",
+      "tests/src/pitch/test-pitchmcomb.c",
+      "tests/src/pitch/test-pitchschmitt.c",
+      "tests/src/pitch/test-pitchspecacf.c",
+      "tests/src/pitch/test-pitchyin.c",
+      "tests/src/pitch/test-pitchyinfft.c",
+      "tests/src/spectral/test-awhitening.c",
+      "tests/src/spectral/test-dct.c",
+      "tests/src/spectral/test-fft.c",
+      "tests/src/spectral/test-filterbank.c",
+      "tests/src/spectral/test-filterbank_mel.c",
+      "tests/src/spectral/test-mfcc.c",
+      "tests/src/spectral/test-phasevoc.c",
+      "tests/src/spectral/test-specdesc.c",
+      "tests/src/spectral/test-tss.c",
+      "tests/src/synth/test-sampler.c",
+      "tests/src/synth/test-wavetable.c",
+      "tests/src/tempo/test-beattracking.c",
+      "tests/src/tempo/test-tempo.c",
+      "tests/src/temporal/test-a_weighting.c",
+      "tests/src/temporal/test-biquad.c",
+      "tests/src/temporal/test-c_weighting.c",
+      "tests/src/temporal/test-filter.c",
+      "tests/src/temporal/test-resampler.c",
+      "tests/src/test-cvec.c",
+      "tests/src/test-fmat.c",
+      "tests/src/test-fvec.c",
+      "tests/src/test-lvec.c",
+      "tests/src/test-mathutils-window.c",
+      "tests/src/test-mathutils.c",
+      "tests/src/test-vecutils.c",
+      "tests/src/utils/test-hist.c",
+      "tests/src/utils/test-log.c",
+      "tests/src/utils/test-parameter.c",
+      "tests/src/utils/test-scale.c",
+      "tests/utils_tests.h",
+      "tests/wscript_build",
+      "waf_gensyms.py",
+      "wscript"
+    ],
+    "unexplained_retained_changes": []
+  },
+  "ooura": {
+    "adapted_sha256": "da70d1cd4cc9bd1ba387cdf2c3409cdcd4cc0af7e65917896a08b9b3e128c109",
+    "recovered_author_file_sha256": "0844c1b338c1db15858f9feb8c166dffb2696a998a0b59aeaf13dce84eb4c5fc",
+    "reverse_adaptation": "strip 30-line prologue; remove (smpl_t) casts; smpl_t to double; remove aubio_ooura_ prefixes; COS/SIN/ATAN calls to lowercase",
+    "byte_equal_author_file": true,
+    "grant_url": "https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html"
+  },
+  "flac_ogg": {
+    "historical_supplier_chain": null,
+    "approved_replacement_releases": {
+      "flac": "1.5.0",
+      "ogg": "1.3.6"
+    },
+    "approved_architecture": "arm64",
+    "minimum_macos": "14.0",
+    "binary_adoption_approved": false
+  },
+  "grdb": {
+    "revision": "2cf6c756e1e5ef6901ebae16576a7e4e4b834622",
+    "tag": "v6.29.3",
+    "production_only_manifest_adaptation_approved": true,
+    "offline_import_verified": false
+  }
+}

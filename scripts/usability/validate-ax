@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Deterministic accessibility checks that complement AI visual/usability judgment."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+
+ACTIONABLE_ROLES = {
+    "AXButton",
+    "AXCheckBox",
+    "AXComboBox",
+    "AXLink",
+    "AXMenuItem",
+    "AXPopUpButton",
+    "AXRadioButton",
+    "AXRow",
+    "AXSlider",
+    "AXTextField",
+}
+EMPTY_PHRASES = {"no results", "no albums", "no music loaded", "album not found"}
+
+
+def walk(node):
+    if isinstance(node, list):
+        for child in node:
+            yield from walk(child)
+        return
+    yield node
+    for child in node.get("children", []):
+        yield from walk(child)
+
+
+def human_name(node: dict) -> str:
+    direct = str(node.get("title") or node.get("label") or node.get("value") or "").strip()
+    if direct:
+        return direct
+    child_names = [human_name(child) for child in node.get("children", [])]
+    return " ".join(name for name in child_names if name).strip()
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print("Usage: validate-ax SNAPSHOT.ax.json", file=sys.stderr)
+        return 2
+
+    path = Path(sys.argv[1])
+    nodes = list(walk(json.loads(path.read_text())))
+    findings: list[dict] = []
+
+    for node in nodes:
+        role = node.get("role")
+        actions = set(node.get("actions") or [])
+        actionable = role in ACTIONABLE_ROLES or "AXPress" in actions
+        frame = node.get("frame")
+        visibly_sized = bool(frame and frame.get("width", 0) > 0 and frame.get("height", 0) > 0)
+        standard_window_button = str(node.get("subrole") or "").startswith("AX") and str(
+            node.get("subrole") or ""
+        ).endswith("Button")
+        if (
+            actionable
+            and visibly_sized
+            and not standard_window_button
+            and node.get("enabled") is not False
+            and not human_name(node)
+        ):
+            findings.append({
+                "severity": "P1",
+                "rule": "unnamed_action",
+                "path": node.get("path"),
+                "message": f"Enabled {role or 'actionable element'} has no human-readable name.",
+            })
+    visible_text = {human_name(node).lower() for node in nodes if human_name(node)}
+    has_progress = any(node.get("role") == "AXProgressIndicator" for node in nodes)
+    contradictory_empty = sorted(visible_text.intersection(EMPTY_PHRASES))
+    if has_progress and contradictory_empty:
+        findings.append({
+            "severity": "P1",
+            "rule": "loading_and_empty_overlap",
+            "message": "A progress indicator is exposed with an empty state: "
+            + ", ".join(contradictory_empty),
+        })
+
+    report = {
+        "snapshot": str(path),
+        "node_count": len(nodes),
+        "finding_count": len(findings),
+        "findings": findings,
+    }
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 1 if findings else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

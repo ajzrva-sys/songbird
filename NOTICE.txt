@@ -1,0 +1,9 @@
+Copyright (C) 2026 Andrew Zimmerman
+
+Songbird's authorized original application code and project-authored assets are licensed under GPL-3.0-or-later: the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You may redistribute and modify it under the applicable GNU General Public License terms. See LICENSE for the full license and SOURCE_CODE.md for corresponding-source information.
+
+The restored historical Songbird bird artwork is not relicensed by this notice.
+
+Third-party components retain their own copyright notices and applicable license terms; see THIRD_PARTY_NOTICES.txt and docs/LICENSE_SCOPE.md. Existing synthetic fixtures retain their declared CC0 terms. No trademark permission is granted or claimed by this notice.

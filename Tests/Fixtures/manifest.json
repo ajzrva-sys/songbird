@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "license": "CC0-1.0",
+  "provenance": "Fixtures are generated synthetic signals and contain no third-party recordings.",
+  "generator": "scripts/generate-audio-fixtures.sh",
+  "coverage": "Representative combinations; properties are not a Cartesian product.",
+  "sets": [
+    {
+      "name": "gapless-boundaries",
+      "signals": ["adjacent impulse", "ascending ramp", "descending ramp"],
+      "purpose": "Detect inserted, dropped, or duplicated output frames."
+    },
+    {
+      "name": "codec-priming",
+      "formats": ["mp3", "aac"],
+      "purpose": "Detect audible encoder delay and remainder padding."
+    },
+    {
+      "name": "format-matrix",
+      "sampleRates": [44100, 48000, 96000, 192000],
+      "channels": [1, 2],
+      "bitDepths": [16, 24],
+      "containers": ["wav", "aiff", "flac"]
+    },
+    {
+      "name": "flac-metadata",
+      "tags": ["title", "artist", "album", "trackNumber"],
+      "features": ["embedded artwork", "seek impulses"]
+    },
+    {
+      "name": "failure-cases",
+      "features": ["very short stream", "truncated file", "invalid header"]
+    }
+  ],
+  "hashes": "Committed generated files are verified by SHA-256 in Tests/Fixtures/SHA256SUMS."
+}

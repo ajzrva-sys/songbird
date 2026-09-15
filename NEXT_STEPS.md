@@ -1,0 +1,44 @@
+# Candidate next steps
+
+## Ready-to-share implementation
+
+The owner authorized the complete [hobby build plan](docs/exec-plans/active/ready-to-share.md)
+on 2026-09-15, including adoption of the three reviewed libraries. About/notices,
+CD foundations and surfaces, safe rip recovery, conservative system Now Playing,
+and source-component validation are integrated. The combined checks, ad-hoc package, bounded disposable smoke and three remaining
+technical gates pass. The sealed archive and its offline rebuild result are identified
+in the companion RELEASE-RECEIPT.json; see that plan for actual acceptance.
+
+Keep Songbird, Discogs importing, permanent saved artwork/tags/filenames/reports
+and existing Undo. Naming is approved; separate privacy/contact review is waived.
+Those decisions remain nonblocking and do not claim provider permission.
+
+Work only in this publication candidate and disposable test roots. The original
+checkout and normal library are outside this work. The owner confirmed physical-CD
+playback, ripping and eject. AirPlay remains untested.
+
+## GitHub publication
+
+The owner authorized the initial source commit and push to the public repository
+[ajzrva-sys/songbird](https://github.com/ajzrva-sys/songbird) on 2026-09-15.
+Use the selected publication payload on `main`; preserve the separate development
+checkout and local app/source archives. Earlier local-only instructions are superseded.
+
+## Later, only if requested
+
+Uploading app binaries as a GitHub Release, Developer ID signing and notarization
+remain separate follow-ups. The current app is an ad-hoc signed hobby test build for Apple
+Silicon/macOS 14+. Keep its matching source archive and checksums alongside it.
+
+## History
+
+[Publication baseline](docs/exec-plans/completed/publication-baseline.md) records the
+original 537-file preparation. The [earlier remediation plan](docs/exec-plans/active/release-licensing-remediation.md)
+retains dated receipts and implementation detail; its old pause and unanswered S7
+request were superseded by the owner's complete implementation authorization.
+
+## Bird artwork follow-up
+
+Owner-approved restoration of the existing bird logos and themed icons is included
+in [the handoff plan](docs/exec-plans/active/ready-to-share.md). Keep exact image
+provenance and ordinary notices; do not re-open the accepted artwork decision.

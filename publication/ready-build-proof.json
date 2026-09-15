@@ -1,0 +1,304 @@
+{
+  "schema": 1,
+  "scope": "Songbird 0.1.0 build 1 local hobby handoff. Top-level results preserve the original integration evidence; artwork_followup records the subsequent owner-approved bird and Dock presentation restoration.",
+  "tested_input_snapshot_sha256": "6166cc7d533ebb0bc3539c74cec7b1a4ae9742311a5060d9c123af9fa3b15efa",
+  "additional_focused_test": {
+    "path": "Tests/SongbirdTests/DiscogsSavedContentPersistenceTests.swift",
+    "sha256": "ad098931a652a937e309a5950a10082131f59f4d72e89f8d05ae3cf961f56359",
+    "bytes": 3303,
+    "mode": 420
+  },
+  "commands": {
+    "python": "python3 -m unittest discover -s scripts/tests -v",
+    "swift": "SONGBIRD_OFFLINE_DEPS=1 ./check.sh quick -j 4 (isolated HOME/profile, frozen source)",
+    "release": "SONGBIRD_OFFLINE_DEPS=1 swift build -c release",
+    "tsan": "SONGBIRD_OFFLINE_DEPS=1 ./scripts/test-audio-tsan.sh (isolated HOME/profile, frozen source)",
+    "persistence": "./check.sh quick --filter DiscogsSavedContentPersistenceTests (isolated HOME/profile)",
+    "ui": "scripts/ai-usability audit --prepare-only --keep; safe wrapper; same-profile restart under deny network*"
+  },
+  "results": {
+    "python_tests": 105,
+    "python_opt_in_rebuild_skips": 2,
+    "xctest_tests": 284,
+    "xctest_optional_store_skips": 2,
+    "swift_testing_tests": 334,
+    "swift_testing_suites": 43,
+    "additional_disk_persistence_tests": 1,
+    "audio_tsan_tests": 25,
+    "optimized_build": "passed",
+    "ad_hoc_signature": "passed",
+    "notice_delivery": "all four canonical documents byte-matched; rendered and read offline",
+    "discogs_system_display": "original/default metadata and no transient art; tested in DiscogsTransientPresentationTests",
+    "saved_information": "new disk container test retains cover/year1997/path across cache expiry and reopen; Undo works",
+    "ui_smoke": "canned import, six-hour expiry, synthetic playback/pause, saved cover after network-denied restart; scoped acceptance only"
+  },
+  "logs": {
+    "feature-focused.log": "56890453f9a9f58c7423929ad03dce0bbe0de4bc3240fa353c53645722a5740d",
+    "python-final.log": "a09a07f2ede37e41ae98e593081d193b8ac6dd7c62dca95dbad2ca572f66c77d",
+    "swift-final.log": "142e496be67025ed9eb50469e46171b46248dd668a4da2c892e74521a99282d0",
+    "persistence-final.log": "02a274d0fb7d803b60f330e7884bb740a801e5908a70d6af0f2da2dad9f4f098",
+    "tsan-final.log": "035caa2f1d7a475269bdceb122ded56236e98c6c4c7fec74ab1e288877a21482",
+    "ui-prepare.log": "bf592e390dc0b02960acaf66cb3bf0c6413d9899e49dc82855c937940f7243b6",
+    "package-final.log": "a3dba047d79c8e6d6a2b43f45b3983ebfc0208564ad88eda5145dc5376fb14f1",
+    "signature-final.log": "9f295e1e20a7f2d0360ead7a7253213ee2fb4a9ea62f7f6f2b9a236dc10afcb5"
+  },
+  "ui_evidence": {
+    "about.png": "8dca898fce6c06360c68e7d5866ab945934b9b687fa636a483080ec34073cc47",
+    "legal.png": "f5ab0b8e005bcfbd4cd9235eba1a90ee3f61c5fecf441b3f983b6d3034c9f921",
+    "fixture-results-window.png": "969863ee1ee5394451d9a882c3bf30c9cefda860fdc260161761a58e59bea981",
+    "fixture-expired-window.png": "c67e06bd115257960df57c8dce6c3d3179d565092ac9b28438e61c37dea9ade0",
+    "playback-verified.png": "bf2442f1f9062cc58642863e640eed887cf1db07e985da2497ae5344a6176050",
+    "saved-after-offline-restart.png": "d8cf7deb65f46ce56d2f741dcd8da829ecb3203873c0d704bd2e99740932163e",
+    "legal-offline.png": "321eb47e642d8bb921be4507687adbcb15a0dcfceff1e4b0774d565f0a5349e0"
+  },
+  "limitations": [
+    "Owner confirmed physical-CD playback, ripping and eject after the original handoff. AirPlay untested.",
+    "Live Discogs HTTP and full UI matrix untested",
+    "Ad-hoc signing only; no Developer ID/notarization",
+    "Archive hashes and post-seal offline rebuild outcome are recorded in the companion RELEASE-RECEIPT.json"
+  ],
+  "artwork_followup": {
+    "scope": "Restore 26 original runtime PNGs and the matching Dock crop settings/Amber Bird label; notices and owner-decision records updated. No audio, library or dependency implementation changes.",
+    "results": {
+      "python_tests": 105,
+      "python_opt_in_rebuild_skips": 2,
+      "xctest_tests": 285,
+      "xctest_optional_store_skips": 2,
+      "swift_testing_tests": 334,
+      "swift_testing_suites": 43,
+      "focused_theme_xctest_tests": 26,
+      "focused_theme_swift_testing_tests": 3,
+      "optimized_build": "passed",
+      "ui_scope": "Bounded artwork acceptance passed: About bird and idle-player silhouette, bundled legal window including historical attribution, Blue Monday Outline/Vinyl previews and Vinyl selection, and restored missing-art images. This was not a whole-product sweep; other UI, themes, performance and hardware remain uncovered here."
+    },
+    "changed_tested_inputs": [
+      {
+        "path": "Sources/DockIconSupport/SongbirdDockIconArtwork.swift",
+        "sha256": "c23db900ab07121510e71a1220e0b148a33d76d02f8648d281e3197f34db506b",
+        "bytes": 5916,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/Legal/Songbird-NOTICE.txt",
+        "sha256": "6a650095b7b195ae36c0e108f2b6f3fdd8b7e8d33db9072bc2063f288b83b1c8",
+        "bytes": 1008,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/Legal/THIRD-PARTY-NOTICES.txt",
+        "sha256": "c1121ad233d87436712b757fa124211b9044da551592a700cc4f7a31b677d15d",
+        "bytes": 29090,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/asset-provenance.json",
+        "sha256": "70f082e9046b9f44e135e220a00ebbfbb425ac5cd62322b3549e8eb40465e528",
+        "bytes": 10247,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-blackbird-amber.png",
+        "sha256": "5488dcc67e3b17a016807108f3ebdbba001bc85d3714e24d437ca5ee43674efa",
+        "bytes": 1430812,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-blackbird-graphite.png",
+        "sha256": "2e3c31d2bf618e92f4a40860ed0506f540d84c2ce35013068f78fc0c3fdac08f",
+        "bytes": 1498881,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-blue-outline.png",
+        "sha256": "6093346ddea302aba6614ae8bd2cc1a31baf9755d7428056071a82b659ece03d",
+        "bytes": 1232993,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-blue-vinyl.png",
+        "sha256": "221fe8a079644180d7b29dbe3b26182acb3b8b3a3245c1cdb1db0da809b8f05c",
+        "bytes": 1187012,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-bowie-prism.png",
+        "sha256": "13f939ab766dc85291958a635d04784e5ee682acc9646b2d6faedff2f75539fb",
+        "bytes": 947272,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-bowie-silver-blue.png",
+        "sha256": "cf7eed1176b4cad76ed2ead2315669afb92339b4a5f3e6815b146cf224b9dc78",
+        "bytes": 1459952,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-dove-marble.png",
+        "sha256": "8d96e26864eb30cc5cb1517294d6090718e7991a3b2c7b007d2439986f1abd0f",
+        "bytes": 942241,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-dove-pearl.png",
+        "sha256": "2ddba43fcc520192ce2a3b4e6ada9ee533d3c4fdaeff2786092e2734a6edfe53",
+        "bytes": 662165,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-gonzo-dark.png",
+        "sha256": "fa81a4c0a73e5b36f7dbe3fcd47e2417f5fc30572ff1e0cb98b656ea54eb1ce4",
+        "bytes": 1302183,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-gonzo-light.png",
+        "sha256": "e1b65479dbfc8e821dbf909664e25b49a0d93081269411cb23751cae78ce3999",
+        "bytes": 1588898,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-music-dark-red.png",
+        "sha256": "8c7fecc96800c585b6f9cf5c35a807d4056535ddc6e069832ba06993dd1a20df",
+        "bytes": 1082762,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-music-light-lacquer.png",
+        "sha256": "18a7b50c81ca4d0f5b036d3a6c24cab1d0bce5040dfdfb9b10f2e0009d890b16",
+        "bytes": 851101,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-nightingale-glass.png",
+        "sha256": "35f33cd3ee7b6de11e8cf73e455ffc916afb5c5c2011d9080c8e228188338e8a",
+        "bytes": 1591874,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-nightingale-glow.png",
+        "sha256": "1ec7f16ccb29df843dd607957468acaef22f1db44c5338426f5cf4fd249d69c5",
+        "bytes": 1409438,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-pink-burgundy.png",
+        "sha256": "b43535ed608ec642752789d80eac5120aa995607914ef2682e707ea45fe72b62",
+        "bytes": 1059098,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-pink-lacquer.png",
+        "sha256": "e69af361caeefe0914c6a23446c2ff27b1e02ba263948ea8d9816c7c73f00612",
+        "bytes": 1238824,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-pink-terrazzo.png",
+        "sha256": "7c7d2a3e996fe74b10272853bc323417b98266a44442e8d8124648f06361c494",
+        "bytes": 1512328,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-purple-neon.png",
+        "sha256": "dcf4004e3bf7cbb32bc44d4d18a8f4774ac68c85d56fc0c323f08d39fe129265",
+        "bytes": 1182308,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-purple-rim.png",
+        "sha256": "4aef9aea2fdc4f61196034679c0d218621ce3cba046db80c206a70433e19ac99",
+        "bytes": 1251591,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-silverwing-frame.png",
+        "sha256": "8ae0ad1904f22a0b1da61b44e4244c394731de984124aed415fe4cff4387182f",
+        "bytes": 906684,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon-silverwing-graphite.png",
+        "sha256": "d5670d7333440c00dddb4d73bbd71908cca16730a468fac50355e092c2cbac9b",
+        "bytes": 1016011,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/dock-icon.png",
+        "sha256": "6093346ddea302aba6614ae8bd2cc1a31baf9755d7428056071a82b659ece03d",
+        "bytes": 1232993,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/logo.png",
+        "sha256": "c4e5ed46b28578790a732af899725526592be9224e837e259fe1d5cda017c2d8",
+        "bytes": 1017985,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/missing-album-artwork.png",
+        "sha256": "1c20795d863bf05537e46112147a1cff65f0c8389296b9599a8b9ed9e59a64c6",
+        "bytes": 819952,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/songbird-logo.png",
+        "sha256": "c4e5ed46b28578790a732af899725526592be9224e837e259fe1d5cda017c2d8",
+        "bytes": 1017985,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Resources/transparent.png",
+        "sha256": "79cc0bed7e03d01c4a3ddd7a5c470f39881d8d8cb69e86c1f1e746bb4338e6a9",
+        "bytes": 2115570,
+        "mode": 420
+      },
+      {
+        "path": "Sources/Utils/SongbirdDockIconChoice.swift",
+        "sha256": "7709d7e9df66b5490458f415dcfea44801b32e0336dfce19a702da92dcd83e0c",
+        "bytes": 4295,
+        "mode": 420
+      },
+      {
+        "path": "Tests/SongbirdTests/ArtworkProvenanceTests.swift",
+        "sha256": "f10f074566d0d7214d27042ac130c1c491de657d3249708ede5c4ba17744b8f4",
+        "bytes": 3722,
+        "mode": 420
+      },
+      {
+        "path": "Tests/SongbirdTests/ThemeTests.swift",
+        "sha256": "f3fd05c8d8ec0a6d9bf7e1a3ef4dffda55cad0803b843f7a65b643764c5e344b",
+        "bytes": 26830,
+        "mode": 420
+      },
+      {
+        "path": "scripts/check-release-gates.py",
+        "sha256": "2dbd7b425eb4f0ff84c31bca066bf3c4284e45880fb3b36345ccc5e5eb8e080a",
+        "bytes": 4273,
+        "mode": 420
+      },
+      {
+        "path": "scripts/generate-original-artwork.swift",
+        "sha256": "fcbceb8da87bfe0a77e5dfea37b421d93df631ea503b50c3acace68381e6e828",
+        "bytes": 6089,
+        "mode": 420
+      },
+      {
+        "path": "scripts/tests/test_release_gates.py",
+        "sha256": "80204ff0ec1e3773f2a2c86a63bd7336ffb1fd5f5007f4fd43809300358c712e",
+        "bytes": 12372,
+        "mode": 420
+      }
+    ],
+    "logs": {
+      "python.log": "2cc63e4a2d30df09affba9fd42730aa3202313b5074762f1ffd7b4667c2a662f",
+      "swift-focused.log": "265db46a959bacaccb6f14e517bf2ea7afb25e5c61d5aeea687d407d9584d29f",
+      "swift-theme-final.log": "1e1128468b7d82296b712055635ba37479a3554480cbc15692f3ae0987fe097e",
+      "swift-quick-final.log": "ae8a58764b817eec124758dd5b97df2cd7af3272abdb688bb31c0447b088af48",
+      "optimized-build-final.log": "2323ea703a1a906e108df27f4fdebd93355b64cb444008de12613163b54bfd9c",
+      "ui-prepare.log": "8237a502bffd2fee6c513f0b5d9584084405f5978ea9464d51483dde1321a592"
+    },
+    "ui_report_sha256": "c0f1c1ecfa7d137407d7bfc6bec0278b48d7ce93ccc7e051bc6a6f408d77d8e8",
+    "unchanged_coverage": "Original 25 audio TSan cases and full aubio/FLAC/ogg offline source rebuild remain prior evidence, not reruns; all dependency files and audio/data runtime code are unchanged.",
+    "post_seal": "Final archive, signing, offline app/GRDB rebuild and exact evidence hashes are recorded externally in the matching RELEASE-RECEIPT.json."
+  }
+}

@@ -1,0 +1,39 @@
+name: Swift package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swift-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Test and release build
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Record toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Validate agent harness
+        run: ./scripts/validate-agent-harness.sh
+
+      - name: Run package tests
+        run: swift test
+
+      - name: Build release products
+        run: swift build -c release

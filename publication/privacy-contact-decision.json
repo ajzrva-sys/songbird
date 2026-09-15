@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "gate": "privacy-contact-review",
+  "decision": "nonblocking",
+  "review_status": "not-performed",
+  "date": "2026-09-15",
+  "owner_instruction": "The owner said the proposed privacy/contact review is unnecessary.",
+  "scope": "Waive the separate privacy/contact review as a prerequisite for release. Preserve the current public contact information and runtime privacy behavior.",
+  "rationale": "Record the owner's release choice without claiming that the omitted review was performed or passed.",
+  "outside_scope": [
+    "Changing runtime privacy behavior or contact details",
+    "Importing credentials, private reports, real libraries or media into the publication candidate",
+    "Source correspondence, notice delivery and transient system-display acceptance",
+    "Vendor binary adoption, initial commit and public release"
+  ]
+}

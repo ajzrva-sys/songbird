@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "gate": "brand-clearance",
+  "decision": "nonblocking",
+  "trademark_clearance": "unconfirmed",
+  "date": "2026-09-15",
+  "owner_instruction": "The owner approved the Songbird name and subsequently explicitly approved retaining the bird artwork after the historical license/trademark research.",
+  "scope": "Retain Songbird and its existing bird artwork for this hobby build. Additional branding review is not a release prerequisite under this owner decision. See publication/artwork-decision.json for the exact restored assets.",
+  "rationale": "Record the owner's naming approval without representing it as an independently verified trademark clearance.",
+  "outside_scope": [
+    "Reference applications, old Git history and retired screenshots",
+    "Initial commit, public upload, Developer ID signing and notarization"
+  ]
+}

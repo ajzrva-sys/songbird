@@ -1,0 +1,4 @@
+module AudioAtomics {
+    header "SBAudioAtomics.h"
+    export *
+}

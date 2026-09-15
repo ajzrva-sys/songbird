@@ -1,0 +1,53 @@
+#!/usr/bin/python3
+"""Atomically create or advance a disposable Songbird usability run manifest."""
+
+import json
+import os
+from pathlib import Path
+
+
+def optional_int(name: str):
+    value = os.environ.get(name, "")
+    return int(value) if value else None
+
+
+path = Path(os.environ["RUN_MANIFEST_PATH"])
+data = {}
+if path.exists():
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = {}
+
+screen = int(os.environ["RUN_SCREEN_VALUE"])
+data.update(
+    {
+        "schema_version": 2,
+        "run_id": os.environ["RUN_ID_VALUE"],
+        "mode": os.environ["RUN_MODE_VALUE"],
+        "fixture": os.environ["RUN_FIXTURE_VALUE"],
+        "first_run": os.environ["RUN_FIRST_RUN_VALUE"] == "1",
+        "requested_large_track_count": int(os.environ["RUN_TRACK_COUNT_VALUE"]),
+        "phase": os.environ["RUN_PHASE_VALUE"],
+        "error": os.environ["RUN_ERROR_VALUE"] or None,
+        "package_parity": os.environ["RUN_PARITY_VALUE"] == "1",
+        "visual_evidence": None if screen < 0 else screen == 1,
+        "bundle_identifier": os.environ["RUN_BUNDLE_ID_VALUE"],
+        "app_pid": optional_int("RUN_APP_PID_VALUE"),
+        "broker_pid": optional_int("RUN_BROKER_PID_VALUE"),
+        "session": os.environ["RUN_SESSION_VALUE"],
+        "client": "./scripts/usability/ui",
+        "artifacts": os.environ["RUN_ARTIFACTS_VALUE"],
+        "source": {
+            "head": os.environ["RUN_SOURCE_HEAD_VALUE"],
+            "status_sha256": os.environ["RUN_SOURCE_STATUS_SHA_VALUE"],
+            "tracked_diff_sha256": os.environ["RUN_SOURCE_DIFF_SHA_VALUE"],
+        },
+        "package_executable_sha256": os.environ["RUN_APP_SHA_VALUE"] or None,
+        "fixture_manifest_sha256": os.environ["RUN_FIXTURE_SHA_VALUE"] or None,
+    }
+)
+path.parent.mkdir(parents=True, exist_ok=True)
+temporary = path.with_suffix(".json.tmp")
+temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+temporary.replace(path)

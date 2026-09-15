@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "status": "pending-recapture",
+  "captured_on": null,
+  "fixture": "standard synthetic fixture; future capture only",
+  "capture": null,
+  "reason": "README gallery not recaptured; current bounded UI evidence is supplied with the companion release receipt.",
+  "images": []
+}
