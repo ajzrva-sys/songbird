@@ -1,5 +1,12 @@
 # Candidate next steps
 
+## Last.fm sign-in
+
+Browser sign-in and build-time application configuration are implemented and
+installed; see the [implementation record](docs/exec-plans/active/lastfm-sign-in.md).
+The owner created the replacement registration. Real account approval/scrobbling
+is left to the normal user sign-in flow.
+
 ## Ready-to-share implementation
 
 The owner authorized the complete [hobby build plan](docs/exec-plans/active/ready-to-share.md)

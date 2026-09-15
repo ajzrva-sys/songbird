@@ -5,24 +5,55 @@ import Foundation
 public enum LastFMAuthenticationState: Equatable, Sendable {
     case idle
     case authenticating
+    case awaitingAuthorization
     case authenticated
     case failed(String)
 }
 
 public enum LastFMClientError: Error, LocalizedError {
     case incompleteCredentials
+    case applicationNotConfigured
     case invalidResponse
     case service(String)
+    case api(Int, String)
 
     public var errorDescription: String? {
         switch self {
         case .incompleteCredentials:
             return "Enter a username, password, API key, and shared secret."
+        case .applicationNotConfigured:
+            return "This build of Songbird isn’t configured for Last.fm sign-in yet."
         case .invalidResponse:
             return "Last.fm returned an invalid response."
         case .service(let message):
             return message
+        case .api(_, let message):
+            return message
         }
+    }
+}
+
+public struct LastFMApplicationCredentials: Equatable, Sendable {
+    let apiKey: String
+    let apiSecret: String
+
+    public init(apiKey: String, apiSecret: String) {
+        self.apiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.apiSecret = apiSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var isComplete: Bool { !apiKey.isEmpty && !apiSecret.isEmpty }
+
+    public static func bundled() -> Self? {
+        from(info: Bundle.main.infoDictionary ?? [:])
+    }
+
+    static func from(info: [String: Any]) -> Self? {
+        let credentials = Self(
+            apiKey: info["SongbirdLastFMAPIKey"] as? String ?? "",
+            apiSecret: info["SongbirdLastFMAPISecret"] as? String ?? ""
+        )
+        return credentials.isComplete ? credentials : nil
     }
 }
 
@@ -32,7 +63,7 @@ struct LastFMPostCredentials: Equatable, Sendable {
     let sessionKey: String
 }
 
-/// Minimal Last.fm scrobbling client (mobile session + track.scrobble / updateNowPlaying).
+/// Last.fm browser authentication and best-effort scrobbling.
 @MainActor
 public final class LastFMClient: ObservableObject {
     public static let shared = LastFMClient()
@@ -47,17 +78,166 @@ public final class LastFMClient: ObservableObject {
     @Published public private(set) var authenticationState: LastFMAuthenticationState = .idle
 
     private let credentialStore: any SongbirdCredentialStoring
+    private let session: URLSession
+    private let defaults: UserDefaults
+    private let applicationCredentials: LastFMApplicationCredentials?
+    private var pendingAuthorization: (token: String, credentials: LastFMApplicationCredentials)?
 
-    public init(credentialStore: any SongbirdCredentialStoring = SongbirdCredentialStore.shared) {
+    public init(
+        credentialStore: any SongbirdCredentialStoring = SongbirdCredentialStore.shared,
+        session: URLSession = URLSession(configuration: .ephemeral),
+        defaults: UserDefaults = .standard,
+        applicationCredentials: LastFMApplicationCredentials? = .bundled()
+    ) {
         self.credentialStore = credentialStore
+        self.session = session
+        self.defaults = defaults
+        self.applicationCredentials = applicationCredentials
     }
 
     public var isEnabled: Bool {
-        UserDefaults.standard.bool(forKey: Self.enabledKey)
+        defaults.bool(forKey: Self.enabledKey)
     }
 
     public func storedCredential(_ credential: SongbirdCredential) async throws -> String {
         try await credentialStore.value(for: credential) ?? ""
+    }
+
+    public func hasStoredSession() async throws -> Bool {
+        let key = try await credentialStore.value(for: .lastFMAPIKey) ?? ""
+        let secret = try await credentialStore.value(for: .lastFMAPISecret) ?? ""
+        let session = try await credentialStore.value(for: .lastFMSessionKey) ?? ""
+        return !key.isEmpty && !secret.isEmpty && !session.isEmpty
+    }
+
+    public func beginBrowserAuthentication() async -> URL? {
+        guard authenticationState != .authenticating else { return nil }
+        pendingAuthorization = nil
+        authenticationState = .authenticating
+        do {
+            let stored = LastFMApplicationCredentials(
+                apiKey: try await storedCredential(.lastFMAPIKey),
+                apiSecret: try await storedCredential(.lastFMAPISecret)
+            )
+            guard let credentials = stored.isComplete ? stored : applicationCredentials,
+                  credentials.isComplete else {
+                throw LastFMClientError.applicationNotConfigured
+            }
+            let response = try await request("auth.getToken", credentials: credentials)
+            try Task.checkCancellation()
+            guard let token = response["token"] as? String, !token.isEmpty else {
+                throw LastFMClientError.invalidResponse
+            }
+            var url = URLComponents(string: "https://www.last.fm/api/auth/")!
+            url.queryItems = [
+                URLQueryItem(name: "api_key", value: credentials.apiKey),
+                URLQueryItem(name: "token", value: token),
+            ]
+            pendingAuthorization = (token, credentials)
+            authenticationState = .awaitingAuthorization
+            return url.url
+        } catch is CancellationError {
+            authenticationState = .idle
+        } catch {
+            authenticationState = Task.isCancelled ? .idle : .failed(error.localizedDescription)
+        }
+        return nil
+    }
+
+    public func completeBrowserAuthentication() async {
+        guard authenticationState == .awaitingAuthorization,
+              let pending = pendingAuthorization else { return }
+        authenticationState = .authenticating
+        do {
+            let response = try await request(
+                "auth.getSession", parameters: ["token": pending.token],
+                credentials: pending.credentials
+            )
+            try Task.checkCancellation()
+            guard let session = response["session"] as? [String: Any],
+                  let key = session["key"] as? String, !key.isEmpty,
+                  let username = session["name"] as? String, !username.isEmpty else {
+                throw LastFMClientError.invalidResponse
+            }
+            try await saveSession(key, username: username, credentials: pending.credentials)
+            pendingAuthorization = nil
+            authenticationState = .authenticated
+        } catch LastFMClientError.api(14, _) {
+            // Returning from the browser before granting access is retryable.
+            authenticationState = .awaitingAuthorization
+        } catch is CancellationError {
+            pendingAuthorization = nil
+            authenticationState = .idle
+        } catch {
+            pendingAuthorization = nil
+            authenticationState = Task.isCancelled ? .idle : .failed(error.localizedDescription)
+        }
+    }
+
+    public func cancelBrowserAuthentication() {
+        pendingAuthorization = nil
+        authenticationState = .idle
+    }
+
+    public func browserCouldNotOpen() {
+        pendingAuthorization = nil
+        authenticationState = .failed("Could not open Last.fm in your browser. Try signing in again.")
+    }
+
+    public func signOut() async throws {
+        try await credentialStore.removeValue(for: .lastFMSessionKey)
+        defaults.set(false, forKey: Self.enabledKey)
+        cancelBrowserAuthentication()
+    }
+
+    private func request(
+        _ method: String, parameters: [String: String] = [:],
+        credentials: LastFMApplicationCredentials
+    ) async throws -> [String: Any] {
+        var params = parameters
+        params["method"] = method
+        params["api_key"] = credentials.apiKey
+        params["api_sig"] = sign(params, secret: credentials.apiSecret)
+        params["format"] = "json"
+        let data = try await send(params)
+        guard let response = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw LastFMClientError.invalidResponse
+        }
+        return response
+    }
+
+    private func saveSession(
+        _ sessionKey: String, username: String, credentials: LastFMApplicationCredentials
+    ) async throws {
+        let entries: [(SongbirdCredential, String)] = [
+            (.lastFMAPIKey, credentials.apiKey),
+            (.lastFMAPISecret, credentials.apiSecret),
+            (.lastFMSessionKey, sessionKey),
+        ]
+        var previous: [(SongbirdCredential, String?)] = []
+        for (credential, _) in entries {
+            previous.append((credential, try await credentialStore.value(for: credential)))
+        }
+        var written = 0
+        do {
+            for (credential, value) in entries {
+                try Task.checkCancellation()
+                try await credentialStore.setValue(value, for: credential)
+                written += 1
+            }
+            try Task.checkCancellation()
+        } catch {
+            for (credential, value) in previous.prefix(written).reversed() {
+                if let value {
+                    try? await credentialStore.setValue(value, for: credential)
+                } else {
+                    try? await credentialStore.removeValue(for: credential)
+                }
+            }
+            throw error
+        }
+        defaults.set(username, forKey: Self.usernameKey)
+        defaults.removeObject(forKey: Self.passwordKey)
     }
 
     public func authenticate(
@@ -104,8 +284,8 @@ public final class LastFMClient: ObservableObject {
             try await credentialStore.setValue(key, for: .lastFMAPIKey)
             try await credentialStore.setValue(secret, for: .lastFMAPISecret)
             try await credentialStore.setValue(sessionKey, for: .lastFMSessionKey)
-            UserDefaults.standard.set(user, forKey: Self.usernameKey)
-            UserDefaults.standard.removeObject(forKey: Self.passwordKey)
+            defaults.set(user, forKey: Self.usernameKey)
+            defaults.removeObject(forKey: Self.passwordKey)
             authenticationState = .authenticated
         } catch is CancellationError {
             authenticationState = .idle
@@ -201,8 +381,13 @@ public final class LastFMClient: ObservableObject {
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.httpBody = formEncode(params).data(using: .utf8)
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let code = json["error"] as? Int {
+            throw LastFMClientError.api(code, json["message"] as? String ?? "Last.fm request failed.")
+        }
         if !(200...299).contains(response.statusCode) {
             throw LastFMClientError.service("Last.fm request failed (HTTP \(response.statusCode)).")
         }

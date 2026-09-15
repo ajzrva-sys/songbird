@@ -260,6 +260,7 @@ PLUGIN_PLIST_PATH="$PLUGIN/Contents/Info.plist"
 plutil -replace CFBundleIdentifier -string "$BUNDLE_IDENTIFIER" "$PLIST_PATH"
 plutil -replace CFBundleDisplayName -string "$DISPLAY_NAME" "$PLIST_PATH"
 plutil -replace CFBundleIdentifier -string "$BUNDLE_IDENTIFIER.docktileplugin" "$PLUGIN_PLIST_PATH"
+python3 "$ROOT/scripts/lastfm_build_config.py" "$PLIST_PATH"
 if [[ -n "$UI_TEST_ROOT" ]]; then
   plutil -insert SongbirdUITesting -bool true "$PLIST_PATH"
   plutil -insert SongbirdUITestRoot -string "$UI_TEST_ROOT" "$PLIST_PATH"

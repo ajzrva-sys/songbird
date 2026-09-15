@@ -1,5 +1,35 @@
 # Candidate Testing and Validation
 
+## Last.fm browser sign-in — 2026-09-15
+
+Settings now offers browser sign-in without username, password, API-key, or secret
+fields. Returning to Songbird completes an approved token; Finish Sign In provides
+an explicit retry. Unapproved tokens stay retryable, cancellation discards pending
+state, and existing sessions remain compatible. Packaging accepts the maintainer's
+application identity from environment variables or a private local plist.
+
+- Focused authentication tests: 11 XCTest cases passed, including independent
+  signature vectors, approval, pending/expired tokens, malformed replies, cancelled
+  requests, failed credential writes, retained sessions, and sign-out. An earlier
+  focused run also passed 12 credential migration/interaction Swift Testing cases.
+- `./check.sh quick -j 4` in an isolated home/profile passed 296 XCTest cases
+  (two expected optional-store skips) and 334 Swift Testing cases. Two additional
+  cancellation/browser-launch tests were added afterward and passed in the final
+  11-case focused run; production Swift code did not change after the full run.
+- All 109 Python checks passed (two expected opt-in rebuild skips), including four
+  new packaging tests for repeated local configuration and missing/partial inputs.
+- Optimized compilation and configured ad-hoc packaging passed. Installed bundle
+  signatures, all 44 file entries, resources, and packaged application configuration
+  were verified. The previous installed app is preserved externally.
+- Last.fm accepted a live signed `auth.getToken` request using the owner-created
+  replacement registration. No user-account authorization or scrobble was submitted
+  by this check. Real browser approval and the updated Settings UI remain manual
+  acceptance; no automated visual-pass claim is made.
+- Evidence is retained locally under
+  `/Users/aji/project/songbird-public-verification/lastfm-sign-in-20260915/`.
+  Credential values are excluded from source and evidence logs. No audio, library,
+  hardware, or schema changes were made; audio TSan/hardware tests were not repeated.
+
 ## Track column context menu — 2026-09-15
 
 The table-header context menu now lists the supported column checkboxes directly.

@@ -53,6 +53,21 @@ All screenshots use a fictional demo library.
 - **Xcode with its command-line tools selected.** Tested with Xcode 26.6 and Apple Swift 6.3.3.
 - Bundled dependency sources support offline builds; set `SONGBIRD_OFFLINE_DEPS=1`. Discogs, Last.fm, and online CD metadata are optional network features.
 
+### Last.fm in distributed builds
+
+Last.fm uses a **Sign in with Last.fm** button and browser approval. The maintainer
+configures the application's Last.fm API identity once when packaging; listeners
+do not need their own API accounts. Existing saved sessions remain supported.
+
+For a configured build, provide `SONGBIRD_LASTFM_API_KEY` and
+`SONGBIRD_LASTFM_API_SECRET` in the environment when running `./build.sh`.
+Alternatively, keep `SongbirdLastFMAPIKey` and `SongbirdLastFMAPISecret` in a private
+plist at `~/.config/songbird/lastfm-build.plist` (or set `SONGBIRD_LASTFM_CONFIG`
+to its path). The packager includes them in the signed app. Keep credential values out of Git,
+terminal history, and build logs. As with other desktop clients, application
+credentials shipped inside the app are extractable. Builds without an application
+identity can reuse previously saved credentials but cannot start a fresh sign-in.
+
 ## Build and run
 
 From the repository root:

@@ -22,13 +22,6 @@ public struct SettingsView: View {
     @AppStorage(PlaybackSettings.rememberPositionKey) private var rememberPosition = false
     @AppStorage(PlaybackSettings.crossfadeSecondsKey) private var crossfadeSeconds = 0.0
     @AppStorage(LibrarySettings.writeTagsToFilesKey) private var writeTagsToFiles = false
-    @AppStorage(LastFMClient.enabledKey) private var lastFMEnabled = false
-    @AppStorage(LastFMClient.usernameKey) private var lastFMUsername = ""
-    @State private var lastFMAPIKey = ""
-    @State private var lastFMAPISecret = ""
-    @State private var lastFMSessionActive = false
-    @State private var lastFMPassword = ""
-    @ObservedObject private var lastFMClient = LastFMClient.shared
     @State private var duplicateTasks = ViewTaskSlot()
     @State private var duplicateProgress = 0
     @State private var duplicateTotal = 0
@@ -36,7 +29,6 @@ public struct SettingsView: View {
     @State private var maintenanceTasks = ViewTaskSlot()
     @State private var maintenanceProgress: LibraryMaintenanceProgress?
     @State private var maintenancePhase = LibraryOperationPhase.idle
-    @State private var credentialTasks = ViewTaskSlot()
     @State private var exampleAlbumIDs: [String] = []
     @State private var showingResetConfirmation = false
     @State private var resetTask: Task<Void, Never>?
@@ -125,7 +117,6 @@ public struct SettingsView: View {
         .onAppear {
             maintenanceTasks.activate()
             duplicateTasks.activate()
-            credentialTasks.activate()
             libraryFolderConfigurations = LibraryFolderConfigurationStore.load()
             refreshExampleAlbums()
         }
@@ -134,7 +125,6 @@ public struct SettingsView: View {
         }
         .onDisappear {
             invalidateLibraryTasks()
-            credentialTasks.invalidate()
         }
         .confirmationDialog(
             "Reset Library?",
@@ -519,93 +509,7 @@ public struct SettingsView: View {
     }
 
     private var lastFMTab: some View {
-        Form {
-            Toggle("Enable Last.fm", isOn: $lastFMEnabled)
-            TextField("Username", text: $lastFMUsername)
-                .textFieldStyle(.roundedBorder)
-            SecureField("API Key", text: $lastFMAPIKey)
-                .textFieldStyle(.roundedBorder)
-            SecureField("API Secret", text: $lastFMAPISecret)
-                .textFieldStyle(.roundedBorder)
-            SecureField("Password", text: $lastFMPassword)
-                .textFieldStyle(.roundedBorder)
-            if lastFMSessionActive == false {
-                Button("Authenticate…") {
-                    credentialTasks.start {
-                        await lastFMClient.authenticate(
-                            username: lastFMUsername,
-                            password: lastFMPassword,
-                            apiKey: lastFMAPIKey,
-                            apiSecret: lastFMAPISecret
-                        )
-                        guard !Task.isCancelled else { return }
-                        if lastFMClient.authenticationState == .authenticated {
-                            lastFMPassword = ""
-                            lastFMSessionActive = true
-                        }
-                    }
-                }
-                .disabled(
-                    lastFMAPIKey.isEmpty
-                        || lastFMAPISecret.isEmpty
-                        || lastFMUsername.isEmpty
-                        || lastFMPassword.isEmpty
-                        || lastFMClient.authenticationState == .authenticating
-                )
-            } else {
-                Text("Session active")
-                    .foregroundStyle(.secondary)
-                Button("Sign Out") {
-                    credentialTasks.start {
-                        do {
-                            try await SongbirdCredentialStore.shared.removeValue(for: .lastFMSessionKey)
-                            try Task.checkCancellation()
-                            lastFMSessionActive = false
-                            lastFMEnabled = false
-                        } catch is CancellationError {
-                            return
-                        } catch {
-                            LibraryStatus.shared.showPlaybackError(
-                                "Could not sign out of Last.fm: \(error.localizedDescription)"
-                            )
-                        }
-                    }
-                }
-            }
-            switch lastFMClient.authenticationState {
-            case .authenticating:
-                HStack {
-                    ProgressView().controlSize(.small)
-                    Text("Authenticating…")
-                }
-            case .failed(let message):
-                Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
-            case .authenticated:
-                Label("Authentication succeeded.", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-            case .idle:
-                EmptyView()
-            }
-            Text("Get an API key at last.fm/api. Scrobbles when a track passes the halfway point.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .formStyle(.grouped)
-        .padding()
-        .task {
-            do {
-                lastFMAPIKey = try await lastFMClient.storedCredential(.lastFMAPIKey)
-                lastFMAPISecret = try await lastFMClient.storedCredential(.lastFMAPISecret)
-                lastFMSessionActive = try await lastFMClient.storedCredential(.lastFMSessionKey).isEmpty == false
-            } catch {
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not load Last.fm credentials: \(error.localizedDescription)"
-                )
-            }
-        }
-        .onAppear { credentialTasks.activate() }
-        .onDisappear { credentialTasks.invalidate() }
+        LastFMSettingsView()
     }
 
     private var discogsTab: some View {

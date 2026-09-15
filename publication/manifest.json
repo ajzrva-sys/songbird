@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1779,
+  "payload_file_count_including_manifest": 1784,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "4017ef590db86dff60c0a94f4d7af8f3c37d34fb3d2b4960f04b9f52eba56d70",
-      "bytes": 2350,
+      "sha256": "85e283684a8993b4661f5bbfacdd49f2799d90fa19a5009936a41587273e06e9",
+      "bytes": 2656,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -151,8 +151,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "dc084b1d041af657b53174ad08e879fbfe15a10dc6dd22f0454c4e24785b3c83",
-      "bytes": 5086,
+      "sha256": "e96dc586f644d3b9aed311240739e717ea6d68f4ed50b9f9981729ad5a978b25",
+      "bytes": 6007,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b40e7c0934fd74bf6a009f36de5409ff85f448da1b590fadfb9085299bfb570a"
@@ -736,10 +736,10 @@
     },
     {
       "path": "Sources/Integrations/LastFMClient.swift",
-      "sha256": "b8afb5dd441d0f19e20ed6d5ab66160287ea6fece94e072d57f7fc79e72a4613",
-      "bytes": 8397,
+      "sha256": "1ac6a1b4eca2f798e14293cd62f5819d2d8b49c7d4fa209de06ea997bfc66b76",
+      "bytes": 16176,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "b8afb5dd441d0f19e20ed6d5ab66160287ea6fece94e072d57f7fc79e72a4613"
     },
     {
@@ -1977,6 +1977,13 @@
       "source_sha256": "2d7087651501985d6d9bac48e8c4a805abd4d4c2425c4ee9a6a54a2d0f3fdd28"
     },
     {
+      "origin": "lastfm-browser-sign-in",
+      "path": "Sources/Views/LastFMSettingsView.swift",
+      "sha256": "4fff9912100dc17ce9964565e043c6b8548f57070b9ec2af69fae23ef15669b0",
+      "bytes": 3878,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/LibraryContentView.swift",
       "sha256": "77eaa218664f9d9d93a0bc89d634180153c3e7ea3205d6c7fab954908085b655",
       "bytes": 7662,
@@ -2250,8 +2257,8 @@
     },
     {
       "path": "Sources/Views/SettingsView.swift",
-      "sha256": "6894a14ba4b902ab19c7ab5496489ed253853c61576b097440211fa738bace94",
-      "bytes": 48215,
+      "sha256": "bcb8e190029bc6e7c02576050584a0a3eeebad1701a1fb800a4e84dd9e275adf",
+      "bytes": 43775,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "a81bd56dbcba48b94a3bf4e2f212fac70e836b43073a3ba556c77f1dd501877a"
@@ -2330,8 +2337,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "a84de41a4549b5f716c6a91c1619ac2dead753936e3c9e179f74b9489a7ac77d",
-      "bytes": 21502,
+      "sha256": "745a5a3949658c2661cbe0bcbbccf6dfa495f38b9e81d8cb6f0ad663feed5686",
+      "bytes": 23586,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -2878,6 +2885,13 @@
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "aaee30fa1fe3f46ac9ead92340c08ed3bb5f39964544600bf57873cf34ae63f4"
+    },
+    {
+      "origin": "lastfm-browser-sign-in",
+      "path": "Tests/SongbirdTests/LastFMAuthenticationTests.swift",
+      "sha256": "f193849c65ee9a21df1d409f2f0e0b7a09e5e77faba9f7f0f4c006c0bdf08d68",
+      "bytes": 12326,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/LegalResourcesTests.swift",
@@ -12557,6 +12571,13 @@
       "origin": "baseline-documentation"
     },
     {
+      "origin": "lastfm-browser-sign-in",
+      "path": "docs/exec-plans/active/lastfm-sign-in.md",
+      "sha256": "6e0c733f9bab00e254e04096ba99b59eb49102ebfc3b9fd01576d5a39e47a5ae",
+      "bytes": 5075,
+      "mode": 420
+    },
+    {
       "path": "docs/exec-plans/active/ready-to-share.md",
       "sha256": "034b54cb6481a0dffbb0cdeedab47f67ea550d3d0fc54c15f9bc8c866c571c8b",
       "bytes": 6455,
@@ -12815,6 +12836,13 @@
       "origin": "project-owned source/test changes for adopted A1\u2013A5 behavior"
     },
     {
+      "origin": "lastfm-browser-sign-in",
+      "path": "scripts/lastfm_build_config.py",
+      "sha256": "60dfc085b44e16c7ba185f20b771aa238c745ef2d8e60ea889a7a672b38cdcc7",
+      "bytes": 1936,
+      "mode": 420
+    },
+    {
       "path": "scripts/legal_resources.py",
       "sha256": "590b8d4f43696e3000dbf0d8d916efa91564daa863a9bc89b9c020ef04b47c06",
       "bytes": 1983,
@@ -12823,8 +12851,8 @@
     },
     {
       "path": "scripts/package-songbird.sh",
-      "sha256": "6267adefcf4f3e0622ef84135238fac70315fa17b4d3f4e6d9785318862bbb24",
-      "bytes": 9842,
+      "sha256": "8cb3f1ea80475e034e3ea39e857762078e7ac06ca2725ea56494e43fedc0012d",
+      "bytes": 9903,
       "mode": 493,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "f032f3d4df5a0278292b6f1ee6b6afd9c55c3c372e5155aad8f4aedd15c0d721"
@@ -12889,6 +12917,13 @@
       "bytes": 8551,
       "mode": 420,
       "origin": "Locally authored S6 regression tests, import documentation, or generated exact provenance/patch evidence"
+    },
+    {
+      "origin": "lastfm-browser-sign-in",
+      "path": "scripts/tests/test_lastfm_build_config.py",
+      "sha256": "f4b04565a771c513c1b9b50118cd664a3e121e212ac625589244838927332c38",
+      "bytes": 2950,
+      "mode": 420
     },
     {
       "path": "scripts/tests/test_legal_inputs.py",
