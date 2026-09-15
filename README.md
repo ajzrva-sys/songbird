@@ -68,7 +68,7 @@ Useful starting points:
 
 ## Licensing and acknowledgments
 
-Copyright © 2026 Andrew Zimmerman. Songbird's original application code is licensed under [GPL-3.0-or-later](LICENSE).
+Songbird's original application code is licensed under [GPL-3.0-or-later](LICENSE).
 
 Songbird uses **aubio**, **libFLAC**, **libogg**, and **GRDB.swift**. The original Songbird bird design is credited to **Pioneers of the Inevitable**.
 
