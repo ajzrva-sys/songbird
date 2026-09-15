@@ -151,8 +151,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "e4dc37121ca7867f01d23df9975bc07036a63b9ed17d06e8ad4e3458afe8c44b",
-      "bytes": 7241,
+      "sha256": "29c5d311dfb59e7b5277d689db731662abbe2996e7c026df80bea323ff693c8f",
+      "bytes": 4453,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b40e7c0934fd74bf6a009f36de5409ff85f448da1b590fadfb9085299bfb570a"
