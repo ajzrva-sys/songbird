@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1791,
+  "payload_file_count_including_manifest": 1793,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "9878636a9a7008db7c864241018a94e93196450323d1dabe249ca258618831b3",
-      "bytes": 3731,
+      "sha256": "de44ab30b2f7fe1e00ba7c39d6af8e21c048484df80f22485e0d8c65d49f78c5",
+      "bytes": 4250,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -190,8 +190,8 @@
     },
     {
       "path": "Sources/App/SongbirdApp.swift",
-      "sha256": "9a22d9a3e6d92cfa645a064ce3c36971d82795dc13d03d4fdc6472494e7f2e0f",
-      "bytes": 30418,
+      "sha256": "deef598e5b79ab5d782ea7dcc0f7ccbcc191a85c29ac2bc040a86f2cc72e1157",
+      "bytes": 30777,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "915f3adc1804d686bb3b5502030e9262b845abe73b837acd945e9b9452a5313f"
@@ -919,10 +919,10 @@
     },
     {
       "path": "Sources/Library/LibraryFolderWatcher.swift",
-      "sha256": "fee63e0ad30dc642b43d6a4821586b1f8d2651ad814dedfc86267840e652ebd9",
-      "bytes": 21117,
+      "sha256": "ae53171a0f14a90fc7f832e7eb93d2c0bf0d6d2af5cf89fb067a65cf3f15a26c",
+      "bytes": 22420,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "fee63e0ad30dc642b43d6a4821586b1f8d2651ad814dedfc86267840e652ebd9"
     },
     {
@@ -1007,8 +1007,8 @@
     },
     {
       "path": "Sources/Library/LibrarySnapshotStore.swift",
-      "sha256": "9524b10f21c0e9100e51863e0b7af61888cef25bab552ad26f4c88e54e10a36a",
-      "bytes": 31920,
+      "sha256": "e2d9b9041d4255c5127fe2927c404c7bed3a61938b209ce029c9e2195eb4d851",
+      "bytes": 32281,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "c6839ef4d274a40e8440282d1a1fa431c823050fcdf3bbbabcb14802331bb976"
@@ -1135,10 +1135,10 @@
     },
     {
       "path": "Sources/Library/TrackTableProjection.swift",
-      "sha256": "1296dc0f6238d7a76ca4883a47539db5b4c192428ca02f7ab0b8e26810f16b7c",
-      "bytes": 22962,
+      "sha256": "331b46faadd1826aa94f69f69a0b94c926af8df702fec062639d6a45c9d8bffd",
+      "bytes": 23790,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "1296dc0f6238d7a76ca4883a47539db5b4c192428ca02f7ab0b8e26810f16b7c"
     },
     {
@@ -1992,10 +1992,10 @@
     },
     {
       "path": "Sources/Views/LibraryContentView.swift",
-      "sha256": "77eaa218664f9d9d93a0bc89d634180153c3e7ea3205d6c7fab954908085b655",
-      "bytes": 7662,
+      "sha256": "300b53e0e3406c4af21071056dd6572fa9e07aa9ec20ed4fe86388555298b802",
+      "bytes": 8819,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "77eaa218664f9d9d93a0bc89d634180153c3e7ea3205d6c7fab954908085b655"
     },
     {
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "fb27e57e09552d683248dcf8ce1453a969483f222bc22f607140142d8f1b0c13",
-      "bytes": 30515,
+      "sha256": "f6d7cf0f7bcce266cb7eb9bf4475a03897f711877369fc4967665d7dd55c3496",
+      "bytes": 33037,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3001,6 +3001,13 @@
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "6cd166db0fc6a3db6c1593cc7c3f7dab302360d9dafd9a2857e669ca312b3aa7"
+    },
+    {
+      "path": "Tests/SongbirdTests/LibraryStartupTests.swift",
+      "sha256": "cc1795f2c9aa832fc01c8d4252bcdfc9690f547907cff663595d9c3ba51cc265",
+      "bytes": 5651,
+      "mode": 420,
+      "origin": "library-startup-performance"
     },
     {
       "path": "Tests/SongbirdTests/LibraryTests.swift",
@@ -12632,6 +12639,13 @@
       "bytes": 4781,
       "mode": 420,
       "origin": "back-navigation-crash"
+    },
+    {
+      "path": "docs/exec-plans/completed/library-startup.md",
+      "sha256": "587091f7b52021d01f45daf933ba21a31bd898ee7673314f82d6f5b93715ce24",
+      "bytes": 6109,
+      "mode": 420,
+      "origin": "library-startup-performance"
     },
     {
       "path": "docs/exec-plans/completed/pause-album-artwork.md",

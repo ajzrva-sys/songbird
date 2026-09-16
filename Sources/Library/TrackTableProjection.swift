@@ -115,27 +115,33 @@ public struct TrackTableDisplayValues: Equatable, Sendable {
         self.values = values
     }
 
-    public init(track: LibraryTrackSnapshot) {
-        values = [
-            .title: track.title.isEmpty ? "Unknown" : track.title,
-            .albumRating: track.albumRating > 0 ? String(track.albumRating) : "—",
-            .duration: Self.duration(track.duration),
-            .playCount: String(track.playCount),
-            .dateAdded: track.dateAdded.formatted(date: .abbreviated, time: .omitted),
-            .dateModified: track.dateModified.formatted(date: .abbreviated, time: .omitted),
-            .lastPlayed: track.lastPlayed?.formatted(date: .abbreviated, time: .omitted) ?? "—",
-            .bitRate: track.bitrate > 0 ? "\(track.bitrate) kbps" : "—",
-            .sampleRate: track.sampleRate > 0 ? "\(track.sampleRate) Hz" : "—",
-            .kind: track.fileKind.isEmpty ? "—" : track.fileKind,
-            .releaseDate: track.year > 0 ? String(track.year) : "—",
-            .year: track.year > 0 ? String(track.year) : "—",
-            .size: track.fileSize > 0
-                ? ByteCountFormatter.string(fromByteCount: track.fileSize, countStyle: .file)
-                : "—",
-            .trackNumber: track.trackNumber > 0 ? String(track.trackNumber) : "—",
-            .discNumber: track.discNumber > 0 ? String(track.discNumber) : "—",
-            .beatsPerMinute: track.beatsPerMinute > 0 ? String(track.beatsPerMinute) : "—",
-        ]
+    public init(track: LibraryTrackSnapshot, columns: [TrackSortColumn] = TrackSortColumn.allCases) {
+        // Hidden date/size columns must not format every track at startup.
+        // Changing visible columns requests a fresh projection.
+        var values: [TrackSortColumn: String] = [:]
+        for column in columns {
+            switch column {
+            case .title: values[column] = track.title.isEmpty ? "Unknown" : track.title
+            case .albumRating: values[column] = track.albumRating > 0 ? String(track.albumRating) : "—"
+            case .duration: values[column] = Self.duration(track.duration)
+            case .playCount: values[column] = String(track.playCount)
+            case .dateAdded: values[column] = track.dateAdded.formatted(date: .abbreviated, time: .omitted)
+            case .dateModified: values[column] = track.dateModified.formatted(date: .abbreviated, time: .omitted)
+            case .lastPlayed: values[column] = track.lastPlayed?.formatted(date: .abbreviated, time: .omitted) ?? "—"
+            case .bitRate: values[column] = track.bitrate > 0 ? "\(track.bitrate) kbps" : "—"
+            case .sampleRate: values[column] = track.sampleRate > 0 ? "\(track.sampleRate) Hz" : "—"
+            case .kind: values[column] = track.fileKind.isEmpty ? "—" : track.fileKind
+            case .releaseDate, .year: values[column] = track.year > 0 ? String(track.year) : "—"
+            case .size:
+                values[column] = track.fileSize > 0
+                    ? ByteCountFormatter.string(fromByteCount: track.fileSize, countStyle: .file) : "—"
+            case .trackNumber: values[column] = track.trackNumber > 0 ? String(track.trackNumber) : "—"
+            case .discNumber: values[column] = track.discNumber > 0 ? String(track.discNumber) : "—"
+            case .beatsPerMinute: values[column] = track.beatsPerMinute > 0 ? String(track.beatsPerMinute) : "—"
+            default: break // These columns render their snapshot value directly.
+            }
+        }
+        self.values = values
     }
 
     public func text(for column: TrackSortColumn) -> String? {
@@ -203,13 +209,14 @@ public struct TrackTableProjection: Equatable, Sendable {
                 width: Double(TrackTableColumnPrefs.resolvedWidth(for: preference))
             )
         }
+        let displayColumns = columns.map(\.column)
         return TrackTableProjection(
             sourceRevision: snapshot.revision,
             rows: rows,
             orderedIDs: orderedIDs,
             indexByID: indexByID,
             displayValuesByID: Dictionary(
-                uniqueKeysWithValues: rows.map { ($0.id, TrackTableDisplayValues(track: $0)) }
+                uniqueKeysWithValues: rows.map { ($0.id, TrackTableDisplayValues(track: $0, columns: displayColumns)) }
             ),
             facets: .empty,
             totalDuration: rows.reduce(0) { $0 + $1.duration },
@@ -349,13 +356,14 @@ public actor TrackTableProjectionWorker {
             )
         }
 
+        let displayColumns = columns.map(\.column)
         let projection = TrackTableProjection(
             sourceRevision: snapshot.revision,
             rows: rows,
             orderedIDs: ids,
             indexByID: lookup,
             displayValuesByID: Dictionary(
-                uniqueKeysWithValues: rows.map { ($0.id, TrackTableDisplayValues(track: $0)) }
+                uniqueKeysWithValues: rows.map { ($0.id, TrackTableDisplayValues(track: $0, columns: displayColumns)) }
             ),
             facets: cachedFacets.facets,
             totalDuration: rows.reduce(0) { $0 + $1.duration },

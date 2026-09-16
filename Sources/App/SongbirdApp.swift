@@ -130,7 +130,6 @@ struct SongbirdApp: App {
                     SongbirdDockIconManager.apply(for: selectedTheme)
                     if isUsabilityTesting == false {
                         LibraryFolderWatcher.shared.applySettingsFromDefaults()
-                        ArtworkMaintenance.startIfNeeded(in: MediaLibrary.shared.container)
                     }
                     if let startupError = MediaLibrary.shared.startupError {
                         LibraryStatus.shared.showPlaybackError(startupError)
@@ -142,7 +141,13 @@ struct SongbirdApp: App {
                         }
                     }
                 }
-                .task {
+                .task(id: librarySnapshots.snapshot.revision > 0) {
+                    // Maintenance may save and invalidate snapshots. Let the
+                    // first catalog read finish before starting that extra I/O.
+                    guard librarySnapshots.snapshot.revision > 0 else { return }
+                    if isUsabilityTesting == false {
+                        ArtworkMaintenance.startIfNeeded(in: MediaLibrary.shared.container)
+                    }
                     _ = await AlbumRelationshipMaintenance.runIfNeeded(
                         in: MediaLibrary.shared.container
                     )

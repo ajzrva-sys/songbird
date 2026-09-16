@@ -404,6 +404,13 @@ public final class LibrarySnapshotStore: ObservableObject {
     @Published public private(set) var snapshot: LibrarySnapshot = .empty
     @Published public private(set) var rebuildError: String?
 
+    /// Revision zero is an unread catalog, not an empty library.
+    public var initialLoadState: LibraryProjectionState<LibrarySnapshot> {
+        if snapshot.revision > 0 { return .loaded(snapshot) }
+        if let rebuildError { return .failed(message: rebuildError, previous: nil) }
+        return .loading(previous: nil)
+    }
+
     public let modelContainer: ModelContainer
     private let worker: any LibrarySnapshotBuilding
     private let artworkService: ArtworkThumbnailService?
@@ -458,6 +465,7 @@ public final class LibrarySnapshotStore: ObservableObject {
         rebuildTask = nil
         requestedRevision += 1
         let revision = requestedRevision
+        rebuildError = nil
         await rebuild(revision: revision, forceFullRebuild: true)
     }
 

@@ -262,8 +262,21 @@ public final class LibraryFolderWatcher {
     private let callbackQueue = DispatchQueue(label: "com.songbird.folder-watcher")
     private var sleepObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
+    private let resolvePaths: @Sendable ([String]) -> [String]
+    private let startStream: (([String]) -> Void)?
+    private var pathResolutionTask: Task<Void, Never>?
+    private var pathResolutionGeneration = 0
 
-    private init() {
+    init(
+        observesSystemEvents: Bool = true,
+        resolvePaths: @escaping @Sendable ([String]) -> [String] = {
+            LibraryFolderWatchPolicy.watchablePaths($0)
+        },
+        startStream: (([String]) -> Void)? = nil
+    ) {
+        self.resolvePaths = resolvePaths
+        self.startStream = startStream
+        guard observesSystemEvents else { return }
         sleepObserver = NotificationCenter.default.addObserver(
             forName: .systemWillSleep,
             object: nil,
@@ -281,6 +294,7 @@ public final class LibraryFolderWatcher {
     }
 
     isolated deinit {
+        pathResolutionTask?.cancel()
         if let sleepObserver { NotificationCenter.default.removeObserver(sleepObserver) }
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
     }
@@ -358,18 +372,29 @@ public final class LibraryFolderWatcher {
     }
 
     public func start(paths: [String]) {
-        let watchablePaths = LibraryFolderWatchPolicy.watchablePaths(paths)
-        guard !watchablePaths.isEmpty else {
-            stop()
-            return
+        pathResolutionGeneration &+= 1
+        let generation = pathResolutionGeneration
+        pathResolutionTask?.cancel()
+        let resolvePaths = self.resolvePaths
+        pathResolutionTask = Task { [weak self] in
+            // Checking existence/locality can block on an unavailable volume.
+            // Never hold up the first library frame (or Settings) for that I/O.
+            let paths = await Task.detached(priority: .utility) { resolvePaths(paths) }.value
+            guard !Task.isCancelled, let self,
+                  generation == self.pathResolutionGeneration else { return }
+            if self.stream != nil, self.watchedPaths == paths { return }
+            self.stop()
+            guard !paths.isEmpty else { return }
+            self.watchedPaths = paths
+            if let startStream = self.startStream { startStream(paths) }
+            else { self.createStream(for: paths) }
         }
-        if stream != nil, watchedPaths == watchablePaths { return }
-        stop()
-        watchedPaths = watchablePaths
-        createStream(for: watchablePaths)
     }
 
     public func stop() {
+        pathResolutionGeneration &+= 1
+        pathResolutionTask?.cancel()
+        pathResolutionTask = nil
         debounceItem?.cancel()
         debounceItem = nil
         importGeneration &+= 1

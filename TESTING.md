@@ -1,5 +1,41 @@
 # Candidate Testing and Validation
 
+## Initial library loading — 2026-09-15
+
+See the [completed record](docs/exec-plans/completed/library-startup.md).
+Folder existence/locality checks run on a worker with cancellation/generation
+guards; startup maintenance waits for the first snapshot. Table preparation only
+formats visible columns. An unread catalog shows Loading Library; failure offers
+Retry and a successful empty read retains the ordinary empty-library presentation.
+
+- Two fresh 10,000-track baselines reproduced No Results/zero tracks before data
+  arrived. Two final replays showed loading then all tracks, without that false
+  empty state. Album navigation, Now Playing and Back at 956 × 650 also passed.
+- Focused suite: 52 Swift Testing cases passed. Final isolated quick suite:
+  313 XCTest cases (two expected optional-store skips) and 343 Swift Testing cases,
+  zero failures. The first full run hit the unchanged gapless-preload test's short
+  yield-based wait while release compilation overlapped; reruns passed unchanged.
+- External debug benchmark, same disposable 10,000-track store: default table
+  preparation 0.411 → 0.335 s; initial snapshot about 0.60 s. These single samples
+  measure specific stages, not real-library launch time. Album grouping still
+  measured about 1.15 s in debug and remains a performance follow-up.
+- Final UI observations became ready 2.017 and 1.494 s after harness preparation.
+  Preparation itself takes time, so these are not process-launch measurements.
+  An intermediate build took 2.605 s at the same observation stage before startup
+  maintenance was deferred. No universal or instant-startup claim is made.
+- Optimized compilation passed; an initial packaging attempt rejected the /var
+  symlink spelling. Canonical /private/var packaging passed. The final app-only
+  compile/package after maintenance scheduling changed passed in 6.07 s.
+- Installed `/Applications/Songbird.app`; all 44 file/link entries, signatures,
+  resources/notices and retained Last.fm application configuration verify. Backup:
+  `/Users/aji/project/songbird-public-verification/installed-backups/Songbird-20260916T012350Z.app`.
+
+Evidence, partial usability reports and receipts are retained at
+`/Users/aji/project/songbird-public-verification/library-startup-20260915/`.
+Normal library/media were not accessed. All disposable apps/brokers were stopped.
+No audio/backend/schema/dependency change; Python, audio TSan, live network volumes,
+and hardware coverage were not repeated. PERF-STARTUP retains remaining work.
+
 ## Back crash with constrained panes — 2026-09-15
 
 See the [completed record](docs/exec-plans/completed/back-navigation-crash.md).

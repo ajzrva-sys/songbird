@@ -1,5 +1,14 @@
 # Candidate next steps
 
+## Initial library display
+
+Installed: folder checks run off-main, maintenance waits for the first catalog
+read, hidden columns skip formatting, and startup displays honest loading/error
+states. See the [completed record](docs/exec-plans/completed/library-startup.md).
+**PERF-STARTUP:** further reduce cold catalog/grouping work and measure the normal
+library with owner participation. Final 10,000-track fixture observations became
+ready 1.49–2.02 s after harness preparation; these are not process-launch timings.
+
 ## Back-button crash
 
 Fixed and installed: Back can restore the sidebar when the window leaves zero or

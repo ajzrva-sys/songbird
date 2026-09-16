@@ -13,6 +13,38 @@ public struct LibraryContentView: View {
     }
 
     public var body: some View {
+        Group {
+            // Queue and CD playback remain available while the catalog loads.
+            if destination == .queue || isAudioCD {
+                content
+            } else {
+                switch librarySnapshots.initialLoadState {
+                case .loading:
+                    ProgressView("Loading Library…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .failed(let message, _):
+                    ContentUnavailableView {
+                        Label("Library Could Not Load", systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(message)
+                    } actions: {
+                        Button("Retry") { Task { await librarySnapshots.refresh() } }
+                    }
+                case .loaded:
+                    content
+                }
+            }
+        }
+        .background(SongbirdTheme.background(for: colorScheme))
+    }
+
+    private var isAudioCD: Bool {
+        if case .audioCD = destination { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch destination {
         case .allTracks:
             TrackTableView(title: "All Tracks", collection: .allTracks, showsHeader: false)
