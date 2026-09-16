@@ -361,17 +361,21 @@ struct ResizableDivider: View {
                 .frame(width: 1)
                 .allowsHitTesting(false)
 
-            Slider(
-                value: $width,
-                in: Double(minimum)...Double(maximum),
-                step: 10
-            )
-            .labelsHidden()
-            .opacity(0)
-            .focusEffectDisabled()
-            .focused($isFocused)
-            .accessibilityLabel("Sidebar width")
-            .accessibilityValue("\(Int(width)) points")
+            // Restoring a pane can leave no resizing room, or less than one
+            // keyboard step. SwiftUI traps if a stepped Slider has zero steps.
+            if maximum > minimum {
+                Slider(
+                    value: $width,
+                    in: Double(minimum)...Double(maximum),
+                    step: min(10, Double(maximum - minimum))
+                )
+                .labelsHidden()
+                .opacity(0)
+                .focusEffectDisabled()
+                .focused($isFocused)
+                .accessibilityLabel("Sidebar width")
+                .accessibilityValue("\(Int(width)) points")
+            }
         }
         .frame(width: 8)
         .contentShape(Rectangle())

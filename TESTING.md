@@ -1,5 +1,36 @@
 # Candidate Testing and Validation
 
+## Back crash with constrained panes — 2026-09-15
+
+See the [completed record](docs/exec-plans/completed/back-navigation-crash.md).
+Back restored the sidebar with a fixed or sub-10-point resize range, causing
+SwiftUI's stepped Slider initializer to trap. The divider now omits its slider
+when resizing is impossible and caps its keyboard step at the available span.
+
+- The reported main-thread crash matched two fresh disposable reproductions at
+  956 × 650 points with Now Playing visible. A native rendering regression also
+  crashed on the original code with `max stride must be positive`.
+- Focused divider/navigation/window tests: eight XCTest plus four Swift Testing
+  cases passed. Final isolated `./check.sh quick -j 4`: 313 XCTest cases (two
+  expected optional-store skips), plus 339 Swift Testing cases; zero failures.
+- Optimized build/package passed in 80.12 seconds. Two fresh 1,000-track UI
+  replays survived the exact Back sequence. Additional checks covered widths
+  960, 1090 and 1280 points, hiding Now Playing and reopening Albums.
+- This is focused crash/window coverage, not a new navigation-latency benchmark
+  or whole-product usability pass. Reports retain uncovered outcomes. Audio,
+  database, dependencies and scripts did not change; audio TSan, Python and
+  physical hardware coverage were not repeated.
+- Installed `/Applications/Songbird.app`; all 44 bundle file/link entries match,
+  signatures/resources/notices verify, and Last.fm application configuration is
+  preserved. The previous app is retained at
+  `/Users/aji/project/songbird-public-verification/installed-backups/Songbird-20260916T010456Z.app`.
+
+Logs, partial UI reports, screenshots, installation receipt and checksums are in
+`/Users/aji/project/songbird-public-verification/back-navigation-crash-20260915/`.
+Only the exception and relevant stack frames were retained from the owner's crash
+report. Disposable apps/brokers were stopped; the normal library was not accessed.
+The previous wide-window Back check missed this constrained layout.
+
 ## Pause, album navigation and artwork reuse — 2026-09-15
 
 See the [completed implementation record](docs/exec-plans/completed/pause-album-artwork.md).

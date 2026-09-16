@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1789,
+  "payload_file_count_including_manifest": 1791,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "a9c8940b2e03170ba3b535a2c2469f260eb90829cf5b9a38c2d6a6eaa6c72ad4",
-      "bytes": 3454,
+      "sha256": "9878636a9a7008db7c864241018a94e93196450323d1dabe249ca258618831b3",
+      "bytes": 3731,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -2104,8 +2104,8 @@
     },
     {
       "path": "Sources/Views/MainView.swift",
-      "sha256": "4469b487861aeb20b401e16cc56cfc7e04ba49e79b7006474ff86bc45a06bbe1",
-      "bytes": 16390,
+      "sha256": "2619a1e6223e7e2495116912d5364d2ab8ff1720b4bacd0824f4dde8771b8d7b",
+      "bytes": 16672,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "4469b487861aeb20b401e16cc56cfc7e04ba49e79b7006474ff86bc45a06bbe1"
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "38e7e76a80368a64075678fa01bab6b8b689b30c2dc07339fb01c001e6dc117b",
-      "bytes": 28473,
+      "sha256": "fb27e57e09552d683248dcf8ce1453a969483f222bc22f607140142d8f1b0c13",
+      "bytes": 30515,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3103,6 +3103,13 @@
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "900570cd58bcf6da549d18173811b96581c92bfda326ca839faa4d68f90c9b49"
+    },
+    {
+      "path": "Tests/SongbirdTests/ResizableDividerTests.swift",
+      "sha256": "4ee07f5356862378938a9b6168b5a87983339517cf46423573333d78d37a00d4",
+      "bytes": 2078,
+      "mode": 420,
+      "origin": "back-navigation-crash"
     },
     {
       "path": "Tests/SongbirdTests/SmartPlaylistEditorTargetStabilityTests.swift",
@@ -12618,6 +12625,13 @@
       "bytes": 181,
       "mode": 420,
       "origin": "baseline-documentation"
+    },
+    {
+      "path": "docs/exec-plans/completed/back-navigation-crash.md",
+      "sha256": "aaca4fc20fbc36ee18b9f483921796184476ece207536987dd6c9c4ff1928e8a",
+      "bytes": 4781,
+      "mode": 420,
+      "origin": "back-navigation-crash"
     },
     {
       "path": "docs/exec-plans/completed/pause-album-artwork.md",

@@ -1,5 +1,11 @@
 # Candidate next steps
 
+## Back-button crash
+
+Fixed and installed: Back can restore the sidebar when the window leaves zero or
+less than ten points of resizing room. Two fresh UI replays and the full quick
+suite passed; see the [completed record](docs/exec-plans/completed/back-navigation-crash.md).
+
 ## Pause and album artwork
 
 Immediate Pause, shared album covers, background database readers and the menu-focus
