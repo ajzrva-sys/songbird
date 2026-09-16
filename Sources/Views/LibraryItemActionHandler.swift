@@ -45,6 +45,7 @@ public final class LibraryItemActionHandler: ObservableObject {
     private var finderTask: Task<Void, Never>?
     private var playbackTask: Task<Void, Never>?
     private var artworkSearchTask: Task<Void, Never>?
+    private let folderArtworkLoader: @Sendable (URL) -> Data?
 
     public init(
         modelContainer: ModelContainer,
@@ -53,6 +54,7 @@ public final class LibraryItemActionHandler: ObservableObject {
         navigation: LibraryNavigationCoordinator,
         fileAvailabilityWorker: FileAvailabilityWorker = FileAvailabilityWorker(),
         importExclusions: LibraryImportExclusionStore = .shared,
+        folderArtworkLoader: (@Sendable (URL) -> Data?)? = nil,
         revealFiles: @escaping @MainActor ([URL]) -> Void = {
             NSWorkspace.shared.activateFileViewerSelecting($0)
         }
@@ -63,6 +65,7 @@ public final class LibraryItemActionHandler: ObservableObject {
         self.navigation = navigation
         self.fileAvailabilityWorker = fileAvailabilityWorker
         self.importExclusions = importExclusions
+        self.folderArtworkLoader = folderArtworkLoader ?? { TrackImporter.folderArtworkData(for: $0) }
         self.revealFiles = revealFiles
         healthMutations = LibraryHealthMutationService(modelContainer: modelContainer)
         trackMetadataMutations = TrackMetadataMutationService(modelContainer: modelContainer)
@@ -163,6 +166,55 @@ public final class LibraryItemActionHandler: ObservableObject {
             return .failure(.persistence("Artwork application was cancelled."))
         } catch {
             return .failure(.persistence(error.localizedDescription))
+        }
+    }
+
+    /// Opening an existing album can discover art added beside its audio after import.
+    /// Disk reads/normalization stay off-main; a fresh write context protects newer edits.
+    public func discoverFolderArtwork(albumIDs: [UUID]) async {
+        for id in Set(albumIDs).sorted(by: { $0.uuidString < $1.uuidString }) {
+            guard !Task.isCancelled else { return }
+            guard let album = librarySnapshots.snapshot.albumsByID[id],
+                  album.artworkReference == nil else { continue }
+            let paths = Set(album.trackIDs.compactMap { librarySnapshots.snapshot.tracksByID[$0]?.path })
+            guard !paths.isEmpty else { continue }
+            let load = Task.detached(priority: .utility) { [folderArtworkLoader] () -> Data? in
+                var folders = Set<String>()
+                for path in paths.sorted() {
+                    guard !Task.isCancelled else { return nil }
+                    let url = URL(fileURLWithPath: path)
+                    guard folders.insert(url.deletingLastPathComponent().path).inserted else { continue }
+                    if let data = folderArtworkLoader(url), ArtworkStorage.pixelSize(of: data) != nil {
+                        return ArtworkStorage.normalized(data)
+                    }
+                }
+                return nil
+            }
+            let data = await withTaskCancellationHandler {
+                await load.value
+            } onCancel: {
+                load.cancel()
+            }
+            guard !Task.isCancelled else { return }
+            guard let data else { continue }
+            do {
+                let context = ModelContext(modelContainer)
+                context.autosaveEnabled = false
+                var query = FetchDescriptor<Album>(predicate: #Predicate { $0.id == id })
+                query.fetchLimit = 1
+                guard let current = try context.fetch(query).first,
+                      current.artworkData == nil,
+                      current.tracks.allSatisfy({ $0.artworkData == nil }),
+                      Set(current.tracks.map(\.path)) == paths else { continue }
+                current.artworkData = data
+                try context.save()
+                // Automatic discovery must not replace the user's existing Undo receipt.
+                await librarySnapshots.refreshAfterMutation()
+            } catch {
+                LibraryStatus.shared.showNotice(
+                    "Could not save folder artwork: \(error.localizedDescription)", severity: .warning
+                )
+            }
         }
     }
 

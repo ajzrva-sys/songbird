@@ -177,7 +177,7 @@ public enum TrackImporter {
         track.checksum = Track.contentChecksum(at: path)
     }
 
-    /// Finds an immediate sibling named cover.jpg, ignoring filename case.
+    /// Finds a conventional cover filename beside the audio, ignoring filename case.
     /// Keeping this lookup local to the audio folder prevents art from one
     /// album being applied to tracks in another nested folder.
     nonisolated static func folderArtworkData(for audioURL: URL) -> Data? {
@@ -188,16 +188,25 @@ public enum TrackImporter {
             options: [.skipsHiddenFiles]
         ) else { return nil }
 
-        guard let coverURL = entries.first(where: {
-            $0.lastPathComponent.caseInsensitiveCompare("cover.jpg") == .orderedSame
-        }),
-        let values = try? coverURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
-        values.isRegularFile == true,
-        let byteCount = values.fileSize,
-        byteCount > 0,
-        byteCount <= 25 * 1024 * 1024 else { return nil }
-
-        return try? Data(contentsOf: coverURL, options: .mappedIfSafe)
+        let names = ["cover", "folder", "front", "album", "artwork"]
+        let extensions = ["jpg", "jpeg", "png", "heic", "tiff", "webp"]
+        let sortedEntries = entries.sorted { $0.lastPathComponent < $1.lastPathComponent }
+        for name in names {
+            for ext in extensions {
+                for coverURL in sortedEntries where
+                    coverURL.lastPathComponent.caseInsensitiveCompare("\(name).\(ext)") == .orderedSame {
+                    guard !Task.isCancelled,
+                          let values = try? coverURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
+                          values.isRegularFile == true,
+                          let byteCount = values.fileSize, byteCount > 0,
+                          byteCount <= 25 * 1024 * 1024,
+                          let data = try? Data(contentsOf: coverURL, options: .mappedIfSafe),
+                          ArtworkStorage.pixelSize(of: data) != nil else { continue }
+                    return data
+                }
+            }
+        }
+        return nil
     }
 
     public static func linkRelations(

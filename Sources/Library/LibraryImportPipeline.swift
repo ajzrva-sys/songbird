@@ -14,7 +14,7 @@ struct ExistingTrackSnapshot: Sendable {
     let fileSize: Int64
     let dateModified: Date
     let checksum: String
-    let needsMetadataRefresh: Bool
+    let needsArtwork: Bool
 }
 
 struct PreparedImport: Sendable {
@@ -68,7 +68,7 @@ private actor FolderArtworkCache {
         let folder = audioURL.deletingLastPathComponent().standardizedFileURL.path
         if let value = values[folder] { return value }
         if misses.contains(folder) { return nil }
-        if let value = TrackImporter.folderArtworkData(for: audioURL) {
+        if let value = TrackImporter.folderArtworkData(for: audioURL).map(ArtworkStorage.normalized) {
             // Import paths are sorted, so a small rolling cache covers adjacent
             // tracks without retaining every cover image for the entire scan.
             if value.count <= Self.maximumBytes {
@@ -167,15 +167,6 @@ private actor LibraryImportStore {
 
         var result: [String: ExistingTrackSnapshot] = [:]
         for track in tracks {
-            let filenameTitle = URL(fileURLWithPath: track.path)
-                .deletingPathExtension().lastPathComponent
-            let incomplete = track.artist == "Unknown Artist"
-                || track.album == "Unknown Album"
-                || track.title == filenameTitle
-                || track.title.range(
-                    of: #"^\d{1,2}-\d{2}\s"#,
-                    options: .regularExpression
-                ) != nil
             let key = LibraryPathIdentity.key(track.path)
             if let collision = result[key],
                !LibraryPathIdentity.hasSameScalarSpelling(collision.path, track.path) {
@@ -186,7 +177,7 @@ private actor LibraryImportStore {
                 fileSize: track.fileSize,
                 dateModified: track.dateModified,
                 checksum: track.checksum,
-                needsMetadataRefresh: incomplete
+                needsArtwork: track.resolvedArtworkData == nil
             )
         }
         return result
@@ -281,12 +272,19 @@ private actor LibraryImportStore {
             }
             switch record.action {
             case .skip:
+                if let track = matchedTrack, track.resolvedArtworkData == nil,
+                   let artwork = record.folderArtwork {
+                    try link(track, artwork: artwork)
+                }
                 continue
             case let .touch(checksum):
                 guard let track = try matchedTrack ?? track(at: livePath) else { continue }
                 track.fileSize = record.fileSize
                 track.dateModified = record.dateModified
                 track.checksum = checksum
+                if track.resolvedArtworkData == nil, let artwork = record.folderArtwork {
+                    try link(track, artwork: artwork)
+                }
             case let .refresh(checksum):
                 guard let track = try matchedTrack ?? track(at: livePath),
                       let metadata = record.metadata else { continue }
@@ -508,7 +506,7 @@ public enum LibraryImportPipeline {
             )
         }
         let artworkCache = FolderArtworkCache()
-        let resume = await partitionForResume(files: files, existing: existing)
+        let resume = await partitionForResume(files: files, existing: existing, artworkCache: artworkCache)
         var processed = resume.completed
         var added = 0
         var failureMessage: String?
@@ -562,7 +560,8 @@ public enum LibraryImportPipeline {
 
     private static func partitionForResume(
         files: [URL],
-        existing: [String: ExistingTrackSnapshot]
+        existing: [String: ExistingTrackSnapshot],
+        artworkCache: FolderArtworkCache
     ) async -> (completed: Int, pending: [URL]) {
         await Task.detached(priority: .utility) {
             var completed = 0
@@ -583,7 +582,11 @@ public enum LibraryImportPipeline {
                 ),
                    size == snapshot.fileSize,
                    abs(modified.timeIntervalSince(snapshot.dateModified)) < 1 {
-                    completed += 1
+                    if snapshot.needsArtwork, await artworkCache.artwork(for: url) != nil {
+                        pending.append(url)
+                    } else {
+                        completed += 1
+                    }
                 } else {
                     pending.append(url)
                 }
@@ -651,11 +654,14 @@ public enum LibraryImportPipeline {
         if let existing {
             let unchanged = size == existing.fileSize
                 && abs(modified.timeIntervalSince(existing.dateModified)) < 1
-            if unchanged, !existing.needsMetadataRefresh {
+            if unchanged {
                 return PreparedImport(
                     url: url, existingPath: existing.path,
                     fileSize: size, dateModified: modified,
-                    metadata: nil, folderArtwork: nil, action: .skip
+                    metadata: nil,
+                    folderArtwork: existing.needsArtwork
+                        ? await artworkCache.artwork(for: url) : nil,
+                    action: .skip
                 )
             }
             if !unchanged, !existing.checksum.isEmpty {
@@ -664,12 +670,15 @@ public enum LibraryImportPipeline {
                     return PreparedImport(
                         url: url, existingPath: existing.path,
                         fileSize: size, dateModified: modified,
-                        metadata: nil, folderArtwork: nil, action: .touch(checksum: checksum)
+                        metadata: nil,
+                        folderArtwork: existing.needsArtwork
+                            ? await artworkCache.artwork(for: url) : nil,
+                        action: .touch(checksum: checksum)
                     )
                 }
                 let metadata = normalized(await MetadataReader.read(from: url))
                 let artwork = metadata?.artworkData == nil
-                    ? await artworkCache.artwork(for: url).map(ArtworkStorage.normalized)
+                    ? await artworkCache.artwork(for: url)
                     : nil
                 return PreparedImport(
                     url: url, existingPath: existing.path,
@@ -681,7 +690,7 @@ public enum LibraryImportPipeline {
 
             let metadata = normalized(await MetadataReader.read(from: url))
             let artwork = metadata?.artworkData == nil
-                ? await artworkCache.artwork(for: url).map(ArtworkStorage.normalized)
+                ? await artworkCache.artwork(for: url)
                 : nil
             let checksum = unchanged ? nil : Track.contentChecksum(at: url.path)
             return PreparedImport(
@@ -694,7 +703,7 @@ public enum LibraryImportPipeline {
 
         let metadata = normalized(await MetadataReader.read(from: url))
         let artwork = metadata?.artworkData == nil
-            ? await artworkCache.artwork(for: url).map(ArtworkStorage.normalized)
+            ? await artworkCache.artwork(for: url)
             : nil
         let checksum = Track.contentChecksum(at: url.path)
         return PreparedImport(

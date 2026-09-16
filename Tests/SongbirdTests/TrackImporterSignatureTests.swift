@@ -54,7 +54,7 @@ final class TrackImporterSignatureTests: XCTestCase {
 
     func testDiscoversCaseInsensitiveCoverJPGBesideAudioFile() throws {
         let audioFile = tempDir.appendingPathComponent("track.flac")
-        let expectedArtwork = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let expectedArtwork = try folderArtworkFixture()
         try Data().write(to: audioFile)
         try expectedArtwork.write(to: tempDir.appendingPathComponent("COVER.JPG"))
 

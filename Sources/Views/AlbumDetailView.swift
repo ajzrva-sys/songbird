@@ -85,6 +85,10 @@ public struct AlbumDetailView: View {
         .task(id: librarySnapshots.snapshot.revision) {
             await albumProjectionStore.update(from: librarySnapshots.snapshot)
         }
+        .task(id: album?.id) {
+            guard let album, album.artworkReference == nil else { return }
+            await actions.discoverFolderArtwork(albumIDs: album.albumIDs)
+        }
         .onDisappear {
             if let album {
                 actions.cancelSidebarPlaylistTargeting(sourceID: album.id)

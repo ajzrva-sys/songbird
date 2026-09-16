@@ -182,6 +182,10 @@ public struct ServicePaneView: View {
         let localArtworkTrack = selectedDisc == nil ? displayedTrack : nil
         let localAlbum = localArtworkTrack?.albumRelation
         let localArtworkReference: ArtworkReference? = {
+            if let track = localArtworkTrack,
+               let snapshot = librarySnapshots.trackSnapshot(id: track.id) {
+                return snapshot.artworkReference
+            }
             guard let album = localAlbum,
                   let artworkData = album.artworkData,
                   artworkData.isEmpty == false else { return nil }

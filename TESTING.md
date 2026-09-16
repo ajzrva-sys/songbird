@@ -1,5 +1,36 @@
 # Candidate Testing and Validation
 
+## Folder artwork discovery — 2026-09-16
+
+See the [completed record](docs/exec-plans/completed/folder-artwork.md). Local lookup
+recognizes cover/folder/front/album/artwork in common image formats, ignoring case,
+with cover.jpg priority, immediate-folder scope and the existing 25 MB limit.
+Opening an existing album fills a missing cover off-main, then rechecks membership
+and current artwork before saving. Scans discover covers beside unchanged audio
+without replacing tags; folders without artwork retain their scan fast path.
+
+- Focused tests covered filename/case/priority, invalid candidates, new and unchanged
+  imports, cancellation, concurrent cover/path changes, retained Undo and disk-store
+  reopening after the original image was removed. The first full suite caught a
+  resume-progress regression; preserving the no-cover fast path fixed it without
+  weakening the existing test. Final quick suite: 324 XCTest (two optional-store
+  skips), plus 343 Swift Testing cases; zero failures.
+- Initial optimized build/package passed in 96.18 s. The first disposable UI check
+  confirmed detail/grid/player refresh and cover retention after removing folder.jpg,
+  but exposed stale sidebar artwork. ServicePaneView now consumes the current snapshot.
+  The full suite passed again; final optimized package passed in 74.32 s.
+- A fresh final 1,000-track UI check showed the discovered JPEG in the album header,
+  grid, player and sidebar. Both disposable apps/brokers were stopped. This was bounded
+  coverage, not a full usability or latency audit. Double-click starts playback;
+  the accessible Open Album action was used for navigation.
+- Installed `/Applications/Songbird.app`; all 44 bundle entries, signatures,
+  resources/notices and Last.fm application configuration verify. Previous app backup:
+  `Songbird-20260916T074422Z.app` under the verification directory's installed-backups.
+
+Evidence: `/Users/aji/project/songbird-public-verification/folder-artwork-20260916/`.
+Normal library/media were not accessed. No backend, schema or dependency changes;
+Python, audio TSan, physical-CD and AirPlay coverage were not repeated.
+
 ## Compact Favorite column — 2026-09-16
 
 Favorite uses a fixed 32-point width and a heart header with its accessible name

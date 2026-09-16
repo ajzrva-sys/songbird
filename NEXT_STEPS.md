@@ -1,5 +1,11 @@
 # Candidate next steps
 
+## Folder artwork discovery
+
+Installed: folder.jpg and other conventional covers are discovered on album opening
+and rescans, retained permanently, and shared by the album/grid/player/sidebar.
+Scope, tests and evidence: [record](docs/exec-plans/completed/folder-artwork.md).
+
 ## Compact Favorite column
 
 Installed: a 32-point Favorite column with a heart header, including for older saved
