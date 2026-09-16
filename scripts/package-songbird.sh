@@ -268,12 +268,14 @@ if [[ -n "$UI_TEST_ROOT" ]]; then
     "$([[ "$UI_TEST_FIRST_RUN" -eq 1 ]] && echo false || echo true)" "$PLIST_PATH"
 fi
 
-echo "Signing (nested ad-hoc)…"
+# Resolve once; a broken configured identity must never fall back to ad-hoc.
+SIGNING_OPTIONS=("${(@f)$(python3 "$ROOT/scripts/signing_config.py")}")
+echo "Signing nested code…"
 sign_item() {
   if [[ "$#" -eq 2 ]]; then
-    codesign --force --sign - --timestamp=none --identifier "$2" "$1"
+    codesign --force "${SIGNING_OPTIONS[@]}" --identifier "$2" "$1"
   else
-    codesign --force --sign - --timestamp=none "$1"
+    codesign --force "${SIGNING_OPTIONS[@]}" "$1"
   fi
 }
 
@@ -291,15 +293,13 @@ if [[ "$SANDBOX" -eq 1 ]]; then
 fi
 codesign \
   --force \
-  --sign - \
-  --timestamp=none \
+  "${SIGNING_OPTIONS[@]}" \
   --identifier "$BUNDLE_IDENTIFIER" \
   --entitlements "$ENTITLEMENTS" \
   "$APP/Contents/MacOS/Songbird"
 codesign \
   --force \
-  --sign - \
-  --timestamp=none \
+  "${SIGNING_OPTIONS[@]}" \
   --identifier "$BUNDLE_IDENTIFIER" \
   --entitlements "$ENTITLEMENTS" \
   "$APP"

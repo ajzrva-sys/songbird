@@ -30,7 +30,20 @@ codesign --remove-signature "$TEMP_DIRECTORY/real-Songbird"
 codesign --remove-signature "$TEMP_DIRECTORY/usability-Songbird"
 cmp "$TEMP_DIRECTORY/real-Songbird" "$TEMP_DIRECTORY/usability-Songbird"
 
-diff -qr "$REAL_APP/Contents/Frameworks" "$USABILITY_APP/Contents/Frameworks"
+# Certificate signatures can have different signing times. Verify the sealed apps
+# above, then compare library identities and unsigned code, as for the executable.
+cp -R "$REAL_APP/Contents/Frameworks" "$TEMP_DIRECTORY/real-Frameworks"
+cp -R "$USABILITY_APP/Contents/Frameworks" "$TEMP_DIRECTORY/usability-Frameworks"
+for real_library in "$TEMP_DIRECTORY/real-Frameworks"/*.dylib; do
+  library_name="${real_library:t}"
+  test_library="$TEMP_DIRECTORY/usability-Frameworks/$library_name"
+  codesign -d -r- "$real_library" > "$TEMP_DIRECTORY/real-requirement" 2>/dev/null
+  codesign -d -r- "$test_library" > "$TEMP_DIRECTORY/test-requirement" 2>/dev/null
+  cmp "$TEMP_DIRECTORY/real-requirement" "$TEMP_DIRECTORY/test-requirement"
+  codesign --remove-signature "$real_library"
+  codesign --remove-signature "$test_library"
+done
+diff -qr "$TEMP_DIRECTORY/real-Frameworks" "$TEMP_DIRECTORY/usability-Frameworks"
 diff -qr "$REAL_APP/Contents/Resources" "$USABILITY_APP/Contents/Resources"
 
 for app in "$REAL_APP" "$USABILITY_APP"; do

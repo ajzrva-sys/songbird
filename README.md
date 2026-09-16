@@ -6,7 +6,7 @@ A native macOS music player with a classic, library-first interface. Browse your
 
 Built with SwiftUI, SwiftData, and a native buffered audio engine, inspired by the Songbird/Nightingale interface.
 
-This is a hobby project. Builds are ad-hoc signed and are not notarized by Apple.
+This is a hobby project. Builds use local signing and are not notarized by Apple.
 
 ## Features
 
@@ -77,7 +77,20 @@ From the repository root:
 open ./Songbird.app
 ```
 
-`build.sh` compiles release products, packages the runtime libraries and resources, and verifies the resulting app's ad-hoc signature. It **replaces the output `Songbird.app` bundle**; do not point it at an installation you need to preserve. Building does not itself launch the app.
+`build.sh` compiles release products, packages the runtime libraries and resources, and verifies the resulting app's signature. It **replaces the output `Songbird.app` bundle**; do not point it at an installation you need to preserve. Building does not itself launch the app.
+
+#### Keeping Keychain access across local updates
+
+Unconfigured builds use ad-hoc signing, whose identity changes with the executable.
+To retain Keychain approval across updates, reuse a local code-signing certificate.
+Set `SONGBIRD_SIGNING_IDENTITY` to its 40-character SHA-1 certificate fingerprint,
+or save `~/.config/songbird/code-signing.json` with an `identity` field and optional
+absolute `keychain` and `password_file` paths. A separate build keychain must be in
+the user's keychain search list; its password file must have mode 0600. Keep all
+private signing material outside the checkout. `SONGBIRD_SIGNING_CONFIG` selects
+another configuration file; `SONGBIRD_SIGNING_IDENTITY=-` explicitly selects ad-hoc.
+A broken configured identity stops packaging instead of silently falling back.
+The first switch to a certificate may need one final **Always Allow** approval.
 
 For compilation without packaging or launch:
 

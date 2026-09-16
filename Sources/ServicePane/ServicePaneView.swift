@@ -91,6 +91,7 @@ public struct ServicePaneView: View {
                     }
                     .scrollIndicators(.automatic)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .clipped()
                     .onChange(of: selectedDestination) { _, destination in
                         guard let destination else { return }
                         proxy.scrollTo(destination, anchor: .center)
@@ -114,9 +115,18 @@ public struct ServicePaneView: View {
                     sidebarWidth: geometry.size.width,
                     windowHeight: geometry.size.height
                    ) {
-                    sidebarArtworkWell
-                        .frame(width: side, height: side)
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .fill(SongbirdTheme.divider(for: colorScheme))
+                            .frame(height: 1)
+                        sidebarArtworkWell
+                            .frame(width: side, height: side)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .padding(12)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .background(sidebarBg)
+                    .accessibilityIdentifier("library.sidebar.artwork")
                 }
             }
         }

@@ -74,7 +74,9 @@ struct UsabilityRemediationTests {
         )
         #expect(roomy.sidebar == 420)
         #expect(roomy.rightPane == 344)
-        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 260, windowHeight: 520) == 168)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 260, windowHeight: 520) == 143)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 420, windowHeight: 900) == 160)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 900) == 156)
         #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 450) == nil)
     }
 

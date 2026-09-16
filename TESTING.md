@@ -1,5 +1,37 @@
 # Candidate Testing and Validation
 
+## Sidebar artwork and stable local signing — 2026-09-16
+
+See the [completed record](docs/exec-plans/completed/sidebar-artwork-signing.md).
+Artwork now has a 160-point maximum, 12-point padding, a separate divider and a
+clipped navigation region. Local packaging reuses an optional certificate identity;
+unconfigured builds retain ad-hoc signing and configured errors stop packaging.
+
+- Focused Swift: 50 passed. Full isolated quick suite: 324 XCTest (two optional
+  store skips) and 343 Swift Testing cases passed. Python: 114 (two opt-in skips)
+  passed. Usability runner option/manifest checks and shell syntax checks passed.
+- Two different native test binaries signed with the same certificate wrote/read
+  a synthetic item in a disposable Keychain with authentication UI disabled. An
+  ad-hoc control was denied. No real credentials or normal library were accessed.
+- Optimized build/package passed in 82.90 s. The installed designated requirement
+  binds com.songbird.player to the persistent certificate, rather than a code hash.
+  Private signing material is outside Git; system trust settings are unchanged.
+- Certificate signatures exposed a library-parity assumption about signing times.
+  The harness now verifies both signatures and compares designated requirements
+  plus unsigned library bytes. Its zsh cleanup variable was also corrected.
+- Disposable UI run 20260916T080048Z-62583 showed the padded full image at normal
+  and 520-point heights, with navigation scrolling independently above it. Window
+  scoped Pause resolved a global-selector ambiguity. Both test processes stopped.
+- Installed /Applications/Songbird.app; signatures, all 44 package entries, legal
+  resources and Last.fm application configuration verified. Prior app backup:
+  Songbird-20260916T080259Z.app. Normal app was not restarted. Existing real Keychain
+  items may need a final Always Allow grant per item for the new signing identity;
+  this migration is left to the owner, without automated credential access.
+
+Evidence: `/Users/aji/project/songbird-public-verification/sidebar-signing-20260916/`.
+Bounded UI coverage only; no broad usability, physical-CD, AirPlay or real-account
+claim. No audio/schema changes, so audio TSan and hardware tests were not repeated.
+
 ## Folder artwork discovery — 2026-09-16
 
 See the [completed record](docs/exec-plans/completed/folder-artwork.md). Local lookup

@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1795,
+  "payload_file_count_including_manifest": 1798,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "b84da2a301ac1bcc079016ab0272252e86a1f305da19b36a93d521868da92f6a",
-      "bytes": 4774,
+      "sha256": "84e10aa7d1d89c6318de0459e0de8c0cd9c067085f97eebbcac24d6fc03e557b",
+      "bytes": 5062,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -151,8 +151,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "e96dc586f644d3b9aed311240739e717ea6d68f4ed50b9f9981729ad5a978b25",
-      "bytes": 6007,
+      "sha256": "038499794bc9e95196e9e304fa67b37fee2d120146b3887b980f70705a8fe914",
+      "bytes": 6878,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b40e7c0934fd74bf6a009f36de5409ff85f448da1b590fadfb9085299bfb570a"
@@ -1554,8 +1554,8 @@
     },
     {
       "path": "Sources/ServicePane/ServicePaneView.swift",
-      "sha256": "039d40e5f695d985d430229b0b2581d892bc6cc0883aceb607848f2df642f06b",
-      "bytes": 34375,
+      "sha256": "4adcc140270fc8fccfac00aa9c06b3d2157f3209b73bc3d147dab2c40b2dc4c0",
+      "bytes": 34868,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "17f190262418b9c6f3e917095ec2b047b088fe167624a23c0d8549f2079d7d4d"
@@ -1673,10 +1673,10 @@
     },
     {
       "path": "Sources/Utils/PlayerWindowMetrics.swift",
-      "sha256": "494413812ae0693c109e929b42de55ca7a367924fc8621d05690dc40d10f9224",
-      "bytes": 3523,
+      "sha256": "42792b1bdbd586084e2a3ebf57d1661d2dec3c4ea6a84f0d8cc85279fb9e8e7c",
+      "bytes": 3617,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "494413812ae0693c109e929b42de55ca7a367924fc8621d05690dc40d10f9224"
     },
     {
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "1c0ced8d00f92743edd34ccd8cb069e2feecfb428ac4df1b6bbd51fbace07383",
-      "bytes": 36355,
+      "sha256": "04d271f955d7edb4559d7cfd6555175c2fb1a1c98fe4cf4a968c13cd311f892d",
+      "bytes": 38620,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3253,10 +3253,10 @@
     },
     {
       "path": "Tests/SongbirdTests/UsabilityRemediationTests.swift",
-      "sha256": "cc4ae257ed639275e17dab8d043aae47be6371bee2a63fe5e9c892e6bf031718",
-      "bytes": 42190,
+      "sha256": "2af8bca801deff9e6acf64d427560837f1c8103e1b1a72d726a26d4c7e6408a5",
+      "bytes": 42402,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "cc4ae257ed639275e17dab8d043aae47be6371bee2a63fe5e9c892e6bf031718"
     },
     {
@@ -12683,6 +12683,13 @@
       "origin": "baseline-documentation"
     },
     {
+      "origin": "sidebar-artwork-stable-signing",
+      "path": "docs/exec-plans/completed/sidebar-artwork-signing.md",
+      "sha256": "4cd5942c514fdd99c1b608c22862d5a1f85b6e8aba44394d01e83806cae17542",
+      "bytes": 5621,
+      "mode": 420
+    },
+    {
       "path": "docs/grdb-source-import.md",
       "sha256": "5a7e79e60f24a2236b597d750b5a1a858a1a5d523fbfd7ae0321635f8053b309",
       "bytes": 9112,
@@ -12868,10 +12875,10 @@
     },
     {
       "path": "scripts/ai-usability",
-      "sha256": "d24977c924ca304b236b19ce81ff2413711cdd96d31d4eb424f1c9252a028ae8",
-      "bytes": 15247,
+      "sha256": "4a102e70c2f22287d882912d5e94f5c196b0fc4e16f32882ad78206b444cd717",
+      "bytes": 15283,
       "mode": 493,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "d24977c924ca304b236b19ce81ff2413711cdd96d31d4eb424f1c9252a028ae8"
     },
     {
@@ -12928,8 +12935,8 @@
     },
     {
       "path": "scripts/package-songbird.sh",
-      "sha256": "8cb3f1ea80475e034e3ea39e857762078e7ac06ca2725ea56494e43fedc0012d",
-      "bytes": 9903,
+      "sha256": "5bba703ff600e666cd394f5893d7634f9af2abfff6dc4b8fc186c41fffe01668",
+      "bytes": 10032,
       "mode": 493,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "f032f3d4df5a0278292b6f1ee6b6afd9c55c3c372e5155aad8f4aedd15c0d721"
@@ -12955,6 +12962,13 @@
       "bytes": 206,
       "mode": 493,
       "origin": "project-authored non-destructive controlled vendor build/adoption boundary, source tests, and public-safe evidence"
+    },
+    {
+      "origin": "sidebar-artwork-stable-signing",
+      "path": "scripts/signing_config.py",
+      "sha256": "3b4d75b3eff842117ecc4ae7dfcfa2c9cb365b0b6ea4fdac571ec4a7c4b56dde",
+      "bytes": 2891,
+      "mode": 420
     },
     {
       "path": "scripts/test-audio-tsan.sh",
@@ -13045,6 +13059,13 @@
       "origin": "project-authored publication integrity/gate implementation, synthetic tests or actual gate evidence records"
     },
     {
+      "origin": "sidebar-artwork-stable-signing",
+      "path": "scripts/tests/test_signing_config.py",
+      "sha256": "090103a07b59e177b0d6f293c0dda79d20e4b19440edcec37192bd1fda6a16bd",
+      "bytes": 3314,
+      "mode": 420
+    },
+    {
       "path": "scripts/tests/test_verify_publication.py",
       "sha256": "c9289034d95116b0618513efd82a010a430b12e3cf02406bd66bd74f14778212",
       "bytes": 16743,
@@ -13077,10 +13098,10 @@
     },
     {
       "path": "scripts/usability/validate-app-parity",
-      "sha256": "03376882138757f04682acf39d740826bd3b62573cdf0c9826d3e5f76018ce74",
-      "bytes": 7744,
+      "sha256": "dd724a9600507205b092460a2b6e61986e2d6a13a122aae8190f2f50610cd03d",
+      "bytes": 8575,
       "mode": 493,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "03376882138757f04682acf39d740826bd3b62573cdf0c9826d3e5f76018ce74"
     },
     {

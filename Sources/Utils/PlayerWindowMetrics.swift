@@ -86,8 +86,9 @@ public enum PlayerWindowLayoutPolicy {
     }
 
     public static func sidebarArtworkSide(sidebarWidth: CGFloat, windowHeight: CGFloat) -> CGFloat? {
-        let remaining = windowHeight - 52 - 300
-        let side = min(sidebarWidth, 220, remaining)
+        // Leave a separate, padded footer below at least 300 points of navigation.
+        let remaining = windowHeight - 52 - 300 - 25
+        let side = min(sidebarWidth - 24, 160, remaining)
         return side >= 120 ? side : nil
     }
 }

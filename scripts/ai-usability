@@ -137,10 +137,10 @@ write_run_manifest() {
 write_run_manifest
 
 cleanup() {
-  local status=$?
-  if [[ "$status" -ne 0 && "$RUN_PHASE" != "prepared" ]]; then
+  local runner_exit_status=$?
+  if [[ "$runner_exit_status" -ne 0 && "$RUN_PHASE" != "prepared" ]]; then
     if [[ -z "$RUN_ERROR" ]]; then
-      RUN_ERROR="Runner exited during $RUN_PHASE with status $status."
+      RUN_ERROR="Runner exited during $RUN_PHASE with status $runner_exit_status."
     fi
     RUN_PHASE="failed"
     write_run_manifest 2>/dev/null || true

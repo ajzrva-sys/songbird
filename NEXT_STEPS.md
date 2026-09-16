@@ -1,5 +1,11 @@
 # Candidate next steps
 
+## Sidebar artwork and local signing
+
+Installed: compact padded artwork footer and persistent local signing identity.
+Existing Keychain items may need one final Always Allow approval for the switch.
+Scope and verification: [record](docs/exec-plans/completed/sidebar-artwork-signing.md).
+
 ## Folder artwork discovery
 
 Installed: folder.jpg and other conventional covers are discovered on album opening
