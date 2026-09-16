@@ -74,10 +74,11 @@ struct UsabilityRemediationTests {
         )
         #expect(roomy.sidebar == 420)
         #expect(roomy.rightPane == 344)
-        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 260, windowHeight: 520) == 143)
-        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 420, windowHeight: 900) == 160)
-        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 900) == 156)
-        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 450) == nil)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 260, windowHeight: 520) == 260)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 420, windowHeight: 900) == 420)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 450) == 180)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 420, windowHeight: 520) == nil)
+        #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 100, windowHeight: 900) == nil)
     }
 
     @Test("The main Play button starts visible or selected content only when the queue is empty")

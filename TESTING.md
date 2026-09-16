@@ -1,5 +1,30 @@
 # Candidate Testing and Validation
 
+## Edge-to-edge sidebar artwork correction — 2026-09-16
+
+The owner clarified that the dark framing was the problem and requested the original
+padding-free presentation. Removed the added padding, outline, rounded frame and
+width cap. A square cover fills the sidebar width; navigation stays clipped above
+it. In a window too short for that square plus 180 points of navigation, artwork
+hides instead of shrinking inside dark margins. The prior padded design below is
+superseded by this correction.
+
+- Isolated quick suite passed: 324 XCTest (two expected optional-store skips),
+  343 Swift Testing cases. Updated the existing constrained-layout expectations.
+- Optimized build/package passed in 87.40 s. Disposable UI run
+  20260916T082113Z-1564 verified the full image flush with both sidebar edges at
+  normal and 520-point window heights, including scrolling to Play Queue.
+- Installed /Applications/Songbird.app with all 44 bundle entries/signatures,
+  resources/legal notices and Last.fm application configuration verified. Prior
+  package: Songbird-20260916T082248Z.app in installed-backups. The new app's
+  certificate-bound identity exactly matches the previous installation.
+- Both disposable processes stopped. Normal app/library/credentials were not used;
+  normal app restart is left to the owner. No Python/signing/backend changes, so
+  those suites, audio TSan and hardware coverage were not repeated.
+
+Evidence: `/Users/aji/project/songbird-public-verification/edge-artwork-20260916/`.
+This is a bounded visual check, not a broad usability or real-account sign-in test.
+
 ## Sidebar artwork and stable local signing — 2026-09-16
 
 See the [completed record](docs/exec-plans/completed/sidebar-artwork-signing.md).

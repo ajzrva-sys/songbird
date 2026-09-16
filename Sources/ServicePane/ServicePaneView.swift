@@ -115,18 +115,9 @@ public struct ServicePaneView: View {
                     sidebarWidth: geometry.size.width,
                     windowHeight: geometry.size.height
                    ) {
-                    VStack(spacing: 0) {
-                        Rectangle()
-                            .fill(SongbirdTheme.divider(for: colorScheme))
-                            .frame(height: 1)
-                        sidebarArtworkWell
-                            .frame(width: side, height: side)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .padding(12)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .background(sidebarBg)
-                    .accessibilityIdentifier("library.sidebar.artwork")
+                    sidebarArtworkWell
+                        .frame(width: side, height: side)
+                        .accessibilityIdentifier("library.sidebar.artwork")
                 }
             }
         }
@@ -220,11 +211,6 @@ public struct ServicePaneView: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .frame(maxWidth: .infinity)
-            .overlay {
-                Rectangle()
-                    .stroke(SongbirdTheme.divider(for: colorScheme), lineWidth: 1)
-            }
-            .background(sidebarBg)
         } else if let localAlbum {
             MissingAlbumArtworkButton(
                 albumTitle: localAlbum.title,
@@ -237,12 +223,6 @@ public struct ServicePaneView: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .frame(maxWidth: .infinity)
-            .overlay {
-                Rectangle()
-                    .stroke(SongbirdTheme.divider(for: colorScheme), lineWidth: 1)
-                    .allowsHitTesting(false)
-            }
-            .background(sidebarBg)
             .help("Search Discogs for artwork for \(localAlbum.title)")
         }
     }

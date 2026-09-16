@@ -85,6 +85,11 @@ SONGBIRD_SIGNING_CONFIG and SONGBIRD_SIGNING_IDENTITY select package signing.
 
 ## Outcomes & Retrospective
 
+Owner correction after this pass: the requested appearance is edge-to-edge artwork
+without dark borders or padding. The compact padded layout recorded below is
+superseded; current correction evidence is recorded at the top of TESTING.md.
+Signing behavior remains as verified here.
+
 Installed in /Applications/Songbird.app with the same version and Last.fm application
 configuration. Builds on this Mac now use a persistent certificate; synthetic
 update access passed with authentication UI disabled, and an unrelated signature

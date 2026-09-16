@@ -2,7 +2,8 @@
 
 ## Sidebar artwork and local signing
 
-Installed: compact padded artwork footer and persistent local signing identity.
+Installed: artwork fills the sidebar edge to edge, with no added
+padding, border, rounded frame or width cap. Persistent local signing remains in place.
 Existing Keychain items may need one final Always Allow approval for the switch.
 Scope and verification: [record](docs/exec-plans/completed/sidebar-artwork-signing.md).
 

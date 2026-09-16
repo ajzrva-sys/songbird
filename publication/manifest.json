@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "84e10aa7d1d89c6318de0459e0de8c0cd9c067085f97eebbcac24d6fc03e557b",
-      "bytes": 5062,
+      "sha256": "1381502a075b5b1715d5da7c726624bbb1db11d81b0fc445a265c751e7515c5b",
+      "bytes": 5135,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -1554,8 +1554,8 @@
     },
     {
       "path": "Sources/ServicePane/ServicePaneView.swift",
-      "sha256": "4adcc140270fc8fccfac00aa9c06b3d2157f3209b73bc3d147dab2c40b2dc4c0",
-      "bytes": 34868,
+      "sha256": "31e6d3db2d243978eb22934feff9a15d5679c6076dc32bfc3faec09be98f93a8",
+      "bytes": 34019,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "17f190262418b9c6f3e917095ec2b047b088fe167624a23c0d8549f2079d7d4d"
@@ -1673,8 +1673,8 @@
     },
     {
       "path": "Sources/Utils/PlayerWindowMetrics.swift",
-      "sha256": "42792b1bdbd586084e2a3ebf57d1661d2dec3c4ea6a84f0d8cc85279fb9e8e7c",
-      "bytes": 3617,
+      "sha256": "9fb49a8320770a4232158136249a6d9b6e492bc3ee29f5464475543cc0a33307",
+      "bytes": 3663,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "494413812ae0693c109e929b42de55ca7a367924fc8621d05690dc40d10f9224"
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "04d271f955d7edb4559d7cfd6555175c2fb1a1c98fe4cf4a968c13cd311f892d",
-      "bytes": 38620,
+      "sha256": "18371a3642ed3d362750e57e09bd1f7915127af5c0e111162968221d04c6181b",
+      "bytes": 40208,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3253,8 +3253,8 @@
     },
     {
       "path": "Tests/SongbirdTests/UsabilityRemediationTests.swift",
-      "sha256": "2af8bca801deff9e6acf64d427560837f1c8103e1b1a72d726a26d4c7e6408a5",
-      "bytes": 42402,
+      "sha256": "64b703ff0db4352e5a45440f2a6fed6dd632db6a1035409154035db10ebf1be1",
+      "bytes": 42508,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "cc4ae257ed639275e17dab8d043aae47be6371bee2a63fe5e9c892e6bf031718"
@@ -12685,8 +12685,8 @@
     {
       "origin": "sidebar-artwork-stable-signing",
       "path": "docs/exec-plans/completed/sidebar-artwork-signing.md",
-      "sha256": "4cd5942c514fdd99c1b608c22862d5a1f85b6e8aba44394d01e83806cae17542",
-      "bytes": 5621,
+      "sha256": "a221f9a39709c6a0eec96294899821f57991b7ca35333ec40320ae9c50c32818",
+      "bytes": 5903,
       "mode": 420
     },
     {
