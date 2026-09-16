@@ -348,9 +348,9 @@ public final class PlaybackEngine: ObservableObject {
 
     public func pause() {
         playRequestGeneration &+= 1
-        persistLastTrack()
         backend.pause()
         status = .paused
+        persistLastTrack()
         playQualification.pause(uptime: ProcessInfo.processInfo.systemUptime)
         stopPositionTimer()
         nowPlaying.updateNowPlaying()

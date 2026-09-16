@@ -47,11 +47,28 @@ public actor ArtworkThumbnailService {
         let task: Task<CGImage?, Never>
     }
 
+    private struct CachedData {
+        let data: Data
+        var access: UInt64
+    }
+
+    private struct DataLoad {
+        let id: UUID
+        let task: Task<Data?, Never>
+    }
+
+    // Shared encoded bytes avoid another database read when a cover changes size.
+    // Only permanent local album artwork enters this cache.
+    private var albumDataCache: [ArtworkReference: CachedData] = [:]
+    private var albumDataLoads: [ArtworkReference: DataLoad] = [:]
+    private var sourceByteCost = 0
+    private var maximumSourceByteCost: Int { min(maximumByteCost, 16 * 1024 * 1024) }
+
     private static let signposter = OSSignposter(
         subsystem: "com.songbird.player",
         category: "ArtworkThumbnail"
     )
-    private let dataActor: ArtworkDataModelActor
+    private let dataActor: Task<ArtworkDataModelActor, Never>
     private let albumDataLoader: AlbumDataLoader?
     private let maximumImageCount: Int
     private let maximumByteCost: Int
@@ -82,7 +99,9 @@ public actor ArtworkThumbnailService {
         discogsArtworkLoader: DiscogsArtworkLoader? = nil,
         expirySleep: (@Sendable (TimeInterval) async throws -> Void)? = nil
     ) {
-        dataActor = ArtworkDataModelActor(modelContainer: modelContainer)
+        dataActor = Task.detached {
+            ArtworkDataModelActor(modelContainer: modelContainer)
+        }
         self.albumDataLoader = albumDataLoader
         self.maximumImageCount = maximumImageCount
         self.maximumByteCost = maximumByteCost
@@ -131,15 +150,11 @@ public actor ArtworkThumbnailService {
             return image
         }
 
-        let task = Task<CGImage?, Never> { [dataActor, albumDataLoader, remoteArtworkLoader, discogsArtworkLoader, clock] in
+        let task = Task.detached(priority: .userInitiated) { [self, remoteArtworkLoader, discogsArtworkLoader, clock] () -> CGImage? in
             let data: Data?
             switch reference {
-            case .album(let albumID, _):
-                if let albumDataLoader {
-                    data = await albumDataLoader(albumID)
-                } else {
-                    data = await dataActor.artworkData(for: albumID)
-                }
+            case .album:
+                data = await localAlbumData(for: reference)
             case .remote(let url):
                 data = try? await remoteArtworkLoader(url)
             case .discogsRemote(let url, let evidence):
@@ -176,6 +191,64 @@ public actor ArtworkThumbnailService {
             return nil
         }
         return Task.isCancelled ? nil : image
+    }
+
+    /// Immediate cross-size preview, with no database or network work.
+    public func cachedImage(for reference: ArtworkReference, pointSize: CGSize,
+                            scale: CGFloat = 2) -> CGImage? {
+        pruneExpiredDiscogs()
+        guard isUsable(reference, at: clock()) else { return nil }
+        let target = max(1, Int(ceil(max(pointSize.width, pointSize.height) * scale)))
+        let candidates = cache.keys.filter { $0.reference == reference }
+        let key = candidates.filter { $0.pixelSize >= target }.min { $0.pixelSize < $1.pixelSize }
+            ?? candidates.max { $0.pixelSize < $1.pixelSize }
+        guard let key, var cached = cache[key] else { return nil }
+        accessCounter &+= 1
+        cached.access = accessCounter
+        cache[key] = cached
+        return cached.image
+    }
+
+    private func localAlbumData(for reference: ArtworkReference) async -> Data? {
+        guard case .album(let albumID, _) = reference else { return nil }
+        accessCounter &+= 1
+        if var cached = albumDataCache[reference] {
+            cached.access = accessCounter
+            albumDataCache[reference] = cached
+            return cached.data
+        }
+        let generation = generation(for: reference)
+        if let load = albumDataLoads[reference] {
+            let data = await load.task.value
+            guard generation == self.generation(for: reference), !load.task.isCancelled,
+                  !Task.isCancelled else { return nil }
+            return data
+        }
+        let task = Task { [dataActor, albumDataLoader] in
+            if let albumDataLoader { return await albumDataLoader(albumID) }
+            return await dataActor.value.artworkData(for: albumID)
+        }
+        let id = UUID()
+        albumDataLoads[reference] = DataLoad(id: id, task: task)
+        let data = await task.value
+        guard generation == self.generation(for: reference), albumDataLoads[reference]?.id == id,
+              !task.isCancelled else { return nil }
+        albumDataLoads[reference] = nil
+        if let data, data.count <= maximumSourceByteCost {
+            accessCounter &+= 1
+            albumDataCache[reference] = CachedData(data: data, access: accessCounter)
+            sourceByteCost += data.count
+            while sourceByteCost > maximumSourceByteCost || albumDataCache.count > maximumImageCount {
+                guard let oldest = albumDataCache.min(by: { $0.value.access < $1.value.access }) else { break }
+                sourceByteCost -= oldest.value.data.count
+                albumDataCache[oldest.key] = nil
+            }
+        }
+        return Task.isCancelled ? nil : data
+    }
+
+    func sourceCacheMetrics() -> (count: Int, byteCost: Int) {
+        (albumDataCache.count, sourceByteCost)
     }
 
     /// Expire only Discogs acquisitions. Cancellation never affects ordinary/local artwork.
@@ -227,6 +300,11 @@ public actor ArtworkThumbnailService {
 
     public func invalidate(albumIDs: Set<UUID>) {
         for id in albumIDs { albumGenerations[id, default: 0] &+= 1 }
+        for reference in Set(albumDataCache.keys).union(albumDataLoads.keys) {
+            guard case .album(let id, _) = reference, albumIDs.contains(id) else { continue }
+            if let removed = albumDataCache.removeValue(forKey: reference) { sourceByteCost -= removed.data.count }
+            albumDataLoads.removeValue(forKey: reference)?.task.cancel()
+        }
         let keys = Set(cache.keys).union(inFlight.keys).filter { key in
             if case .album(let id, _) = key.reference { return albumIDs.contains(id) }
             return false
@@ -244,6 +322,10 @@ public actor ArtworkThumbnailService {
         discogsExpiryTask?.cancel()
         discogsExpiryTask = nil
         allGeneration &+= 1
+        for load in albumDataLoads.values { load.task.cancel() }
+        albumDataLoads.removeAll(keepingCapacity: true)
+        albumDataCache.removeAll(keepingCapacity: true)
+        sourceByteCost = 0
         albumGenerations.removeAll(keepingCapacity: true)
         cache.removeAll(keepingCapacity: true)
         byteCost = 0

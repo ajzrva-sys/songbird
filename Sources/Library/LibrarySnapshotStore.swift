@@ -58,6 +58,31 @@ public extension LibrarySnapshotBuilding {
     }
 }
 
+/// Create the ModelContext on a worker, even when the store is UI-owned.
+/// A model actor created on the main thread otherwise inherits its main queue.
+actor BackgroundLibrarySnapshotBuilder: LibrarySnapshotBuilding {
+    private let worker: Task<any LibrarySnapshotBuilding, Never>
+
+    init(modelContainer: ModelContainer) {
+        worker = Task.detached {
+            LibrarySnapshotModelActor(modelContainer: modelContainer)
+        }
+    }
+
+    init(makeWorker: @escaping @Sendable () -> any LibrarySnapshotBuilding) {
+        worker = Task.detached { makeWorker() }
+    }
+
+    func buildSnapshot(revision: Int) async throws -> LibrarySnapshot {
+        try await worker.value.buildSnapshot(revision: revision)
+    }
+
+    func apply(changeSet: LibrarySnapshotChangeSet, to snapshot: LibrarySnapshot,
+               revision: Int) async throws -> LibrarySnapshot? {
+        try await worker.value.apply(changeSet: changeSet, to: snapshot, revision: revision)
+    }
+}
+
 @ModelActor
 public actor LibrarySnapshotModelActor: LibrarySnapshotBuilding {
     private struct TrackStructureKey: Equatable {
@@ -408,7 +433,7 @@ public final class LibrarySnapshotStore: ObservableObject {
     ) {
         self.modelContainer = modelContainer
         self.artworkService = artworkService
-        worker = snapshotBuilder ?? LibrarySnapshotModelActor(modelContainer: modelContainer)
+        worker = snapshotBuilder ?? BackgroundLibrarySnapshotBuilder(modelContainer: modelContainer)
         // SwiftData exposes Schema.entityName(for:) only on macOS 15. The schema
         // names for these non-inherited models are stable on the macOS 14 target.
         relevantEntities = ["Track", "Album", "Playlist", "AlbumFavorite", "TrackFavorite"]

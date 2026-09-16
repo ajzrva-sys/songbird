@@ -4,7 +4,7 @@
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
   "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1787,
+  "payload_file_count_including_manifest": 1789,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -85,8 +85,8 @@
     },
     {
       "path": "AUDIO_ENGINE.md",
-      "sha256": "0678ef9fc309c6c208b8ba3586ff8f43459642dc773abdba6f6aa5cdcdc3c365",
-      "bytes": 3677,
+      "sha256": "a1fe0563c282ad6b23de848ccff5c210585b961535a6bca7bf91425331b77715",
+      "bytes": 4015,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "95e4d53053fa2ccb9c795c04202e39515d5df873603ce6257cea5cbd6b2fc218"
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "c2eac3f57e1e3b6ef6489d38a7d858210516a1f7dec55173afb87aab95a00655",
-      "bytes": 3012,
+      "sha256": "a9c8940b2e03170ba3b535a2c2469f260eb90829cf5b9a38c2d6a6eaa6c72ad4",
+      "bytes": 3454,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -190,8 +190,8 @@
     },
     {
       "path": "Sources/App/SongbirdApp.swift",
-      "sha256": "e6464a43be634049dbf2a9ddaea37fe0b000c76f3e5230f8a7e73e884c897505",
-      "bytes": 30206,
+      "sha256": "9a22d9a3e6d92cfa645a064ce3c36971d82795dc13d03d4fdc6472494e7f2e0f",
+      "bytes": 30418,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "915f3adc1804d686bb3b5502030e9262b845abe73b837acd945e9b9452a5313f"
@@ -374,8 +374,8 @@
     },
     {
       "path": "Sources/Backend/NativeAudioBackend.swift",
-      "sha256": "fd0ce8926c8bdb7b7621e6d013521081644b072a4fbabd9e761f575e02353c06",
-      "bytes": 24667,
+      "sha256": "917be56d05ec821689a06d415faac25915e4189c7749e4e4e828a87f5466e727",
+      "bytes": 24348,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "d08ecff6d5ac2fbd6749557f2ffa6934c5b099858857a7d21af7fc188f319bb5"
@@ -839,8 +839,8 @@
     },
     {
       "path": "Sources/Library/ArtworkThumbnailService.swift",
-      "sha256": "a4a199ec6408412828a77ba9387638e329af5386d0790e45025c62cecadb5dbd",
-      "bytes": 16390,
+      "sha256": "ff2884b31df9d4caa53afa8245fd040087d56237162839ee5d65f77d3b4f38b1",
+      "bytes": 20227,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "d65f9587ac7c1a84cbef2d12da2792f0a1e4f1e9eb2284339d021ed1c53f7647"
@@ -999,18 +999,18 @@
     },
     {
       "path": "Sources/Library/LibrarySnapshot.swift",
-      "sha256": "14611c66b0e01dc4e92e2a0fa3bd50325ff2703aa80135f582371fea814863d5",
-      "bytes": 16061,
+      "sha256": "38f7933918792df7b98dfc6c912931150af542497f1269b47ebeea46201ac1ac",
+      "bytes": 16225,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "719cbb1dfe12fdb55b2ad144b98881e66844f151457e054cb7300bf5aed583c9"
     },
     {
       "path": "Sources/Library/LibrarySnapshotStore.swift",
-      "sha256": "c6839ef4d274a40e8440282d1a1fa431c823050fcdf3bbbabcb14802331bb976",
-      "bytes": 30938,
+      "sha256": "9524b10f21c0e9100e51863e0b7af61888cef25bab552ad26f4c88e54e10a36a",
+      "bytes": 31920,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "c6839ef4d274a40e8440282d1a1fa431c823050fcdf3bbbabcb14802331bb976"
     },
     {
@@ -1239,7 +1239,7 @@
     },
     {
       "path": "Sources/Playback/PlaybackEngine.swift",
-      "sha256": "d968c1696baae9268e5aaa9d59f08f0ab284634715c515a6ed92ee0d649cc45d",
+      "sha256": "bf02e4e636764c0b7c9bf597444f25c84687dd3a8fefe74a13fa16cbae0f41ff",
       "bytes": 32818,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
@@ -1817,8 +1817,8 @@
     },
     {
       "path": "Sources/Views/ArtworkThumbnailView.swift",
-      "sha256": "58f79af65b383a79973e4dc71473a1db2103ada03bedfee4174d596bdd25b329",
-      "bytes": 5127,
+      "sha256": "5da51cb31659206fa7b2d6c210b2bcb86a337e7b04cc2507aef221230d3f77a6",
+      "bytes": 5435,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "2a5efbda4fdb4785f601050b20162dd57ed6b4d3855d4827e73a5e382c54acd5"
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "dd0a8ae53284ad1c0964c2382aa6a91d818255a009de48a02fde3d7ea7ddefef",
-      "bytes": 25440,
+      "sha256": "38e7e76a80368a64075678fa01bab6b8b689b30c2dc07339fb01c001e6dc117b",
+      "bytes": 28473,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -2601,6 +2601,13 @@
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e0b7fb875bd6df5e2178e65f21663177188f345e4ce2376f5f4df4e7cf7f9401"
+    },
+    {
+      "path": "Tests/SongbirdTests/ArtworkReuseTests.swift",
+      "sha256": "9e0538fc6de65db2db800f10a2137dc25ea0a307769e94754abadf5fd5746bca",
+      "bytes": 5880,
+      "mode": 420,
+      "origin": "pause-album-artwork"
     },
     {
       "path": "Tests/SongbirdTests/ArtworkStorageTests.swift",
@@ -12613,6 +12620,13 @@
       "origin": "baseline-documentation"
     },
     {
+      "path": "docs/exec-plans/completed/pause-album-artwork.md",
+      "sha256": "79564eb5bd4edde643acdbec2170f2bce020b6b468768dd7ee2924a906db8101",
+      "bytes": 6134,
+      "mode": 420,
+      "origin": "pause-album-artwork"
+    },
+    {
       "origin": "playback-responsiveness",
       "path": "docs/exec-plans/completed/playback-responsiveness.md",
       "sha256": "1cc7e47b84abc88d3027986bfc28805034a55f168d5294bc3607c615a5c1488a",
@@ -12902,8 +12916,8 @@
     },
     {
       "path": "scripts/test-audio-tsan.sh",
-      "sha256": "43a4f7363644c3aa8626b8f98fa9812df47e6a7871fae6e9bfd184d4b720924e",
-      "bytes": 183,
+      "sha256": "9edee69114e1e2ea22d45182bb3e6082192e7fc2fc1ee0594e92a1f10e635992",
+      "bytes": 272,
       "mode": 493,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "47d6d17a59f47a290e603685b3d4fcd9e7548c4f0b909a2d98711d24216511da"

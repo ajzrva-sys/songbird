@@ -26,8 +26,6 @@ struct SongbirdApp: App {
     @AppStorage("cascadeFilter.visible") private var cascadeVisible = true
     @AppStorage(TrackTableColumnPrefs.storageKey) private var columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
     @AppStorage(PlayerBarPlacement.storageKey) private var playerBarPlacement = PlayerBarPlacement.top.rawValue
-    @FocusedValue(\.trackTableCommands) private var trackTableCommands
-    @FocusedValue(\.librarySearchCommands) private var librarySearchCommands
     private let isUsabilityTesting: Bool
     private let startsPastImportSetup: Bool
 
@@ -219,14 +217,7 @@ struct SongbirdApp: App {
                 }
             }
 
-            CommandGroup(after: .pasteboard) {
-                if let trackTableCommands {
-                    Button("Select All") {
-                        trackTableCommands.selectAll()
-                    }
-                    .keyboardShortcut("a", modifiers: .command)
-                }
-            }
+            LibraryEditingCommands()
 
             CommandMenu("Controls") {
                 Button(session.engine.status == .playing ? "Pause" : "Play") {
@@ -296,15 +287,6 @@ struct SongbirdApp: App {
                     NotificationCenter.default.post(name: .showLyrics, object: nil)
                 }
                 .keyboardShortcut("l", modifiers: [.command, .option])
-            }
-
-            CommandGroup(after: .textEditing) {
-                if let librarySearchCommands {
-                    Button("Find…") {
-                        librarySearchCommands.focusSearch()
-                    }
-                    .keyboardShortcut("f", modifiers: .command)
-                }
             }
 
             // Use CommandGroup (not CommandMenu("View")) so items join the system
@@ -463,6 +445,33 @@ struct SongbirdApp: App {
             Task { @MainActor in
                 let scanner = LibraryScanner(modelContainer: MediaLibrary.shared.container)
                 await scanner.scanFolders(panel.urls)
+            }
+        }
+    }
+}
+
+/// Observe focused commands here so a view publishing new command closures does
+/// not rebuild the app's windows and publish those closures again.
+private struct LibraryEditingCommands: Commands {
+    @FocusedValue(\.trackTableCommands) private var trackTableCommands
+    @FocusedValue(\.librarySearchCommands) private var librarySearchCommands
+
+    var body: some Commands {
+        CommandGroup(after: .pasteboard) {
+            if let trackTableCommands {
+                Button("Select All") {
+                    trackTableCommands.selectAll()
+                }
+                .keyboardShortcut("a", modifiers: .command)
+            }
+        }
+
+        CommandGroup(after: .textEditing) {
+            if let librarySearchCommands {
+                Button("Find…") {
+                    librarySearchCommands.focusSearch()
+                }
+                .keyboardShortcut("f", modifiers: .command)
             }
         }
     }

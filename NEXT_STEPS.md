@@ -1,5 +1,13 @@
 # Candidate next steps
 
+## Pause and album artwork
+
+Immediate Pause, shared album covers, background database readers and the menu-focus
+loop fix are installed; see the [completed plan](docs/exec-plans/completed/pause-album-artwork.md).
+**PERF-ALBUM-250:** continue reducing the measured 0.78–0.80 s menu-to-stable-album
+transition toward the 250 ms target. The sustained multi-second freeze is fixed;
+real-storage and audible Pause timing remain to be measured.
+
 ## Playback responsiveness
 
 Playback preparation, preloading, seeking and decoder cleanup now avoid blocking

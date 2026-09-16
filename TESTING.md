@@ -1,5 +1,48 @@
 # Candidate Testing and Validation
 
+## Pause, album navigation and artwork reuse — 2026-09-15
+
+See the [completed implementation record](docs/exec-plans/completed/pause-album-artwork.md).
+Pause now silences/pauses the engine directly before saving position. Database
+readers are constructed off-main, local album image bytes are shared across sizes,
+and a detail view immediately requests any existing decoded cover as its preview.
+Focused menu commands now observe focus in their own Commands type, preventing
+window reconstruction from feeding a sustained SwiftUI update loop.
+
+- Final isolated `./check.sh quick -j 4`: 310 XCTest cases (two optional-store
+  skips), plus 339 Swift Testing cases in 44 suites; zero failures.
+- Audio/artwork TSan: 37 XCTest and 27 Swift Testing cases, zero races/warnings.
+  Backend/cache source was unchanged after this run.
+- Python: 109 cases, two optional vendor-rebuild skips, zero failures. An initial
+  concurrent packaging run temporarily removed Package.resolved; the final Python
+  retry ran without that overlap and passed.
+- Optimized build/package passed (80.79 seconds); final unchanged-source packaging
+  passed again after UI preparation. Ad-hoc signatures and all 44 installed bundle
+  entries match. Resources/notices and Last.fm application configuration are preserved.
+- Two fresh 10,000-track disposable profiles reproduced the repaired Go to Album
+  route: album header/cover reached their stable frame at 799.87 and 780.99 ms after
+  Return. Neither replay sustained the prior layout freeze. These measurements
+  include menu dismissal/transition and still exceed the 250 ms product target;
+  PERF-ALBUM-250 in NEXT_STEPS.md retains that follow-up. An initial no-op frame
+  capture with no open menu is explicitly excluded from timing evidence.
+- Rendered checks also confirmed album Play (skipping a deliberately missing file),
+  Pause switching back to Play, Command-A selecting all ten album rows, Back, and
+  Command-F focusing Search All Tracks. Silent fixture playback verifies UI state,
+  not audible stopping latency. Generic selector collisions were resolved with
+  window-scoped actions; keyboard checks required the disposable app to be active.
+- Table appearance/geometry and navigation-animation experiments failed to resolve
+  the original stall and were reverted. Diagnostic logging was removed. Limited
+  transition-time AttributeGraph warnings remain; no sustained input stall recurred.
+
+The updated `/Applications/Songbird.app` is installed. The prior app is retained at
+`/Users/aji/project/songbird-public-verification/installed-backups/Songbird-20260916T003847Z.app`.
+Logs, schema-conforming partial UI reports, screenshots/frame evidence, checksums and
+installation receipt are retained in
+`/Users/aji/project/songbird-public-verification/pause-album-artwork-20260915/`.
+All disposable app/broker processes were stopped. Normal library/media were not
+accessed. Real-storage latency, audible output, AirPlay and broad UI coverage remain
+unverified; physical CD coverage was not repeated.
+
 ## Playback responsiveness — 2026-09-15
 
 See the [completed implementation record](docs/exec-plans/completed/playback-responsiveness.md).

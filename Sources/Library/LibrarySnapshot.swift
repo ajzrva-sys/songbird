@@ -20,6 +20,9 @@ public extension ArtworkReference {
             }
             return .remote(remoteURL)
         }
+        if let snapshot = LibrarySnapshotStore.active?.trackSnapshot(id: track.id) {
+            return snapshot.artworkReference ?? .missingAlbumArtwork
+        }
         guard let album = track.albumRelation,
               let artworkData = album.artworkData,
               artworkData.isEmpty == false else { return .missingAlbumArtwork }

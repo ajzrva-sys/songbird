@@ -177,22 +177,13 @@ public final class NativeAudioBackend:
 
     public func pause() {
         guard let engine, _isRunning, !_isPaused else { return }
+        cancelFade(restoringVolume: false)
+        // Pause is a transport command, not a UI-timed animation. Silence the
+        // renderer before stopping the engine, then restore gain while paused.
+        kernel.setVolume(0)
+        engine.pause()
         _isPaused = true
-        fadeTask?.cancel()
-        let startVolume = Float(requestedVolume)
-        fadeTask = Task { @MainActor [weak self, weak engine] in
-            guard let self else { return }
-            let completed = await self.rampVolume(
-                from: startVolume,
-                to: 0,
-                duration: self.transportFadeDuration
-            )
-            guard completed else { return }
-            engine?.pause()
-            // Restore silently while paused so resume starts at the chosen volume.
-            self.kernel.setVolume(Float(self.requestedVolume))
-            self.fadeTask = nil
-        }
+        kernel.setVolume(Float(requestedVolume))
     }
 
     public func resume() {

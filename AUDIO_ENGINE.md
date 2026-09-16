@@ -33,6 +33,13 @@ The synchronous backend compatibility API and output-device recovery still prepa
 synchronously. Core Audio engine configuration/start remain on the control actor.
 This is not a claim that every possible source of UI or hardware latency is removed.
 
+## Pause
+
+Pause cancels an in-flight gain animation, mutes the renderer, and pauses the
+AVAudioEngine synchronously. It no longer waits for a main-actor fade to complete.
+The saved gain is restored while paused for resume. Stop/resume keep their existing
+fades. Actual output-device/AirPlay buffering remains a hardware timing question.
+
 ## Transitions
 
 - Gapless playback changes streams on the frame immediately following EOF.

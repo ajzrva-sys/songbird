@@ -95,7 +95,11 @@ public struct ArtworkThumbnailView: View {
             loadState.publish(nil, generation: generation)
             guard available else { return }
             let reference = reference ?? .missingAlbumArtwork
-            let image = await ArtworkThumbnailService.shared.image(
+            let service = ArtworkThumbnailService.shared
+            let cached = await service.cachedImage(for: reference, pointSize: pointSize, scale: displayScale)
+            guard !Task.isCancelled, reference.isAvailable(at: DiscogsClock.sample()) else { return }
+            loadState.publish(cached, generation: generation)
+            let image = await service.image(
                 for: reference,
                 pointSize: pointSize,
                 scale: displayScale
