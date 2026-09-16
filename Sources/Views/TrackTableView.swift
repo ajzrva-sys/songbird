@@ -431,8 +431,10 @@ struct TrackTableColumnHeader: View {
                 if canMoveColumn(column, direction: 1) {
                     Button("Move Right") { moveColumn(column, direction: 1) }
                 }
-                Button("Narrow Column") { adjustColumnWidth(column, by: -16) }
-                Button("Widen Column") { adjustColumnWidth(column, by: 16) }
+                if column != .rating {
+                    Button("Narrow Column") { adjustColumnWidth(column, by: -16) }
+                    Button("Widen Column") { adjustColumnWidth(column, by: 16) }
+                }
             }
             .contextMenu {
                 contextMenuItems(for: column)
@@ -529,7 +531,12 @@ struct TrackTableColumnHeader: View {
     ) -> some View {
         let alignment: Alignment = column == .rating ? .center : .leading
         return HStack(spacing: 2) {
-            Text(column.label)
+            if column == .rating {
+                Image(systemName: "heart")
+                    .accessibilityLabel(column.label)
+            } else {
+                Text(column.label)
+            }
             if !usePlaylistOrder || showsPlaylistOrderOption == false, sortColumn == column {
                 Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
                     .font(.system(size: 8, weight: .bold))

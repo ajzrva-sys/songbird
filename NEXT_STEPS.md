@@ -1,5 +1,11 @@
 # Candidate next steps
 
+## Compact Favorite column
+
+Installed: a 32-point Favorite column with a heart header, including for older saved
+widths. Other columns retain their preferences. Tests, build and a focused disposable
+render check passed; details are in TESTING.md.
+
 ## Initial library display
 
 Installed: folder checks run off-main, maintenance waits for the first catalog

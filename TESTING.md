@@ -1,5 +1,23 @@
 # Candidate Testing and Validation
 
+## Compact Favorite column — 2026-09-16
+
+Favorite uses a fixed 32-point width and a heart header with its accessible name
+preserved. Older saved Favorite widths resolve to the compact size; other column
+preferences are unchanged. Focused column tests: 13 passed. Isolated
+`./check.sh quick -j 4`: 314 XCTest cases (two optional-store skips) and 343 Swift
+Testing cases passed. Optimized `./build.sh` packaging passed in 80.69 seconds.
+
+A bounded disposable 1,000-track UI check confirmed the 32-point header frame,
+heart rendering and sort-indicator response. A deep window snapshot disambiguated
+the header from row Favorite buttons before activation. This was a cosmetic change
+check, not a broad usability pass; audio/hardware and Python checks were not repeated.
+Installed `/Applications/Songbird.app`; all 44 bundle entries and signatures match,
+and resources/notices and Last.fm application configuration are preserved. The prior
+app is backed up as `Songbird-20260916T072239Z.app`. Evidence and the install receipt:
+`/Users/aji/project/songbird-public-verification/favorite-column-20260916/`.
+Disposable processes were stopped; normal library/media were not accessed.
+
 ## Initial library loading — 2026-09-15
 
 See the [completed record](docs/exec-plans/completed/library-startup.md).

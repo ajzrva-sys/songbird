@@ -21,9 +21,10 @@ public enum TrackTableColumnPrefs {
     public static let storageKey = "trackTable.columnPrefs"
     public static let albumArtistDefaultMigrationKey = "trackTable.albumArtistDefaultMigrated"
     public static let primaryColumnOrderMigrationKey = "trackTable.primaryColumnOrderMigrated"
+    public static let favoriteColumnWidth: CGFloat = 32
 
     public static let defaults: [TrackColumnPref] = [
-        .init(id: TrackSortColumn.rating.rawValue, visible: true, width: 40),
+        .init(id: TrackSortColumn.rating.rawValue, visible: true, width: Double(favoriteColumnWidth)),
         .init(id: TrackSortColumn.albumArtist.rawValue, visible: true, width: 140),
         .init(id: TrackSortColumn.title.rawValue, visible: true, width: 220),
         .init(id: TrackSortColumn.album.rawValue, visible: true, width: 140),
@@ -59,7 +60,8 @@ public enum TrackTableColumnPrefs {
         case .beatsPerMinute, .lastPlayed, .lastSkipped, .movementNumber:
             return 110
         case .duration, .skipCount, .year: return 56
-        case .rating, .starRating, .kind: return 70
+        case .rating: return favoriteColumnWidth
+        case .starRating, .kind: return 70
         case .playCount: return 48
         case .trackNumber: return 60
         case .dateAdded, .dateModified, .albumRating, .sampleRate:
@@ -82,7 +84,7 @@ public enum TrackTableColumnPrefs {
         case .duration, .playCount, .kind, .skipCount, .year,
              .discNumber, .movementNumber, .beatsPerMinute:
             return 40
-        case .rating: return 24
+        case .rating: return favoriteColumnWidth
         case .starRating, .albumRating: return 48
         case .dateAdded, .dateModified, .lastPlayed, .lastSkipped,
              .releaseDate:
@@ -92,6 +94,8 @@ public enum TrackTableColumnPrefs {
     }
 
     public static func resolvedWidth(for pref: TrackColumnPref) -> CGFloat {
+        // The icon-only Favorite column stays compact, including with older saved widths.
+        if pref.column == .rating { return favoriteColumnWidth }
         if let width = pref.width, width > 0 {
             return CGFloat(width)
         }
@@ -102,7 +106,8 @@ public enum TrackTableColumnPrefs {
     }
 
     public static func clampedWidth(_ width: CGFloat, for column: TrackSortColumn) -> CGFloat {
-        max(minimumWidth(for: column), min(600, width))
+        if column == .rating { return favoriteColumnWidth }
+        return max(minimumWidth(for: column), min(600, width))
     }
 
     public static func decode(_ raw: String) -> [TrackColumnPref] {

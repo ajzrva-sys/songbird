@@ -135,6 +135,20 @@ final class TrackTableColumnPrefsTests: XCTestCase {
         XCTAssertEqual(TrackTableColumnPrefs.clampedWidth(900, for: .title), 600)
     }
 
+    func testFavoriteStaysCompactWithLegacyWidthsWithoutResettingOtherColumns() {
+        let prefs = TrackTableColumnPrefs.decode(TrackTableColumnPrefs.encode([
+            TrackColumnPref(id: "rating", visible: true, width: 100),
+            TrackColumnPref(id: "title", visible: true, width: 317),
+        ]))
+
+        XCTAssertEqual(TrackTableColumnPrefs.resolvedWidth(for: prefs[0]), 32)
+        XCTAssertEqual(TrackTableColumnPrefs.resolvedWidth(for: prefs[1]), 317)
+        XCTAssertEqual(TrackTableColumnPrefs.defaultWidth(for: .rating), 32)
+        XCTAssertEqual(TrackTableColumnPrefs.clampedWidth(100, for: .rating), 32)
+        XCTAssertEqual(prefs.map(\.id).prefix(2), ["rating", "title"])
+        XCTAssertTrue(prefs[0].visible)
+    }
+
     func testSharedTableWidthAccountsForInsetsArtworkColumnsAndGaps() {
         let columns = [
             TrackTableColumnDefinition(

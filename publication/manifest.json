@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "de44ab30b2f7fe1e00ba7c39d6af8e21c048484df80f22485e0d8c65d49f78c5",
-      "bytes": 4250,
+      "sha256": "6b506c9ddae82ea8e9f7fed746c6922f2e0a4d2117ac2e22366b2dc77784c4e6",
+      "bytes": 4498,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -1729,10 +1729,10 @@
     },
     {
       "path": "Sources/Utils/TrackTableColumnPrefs.swift",
-      "sha256": "82e79214f3d10e500b285984a18a116fd5f9955560b0c2406735cf018d892019",
-      "bytes": 9450,
+      "sha256": "8c1145de840cb9a8ebbcfd598326fc34630aaab4251003a52fc716fc2d373537",
+      "bytes": 9811,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "82e79214f3d10e500b285984a18a116fd5f9955560b0c2406735cf018d892019"
     },
     {
@@ -2328,8 +2328,8 @@
     },
     {
       "path": "Sources/Views/TrackTableView.swift",
-      "sha256": "02ae2ee5652a09a8dda1ba4206bd4d4dd7b2285a10d0febf9ab49a2c7e85ab24",
-      "bytes": 28446,
+      "sha256": "a10c7c114463a7fc111bfb2046a8ac8b8079e865d95e3acd4bf92097bd84b392",
+      "bytes": 28682,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "debd7f0caf70c7fde9fc8cd119d9f085715bb5876940c83525d330973ba22dc4"
@@ -2344,8 +2344,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "f6d7cf0f7bcce266cb7eb9bf4475a03897f711877369fc4967665d7dd55c3496",
-      "bytes": 33037,
+      "sha256": "2e3ab44e5626b3eb3dd2d00af94273b7c182674c6c740e4958275d051bd64b31",
+      "bytes": 34215,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -3214,10 +3214,10 @@
     },
     {
       "path": "Tests/SongbirdTests/TrackTableColumnPrefsTests.swift",
-      "sha256": "498c4ff55f0f4526907df7cfeb0a69d6f53783375973524fc2ba3e385627eb47",
-      "bytes": 6726,
+      "sha256": "217a80f587de145223334de9315324695bb1b4713df25c038862f75c2ca1ef12",
+      "bytes": 7476,
       "mode": 420,
-      "origin": "unchanged-copy",
+      "origin": "candidate-modification; original source hash retained",
       "source_sha256": "498c4ff55f0f4526907df7cfeb0a69d6f53783375973524fc2ba3e385627eb47"
     },
     {
