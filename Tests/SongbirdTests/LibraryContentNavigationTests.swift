@@ -25,7 +25,7 @@ struct LibraryContentNavigationTests {
     @Test("Back unwinds album, artist, genre, and health routes to the original root")
     @MainActor
     func backRestoresSidebarSelectionForEveryRoute() {
-        let coordinator = LibraryNavigationCoordinator(selectedRoot: .allTracks)
+        let coordinator = LibraryNavigationCoordinator(selectedRoot: .allTracks, restoresPersistedState: false)
         let routes: [LibraryRoute] = [.album(albumID: UUID()), .artist(name: "Fixture Artist"),
                                       .genre(name: "Fixture Genre"), .health(category: .missingArtwork)]
         routes.forEach { coordinator.push($0) }

@@ -554,6 +554,10 @@ public final class PlaybackEngine: ObservableObject {
         }) else { return }
         let saved = UserDefaults.standard.double(forKey: PlaybackSettings.lastTrackPositionKey)
         let start: TimeInterval? = PlaybackSettings.rememberPosition && saved > 1 ? saved : nil
+        LibraryViewState.savePlayingAlbum(
+            id: track.albumRelation?.id,
+            title: track.album.isEmpty ? nil : track.album
+        )
         Task { [weak self, queue] in
             await self?.playResolving(track, startAt: start) {
                 queue.setCurrentTrack(track)
@@ -859,8 +863,19 @@ public final class PlaybackEngine: ObservableObject {
         guard !track.isAudioCDTrack else { return }
         UserDefaults.standard.set(track.path, forKey: PlaybackSettings.lastTrackPathKey)
         UserDefaults.standard.set(track.id.uuidString, forKey: PlaybackSettings.lastTrackIDKey)
-        if PlaybackSettings.rememberPosition {
-            UserDefaults.standard.set(position, forKey: PlaybackSettings.lastTrackPositionKey)
+        // Always store the seek offset so closing the window cannot leave the
+        // user stuck at track start when resume is re-enabled later.
+        UserDefaults.standard.set(position, forKey: PlaybackSettings.lastTrackPositionKey)
+        LibraryViewState.savePlayingAlbum(
+            id: track.albumRelation?.id,
+            title: track.album.isEmpty ? nil : track.album
+        )
+        if let albumID = track.albumRelation?.id {
+            LibraryViewState.saveAlbumGridAnchor(albumID.uuidString, for: .all)
+            LibraryViewState.saveAlbumGridAnchor(albumID.uuidString, for: .recentlyAdded(limit: 100))
+        } else if track.album.isEmpty == false {
+            LibraryViewState.saveAlbumGridAnchor(track.album, for: .all)
+            LibraryViewState.saveAlbumGridAnchor(track.album, for: .recentlyAdded(limit: 100))
         }
     }
 

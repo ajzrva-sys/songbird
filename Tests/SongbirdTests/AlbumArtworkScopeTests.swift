@@ -181,7 +181,7 @@ struct AlbumArtworkScopeTests {
                 modelContainer: container,
                 playbackSession: PlaybackSession(backend: ArtworkTestBackend()),
                 librarySnapshots: snapshots,
-                navigation: LibraryNavigationCoordinator(),
+                navigation: LibraryNavigationCoordinator(restoresPersistedState: false),
                 revealFiles: { _ in }
             )
         }

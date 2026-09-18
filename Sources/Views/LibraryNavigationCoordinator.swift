@@ -41,7 +41,10 @@ public final class LibraryNavigationCoordinator: ObservableObject {
     @Published public private(set) var rootDestination: ServicePaneDestination?
     @Published public private(set) var selectedSidebarDestination: ServicePaneDestination?
     @Published public var path: [LibraryRoute] = [] {
-        didSet { synchronizeSidebarSelection() }
+        didSet {
+            synchronizeSidebarSelection()
+            LibraryViewState.saveNavigationPath(path)
+        }
     }
 
     public var selectedRoot: ServicePaneDestination? { selectedSidebarDestination }
@@ -58,20 +61,26 @@ public final class LibraryNavigationCoordinator: ObservableObject {
         return false
     }
 
-    public init(selectedRoot: ServicePaneDestination? = .allTracks) {
-        rootDestination = selectedRoot
-        selectedSidebarDestination = selectedRoot
+    public init(selectedRoot: ServicePaneDestination? = .allTracks, restoresPersistedState: Bool = true) {
+        if restoresPersistedState,
+           let restored = LibraryViewState.loadRootDestination() {
+            rootDestination = restored
+            selectedSidebarDestination = restored
+            path = LibraryViewState.loadNavigationPath()
+            synchronizeSidebarSelection()
+        } else {
+            rootDestination = selectedRoot
+            selectedSidebarDestination = selectedRoot
+        }
     }
 
     public func selectRoot(_ destination: ServicePaneDestination?) {
         if let category = destination?.healthCategory {
-            rootDestination = .healthDashboard
-            selectedSidebarDestination = destination
+            setRootDestination(.healthDashboard, sidebar: destination)
             path = [.health(category: category)]
             return
         }
-        rootDestination = destination
-        selectedSidebarDestination = destination
+        setRootDestination(destination, sidebar: destination)
         path.removeAll()
     }
 
@@ -101,9 +110,18 @@ public final class LibraryNavigationCoordinator: ObservableObject {
 
     public func showHealth(_ category: LibraryHealthCategory) {
         if rootDestination != .healthDashboard {
-            rootDestination = .healthDashboard
+            setRootDestination(.healthDashboard, sidebar: selectedSidebarDestination)
         }
         path = [.health(category: category)]
+    }
+
+    private func setRootDestination(
+        _ destination: ServicePaneDestination?,
+        sidebar: ServicePaneDestination?
+    ) {
+        rootDestination = destination
+        selectedSidebarDestination = sidebar
+        LibraryViewState.saveRootDestination(destination)
     }
 
     private func synchronizeSidebarSelection() {

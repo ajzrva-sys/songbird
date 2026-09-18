@@ -94,6 +94,8 @@ public struct AlbumGridView: View {
     @State private var gridProjection: AlbumGridProjection = .empty
     @State private var gridProjectionWorker = AlbumGridProjectionWorker()
     @State private var summaryOwner = LibraryContentSummaryOwner()
+    @State private var pendingScrollRestore = true
+    @State private var scrollAnchorID: String?
 
     private var artworkSize: CGFloat {
         CGFloat(AlbumGridSettings.normalizedArtworkSize(storedArtworkSize))
@@ -182,9 +184,19 @@ public struct AlbumGridView: View {
                                 showsDeleteConfirmation = true
                             }
                         )
+                        .id(group.id)
                     }
                 }
                 .padding()
+            }
+            .scrollPosition(id: $scrollAnchorID, anchor: .center)
+            .onChange(of: gridProjection.orderedIDs) { _, orderedIDs in
+                guard pendingScrollRestore, orderedIDs.isEmpty == false else { return }
+                restoreScrollIfNeeded()
+            }
+            .onAppear {
+                guard pendingScrollRestore, gridProjection.orderedIDs.isEmpty == false else { return }
+                restoreScrollIfNeeded()
             }
         }
         .accessibilityIdentifier("library.albumGrid")
@@ -282,8 +294,22 @@ public struct AlbumGridView: View {
     }
 
     private func open(_ group: LibraryAlbumGroupSnapshot) {
+        LibraryViewState.saveAlbumGridAnchor(group.id, for: scope)
         guard let albumID = group.albumIDs.first else { return }
         actions.showAlbum(albumID: albumID)
+    }
+
+    private func restoreScrollIfNeeded() {
+        pendingScrollRestore = false
+        guard let groupID = LibraryViewState.resolveScrollGroupID(
+            in: gridProjection,
+            scope: scope
+        ) else { return }
+        // Defer one turn so the lazy grid has identity for the target row.
+        Task { @MainActor in
+            await Task.yield()
+            scrollAnchorID = groupID
+        }
     }
 
     @ViewBuilder

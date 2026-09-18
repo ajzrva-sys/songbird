@@ -18,8 +18,8 @@ public struct SettingsView: View {
     @State private var libraryFolderConfigurations: [LibraryFolderConfiguration] = []
     @State private var folderPendingForget: LibraryFolderConfiguration?
     @AppStorage(PlaybackSettings.volumeLimitKey) private var volumeLimit = 1.0
-    @AppStorage(PlaybackSettings.resumeOnLaunchKey) private var resumeOnLaunch = false
-    @AppStorage(PlaybackSettings.rememberPositionKey) private var rememberPosition = false
+    @AppStorage(PlaybackSettings.resumeOnLaunchKey) private var resumeOnLaunch = true
+    @AppStorage(PlaybackSettings.rememberPositionKey) private var rememberPosition = true
     @AppStorage(PlaybackSettings.crossfadeSecondsKey) private var crossfadeSeconds = 0.0
     @AppStorage(LibrarySettings.writeTagsToFilesKey) private var writeTagsToFiles = false
     @State private var duplicateTasks = ViewTaskSlot()

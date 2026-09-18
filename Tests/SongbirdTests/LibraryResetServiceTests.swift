@@ -206,7 +206,7 @@ final class LibraryResetServiceTests: XCTestCase {
         let queue = PlaybackQueue()
         _ = queue.replace(with: [track])
         queue.enqueue([track])
-        let navigation = LibraryNavigationCoordinator(selectedRoot: .albums)
+        let navigation = LibraryNavigationCoordinator(selectedRoot: .albums, restoresPersistedState: false)
         navigation.showAlbum(albumID: UUID())
         let selection = LibrarySelectionState()
         selection.updateLibrarySelection(trackID: track.id, track: track)

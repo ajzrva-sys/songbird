@@ -760,7 +760,7 @@ final class LibraryItemActionHandlerTests: XCTestCase {
         let snapshots = LibrarySnapshotStore(modelContainer: container, startsImmediately: false)
         await snapshots.refresh()
         let session = PlaybackSession(backend: ActionRecordingBackend())
-        let navigation = LibraryNavigationCoordinator()
+        let navigation = LibraryNavigationCoordinator(restoresPersistedState: false)
         let actions = LibraryItemActionHandler(
             modelContainer: container,
             playbackSession: session,

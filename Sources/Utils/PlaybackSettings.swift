@@ -20,13 +20,21 @@ public enum PlaybackSettings {
         set { UserDefaults.standard.set(min(1.0, max(0.5, newValue)), forKey: volumeLimitKey) }
     }
 
+    /// Default on so closing the window/relaunching continues the current track.
     public static var resumeOnLaunch: Bool {
-        get { UserDefaults.standard.bool(forKey: resumeOnLaunchKey) }
+        get {
+            guard UserDefaults.standard.object(forKey: resumeOnLaunchKey) != nil else { return true }
+            return UserDefaults.standard.bool(forKey: resumeOnLaunchKey)
+        }
         set { UserDefaults.standard.set(newValue, forKey: resumeOnLaunchKey) }
     }
 
+    /// Default on so long tracks resume mid-album instead of restarting.
     public static var rememberPosition: Bool {
-        get { UserDefaults.standard.bool(forKey: rememberPositionKey) }
+        get {
+            guard UserDefaults.standard.object(forKey: rememberPositionKey) != nil else { return true }
+            return UserDefaults.standard.bool(forKey: rememberPositionKey)
+        }
         set { UserDefaults.standard.set(newValue, forKey: rememberPositionKey) }
     }
 

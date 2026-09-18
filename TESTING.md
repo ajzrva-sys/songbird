@@ -1,5 +1,24 @@
 # Candidate Testing and Validation
 
+## Album list and playback position restore — 2026-09-18
+
+Closing the main window (or relaunching) used to drop the user back to the top of
+Recently Added and restart the current track from zero. The library now persists
+navigation destination/path, album-grid scroll anchors (last opened or currently
+playing album), and the seek offset. “Resume last track on launch” and “Remember
+playback position” default on unless the user has already set them.
+
+- Focused XCTest: `LibraryNavigationCoordinatorTests`, `PlaybackSettingsDefaultsTests`,
+  `PlaybackEngineTests` — 20 tests, 0 failures.
+- Full `./check.sh quick`: XCTest 330 (two expected optional-store skips), 0
+  failures; Swift Testing 343 in 45 suites, 0 failures.
+- Command tree: `songbird-public/songbird-public` at 2026-09-18. No app launch,
+  packaging, audio TSan, or hardware matrix; UI restore behavior still needs a
+  manual window close/reopen check against a real library.
+- Files: `Sources/Utils/LibraryViewState.swift` (new), navigation coordinator,
+  album grid scroll restore, `PlaybackEngine.persistLastTrack`, playback settings
+  defaults.
+
 ## Edge-to-edge sidebar artwork correction — 2026-09-16
 
 The owner clarified that the dark framing was the problem and requested the original

@@ -236,7 +236,7 @@ final class FolderArtworkTests: XCTestCase {
         await snapshots.refresh()
         let actions = LibraryItemActionHandler(modelContainer: container,
             playbackSession: PlaybackSession(backend: FolderArtworkTestBackend()), librarySnapshots: snapshots,
-            navigation: LibraryNavigationCoordinator(), folderArtworkLoader: loader)
+            navigation: LibraryNavigationCoordinator(restoresPersistedState: false), folderArtworkLoader: loader)
         return (actions, snapshots)
     }
 }
