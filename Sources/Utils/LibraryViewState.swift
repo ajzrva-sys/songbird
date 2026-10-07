@@ -52,6 +52,8 @@ public enum LibraryViewState {
             return albumGridAnchorKeyPrefix + "all"
         case .recentlyAdded:
             return albumGridAnchorKeyPrefix + "recentlyAdded"
+        case .artist(let name):
+            return albumGridAnchorKeyPrefix + "artist:" + name
         }
     }
 
@@ -147,6 +149,7 @@ public enum LibraryViewState {
         case .filledComments: return "filledComments"
         case .inconsistentAlbumArtists: return "inconsistentAlbumArtists"
         case .queue: return "queue"
+        case .playHistory: return "playHistory"
         case .playlist(let id): return "playlist:\(id.uuidString)"
         case .audioCD(let disc): return "audioCD:\(disc.id)"
         }
@@ -188,6 +191,7 @@ public enum LibraryViewState {
         case "filledComments": return .filledComments
         case "inconsistentAlbumArtists": return .inconsistentAlbumArtists
         case "queue": return .queue
+        case "playHistory": return .playHistory
         default: return nil
         }
     }

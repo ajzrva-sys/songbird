@@ -1,0 +1,55 @@
+#!/usr/bin/python3
+"""Read-only provenance of current build/test inputs, including no-Git candidates."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from publication_checks import file_record, snapshot_digest
+
+SCOPE = ["Package.swift", "Package.resolved", "Sources", "Tools", "Tests", "scripts",
+         "config", "Usability", "Vendor", "build.sh", "check.sh"]
+EXCLUDED = {".git", ".build", "__pycache__", "reports", ".codex", ".aws", ".agents"}
+
+def provenance(root):
+    root = Path(root).absolute()
+    rows = []
+    for name in SCOPE:
+        path = root / name
+        if path.is_symlink():
+            raise ValueError("Source symlink: " + name)
+        if not path.exists():
+            continue
+        if path.is_dir():
+            for current, dirs, files in os.walk(path, followlinks=False):
+                dirs[:] = sorted(d for d in dirs if d not in EXCLUDED and not d.endswith(".app"))
+                for d in dirs:
+                    if (Path(current) / d).is_symlink():
+                        raise ValueError("Source symlink: " + str((Path(current) / d).relative_to(root)))
+                for f in sorted(files):
+                    rows.append(file_record(root, (Path(current) / f).relative_to(root).as_posix()))
+        else:
+            rows.append(file_record(root, name))
+    rows.sort(key=lambda r: r["path"])
+    result = {"method": "source-tree", "scope": SCOPE, "tree_sha256": snapshot_digest(rows),
+              "file_count": len(rows), "head": None, "status_sha256": None,
+              "tracked_diff_sha256": None}
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(root), *args], stderr=subprocess.DEVNULL)
+    try:
+        if Path(git("rev-parse", "--show-toplevel").decode().strip()).resolve() == root.resolve():
+            result.update(method="git-and-source-tree", head=git("rev-parse", "HEAD").decode().strip(),
+                          status_sha256=hashlib.sha256(git("status", "--porcelain=v1")).hexdigest(),
+                          tracked_diff_sha256=hashlib.sha256(git("diff", "--binary", "--no-ext-diff")).hexdigest())
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return result
+
+if __name__ == "__main__":
+    try:
+        print(json.dumps(provenance(sys.argv[1]), sort_keys=True))
+    except (ValueError, OSError) as error:
+        sys.exit(str(error))

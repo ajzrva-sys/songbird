@@ -520,8 +520,10 @@ public enum LibraryHygiene {
 
     @MainActor
     private static func report(_ error: Error, operation: String) {
-        LibraryStatus.shared.showPlaybackError(
-            "Could not \(operation): \(error.localizedDescription)"
+        LibraryStatus.shared.showNotice(
+            "Could not \(operation): \(error.localizedDescription)",
+            severity: .error,
+            source: .library
         )
     }
 }

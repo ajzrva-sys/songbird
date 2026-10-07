@@ -8,7 +8,7 @@ final class TrackTableColumnPrefsTests: XCTestCase {
         XCTAssertEqual(labels, Set([
             "Album", "Album Artist", "Album Rating", "Artist", "BPM",
             "Bit Rate", "Comments", "Composer", "Date Added", "Date Modified",
-            "Disc Number", "Favorite", "Genre", "Kind", "Last Played",
+            "Disc Number", "Favorite", "Genre", "Kind", "Last Played", "Location",
             "Plays", "Rating", "Sample Rate", "Size", "Time", "Title", "Track", "Year",
         ]))
     }

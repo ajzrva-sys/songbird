@@ -1,5 +1,33 @@
 # Candidate next steps
 
+## File tag recovery automation
+
+Source implemented: **Read File Tags** recovers missing catalog tags/artwork in
+bounded batches without tempo analysis; **Save Checked Tags to Files** durably
+fills deterministic checked suggestions after verifying each saved copy.
+Existing values and artwork are preserved, stale findings are rejected, and
+filename guesses remain outside automatic file repair. Focused tests pass;
+full quick retains the existing Finder-notice assertions. The release build is
+installed with a preserved rollback; restart and **Read File Tags** will refresh
+the user's missing catalog values. Isolated black-box validation
+remains unavailable in this copy. See the [source plan](docs/exec-plans/completed/file-tag-recovery.md)
+and TESTING.md for exact scope and evidence.
+
+The follow-on **Save Library Artwork to Files…** source action checks the whole
+saved-cover catalog, fills absent embedded covers after verifying a temporary
+copy, and preserves existing pictures. JPEG/PNG FLAC/M4A fixtures pass; MP3 is an
+explicit unsupported writer result with its original retained. This extension
+is now release-built and installed with the original rollback preserved; restart
+loads the new action. No normal-library or isolated black-box UI claim is made
+by its source tests.
+
+## Missing album artwork
+
+Installed: Missing Album Art sorting, accurate missing-album rescan progress and
+shared-folder evidence reuse. Focused tests and build pass; black-box coverage is
+blocked by absent Git metadata and the full suite retains the Finder-notice
+failure. See [plan](docs/exec-plans/active/missing-artwork-sort.md) and TESTING.md.
+
 ## Sidebar artwork and local signing
 
 Installed: artwork fills the sidebar edge to edge, with no added

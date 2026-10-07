@@ -83,7 +83,7 @@ public final class AudioCDRipCoordinator: ObservableObject {
         destinationURL = AudioCDRipPaths.albumDirectory(for: disc, root: destinationRoot)
         opticalDiscs.setImporting(true, discID: disc.id)
         LibrarySnapshotStore.active?.beginBulkUpdates()
-        libraryStatus.beginScan(total: disc.tracks.count)
+        let operationID = libraryStatus.beginScan(total: disc.tracks.count, activityKind: .cdRip)
         libraryStatus.setImportCancellation { [weak self] in self?.cancel() }
 
         ripTask = Task {
@@ -91,7 +91,8 @@ public final class AudioCDRipCoordinator: ObservableObject {
                 disc: disc,
                 modelContext: modelContext,
                 opticalDiscs: opticalDiscs,
-                libraryStatus: libraryStatus
+                libraryStatus: libraryStatus,
+                operationID: operationID
             )
         }
     }
@@ -115,7 +116,8 @@ public final class AudioCDRipCoordinator: ObservableObject {
         disc: AudioDisc,
         modelContext: ModelContext,
         opticalDiscs: OpticalDiscService,
-        libraryStatus: LibraryStatus
+        libraryStatus: LibraryStatus,
+        operationID: UUID
     ) async {
         let importContext = ModelContext(modelContext.container)
         importContext.autosaveEnabled = false
@@ -126,7 +128,7 @@ public final class AudioCDRipCoordinator: ObservableObject {
                 destinationRoot: destinationRoot,
                 completed: completedResults
             ) { value in
-                await self.receive(progress: value, libraryStatus: libraryStatus)
+                await self.receive(progress: value, libraryStatus: libraryStatus, operationID: operationID)
             }
             completedResults = results
             try Task.checkCancellation()
@@ -145,7 +147,7 @@ public final class AudioCDRipCoordinator: ObservableObject {
                 ) {
                     importedCount += 1
                 }
-                libraryStatus.updateScan(scanned: index + 1, total: results.count)
+                libraryStatus.updateScan(scanned: index + 1, total: results.count, operationID: operationID)
             }
             try requireFresh(disc)
             _ = try AlbumRelationshipReconciler.reconcile(in: importContext)
@@ -155,7 +157,7 @@ public final class AudioCDRipCoordinator: ObservableObject {
             completedResults = []
             needsMetadataRecovery = false
 
-            libraryStatus.endScan(added: importedCount)
+            libraryStatus.endScan(added: importedCount, operationID: operationID)
             let count = results.count
             completionMessage = "Imported \(count) track\(count == 1 ? "" : "s") as lossless ALAC."
         } catch AudioCDRipError.metadataExpired(let completed) {
@@ -164,16 +166,17 @@ public final class AudioCDRipCoordinator: ObservableObject {
                 completedResults.append(result)
             }
             needsMetadataRecovery = true
-            libraryStatus.endScan(added: 0)
             lastError = "Discogs results expired. Completed audio was kept. Refresh metadata or use CD-Text to resume."
+            libraryStatus.endOperation(message: lastError ?? "CD import needs refreshed metadata", severity: .warning,
+                                       operationID: operationID, activityStatus: .failed)
         } catch is CancellationError {
-            libraryStatus.endScan(added: 0)
-            libraryStatus.statusMessage = "CD import canceled"
+            libraryStatus.endOperation(message: "CD import canceled", severity: .information,
+                                       operationID: operationID, activityStatus: .cancelled)
             completionMessage = "CD import canceled. Completed files were kept so the import can resume."
         } catch {
-            libraryStatus.endScan(added: 0)
-            libraryStatus.statusMessage = "CD import failed"
             lastError = error.localizedDescription
+            libraryStatus.endOperation(message: "CD import failed: \(error.localizedDescription)", severity: .error,
+                                       operationID: operationID, activityStatus: .failed)
         }
 
         isRipping = false
@@ -183,7 +186,7 @@ public final class AudioCDRipCoordinator: ObservableObject {
         ripTask = nil
     }
 
-    private func receive(progress value: AudioCDRipProgress, libraryStatus: LibraryStatus) {
+    private func receive(progress value: AudioCDRipProgress, libraryStatus: LibraryStatus, operationID: UUID) {
         let now = ContinuousClock.now
         guard now - lastProgressPublication >= .milliseconds(100)
                 || value.completedDiscSectors >= value.totalDiscSectors else {
@@ -193,9 +196,10 @@ public final class AudioCDRipCoordinator: ObservableObject {
         progress = value
         libraryStatus.updateScan(
             scanned: max(0, value.trackIndex - 1),
-            total: value.totalTracks
+            total: value.totalTracks,
+            message: "Importing CD track \(value.trackIndex) of \(value.totalTracks)…",
+            operationID: operationID
         )
-        libraryStatus.statusMessage = "Importing CD track \(value.trackIndex) of \(value.totalTracks)…"
     }
 
     private func fetchArtwork(from disc: AudioDisc) async -> Data? {

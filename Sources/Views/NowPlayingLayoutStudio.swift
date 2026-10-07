@@ -267,8 +267,11 @@ struct NowPlayingLayoutStudio: View {
             )
             studioStepper(
                 title: "Height",
-                value: $faceplateHeight,
-                range: NowPlayingLayoutSettings.faceplateHeightRange,
+                value: Binding(
+                    get: { MainPlayerReadability.resolvedHeight(faceplateHeight) },
+                    set: { faceplateHeight = $0 }
+                ),
+                range: MainPlayerReadability.heightRange,
                 step: NowPlayingLayoutSettings.heightStep
             )
         case .leadingGap:

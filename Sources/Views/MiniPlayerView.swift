@@ -1093,12 +1093,21 @@ public struct MiniPlayerView: View {
     // MARK: - Shared
 
     private func artwork(for track: Track, size: CGFloat) -> some View {
-        ArtworkThumbnailView(
-            reference: ArtworkReference.resolved(for: track),
-            pointSize: CGSize(width: size, height: size),
-            accessibilityLabel: "Album artwork for \(track.audioCDMetadata(at: discogsClock.now).album)",
-            placeholderColor: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.12)
-        )
+        Button {
+            returnToFullPlayer()
+        } label: {
+            ArtworkThumbnailView(
+                reference: ArtworkReference.resolved(for: track),
+                pointSize: CGSize(width: size, height: size),
+                accessibilityLabel: "Album artwork for \(track.audioCDMetadata(at: discogsClock.now).album)",
+                placeholderColor: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.12)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Show Full Player")
+        .accessibilityIdentifier("player.switchToFullPlayer")
+        .help("Show Full Player")
     }
 
     private func flatWellButton(

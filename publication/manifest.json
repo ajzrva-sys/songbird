@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "status": "local-ad-hoc-signed-hobby-handoff",
+  "status": "github-source-update-2026-10-06",
   "source_parent_commit": "4630e93f4f80e266100af166229ecd7f37082776",
-  "source_parent_commit_note": "Provenance only; no parent commit or Git objects were imported. Current uncommitted source bytes are identified per file.",
+  "source_parent_commit_note": "Historical preparation provenance only. Current source bytes are identified per file; GitHub history is preserved.",
   "copied_source_file_count": 522,
-  "payload_file_count_including_manifest": 1798,
+  "payload_file_count_including_manifest": 1836,
   "self_path": "publication/manifest.json",
   "self_hash_exception": "The manifest is an explicitly allowed file and cannot include its own stable content hash.",
   "excluded_source_material": [
@@ -77,8 +77,8 @@
     },
     {
       "path": "ARCHITECTURE.md",
-      "sha256": "6c0f4f58c3bfc57aaa85fea3330e49aee8542e31f0f8de0d0911fcb3f6183770",
-      "bytes": 11886,
+      "sha256": "f9d1b69439ca5248d1ccd982464e5087e81498707e17fc2abb143ccab0e33678",
+      "bytes": 13382,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "6c0f4f58c3bfc57aaa85fea3330e49aee8542e31f0f8de0d0911fcb3f6183770"
@@ -100,8 +100,8 @@
     },
     {
       "path": "CONTINUITY.md",
-      "sha256": "182caf244663f469e51840ee962d7d1282ffe5744c574afbbd7724cc0c74c3b4",
-      "bytes": 5055,
+      "sha256": "892ae99f420a729c5c3a730f0b03c864fdf0e1fe84064ee9e019b0d1194df5c7",
+      "bytes": 18848,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -114,8 +114,8 @@
     },
     {
       "path": "NEXT_STEPS.md",
-      "sha256": "1381502a075b5b1715d5da7c726624bbb1db11d81b0fc445a265c751e7515c5b",
-      "bytes": 5135,
+      "sha256": "4bad5a9d029e75b7584eac18613b9ecefae5b25ce7b704b11dcef21227935619",
+      "bytes": 6778,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -151,8 +151,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "038499794bc9e95196e9e304fa67b37fee2d120146b3887b980f70705a8fe914",
-      "bytes": 6878,
+      "sha256": "10d91d960da80e47a7b4122e05646ef4fd7bbe388a3c74f6f866739ba96002d2",
+      "bytes": 6927,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b40e7c0934fd74bf6a009f36de5409ff85f448da1b590fadfb9085299bfb570a"
@@ -174,8 +174,8 @@
     },
     {
       "path": "Sources/App/AppDelegate.swift",
-      "sha256": "c4b69ae3623d0b393704092776baf92af4fbb1850cf1647b8debb5c744e15c9e",
-      "bytes": 5269,
+      "sha256": "e0167c5cd6c4144f0e55b01c0d07a272f17a58b58ca1739a5229c008b4d88d95",
+      "bytes": 5639,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "c4b69ae3623d0b393704092776baf92af4fbb1850cf1647b8debb5c744e15c9e"
@@ -190,8 +190,8 @@
     },
     {
       "path": "Sources/App/SongbirdApp.swift",
-      "sha256": "deef598e5b79ab5d782ea7dcc0f7ccbcc191a85c29ac2bc040a86f2cc72e1157",
-      "bytes": 30777,
+      "sha256": "a1ac57987b99ec8c3b1923c5d4a824a6389cfd4f4d57b492bc549670cc2dde70",
+      "bytes": 30547,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "915f3adc1804d686bb3b5502030e9262b845abe73b837acd945e9b9452a5313f"
@@ -894,17 +894,41 @@
       "source_sha256": "8de4d8bede030402c913fefbb3abbb800d4c8a14009b5cb807b35f9a3e652e73"
     },
     {
+      "path": "Sources/Library/LibraryActivityRecord.swift",
+      "sha256": "a6760ef238e4f283d517a6d46c4267e749f748fc7052901cb7e224989c6dd275",
+      "bytes": 5614,
+      "mode": 420
+    },
+    {
+      "path": "Sources/Library/LibraryActivityStorage.swift",
+      "sha256": "7f62d120c396855b330946c704cfb592ca1b3bd63c17fbe5c1c987bb6204814d",
+      "bytes": 6060,
+      "mode": 420
+    },
+    {
+      "path": "Sources/Library/LibraryActivityStore.swift",
+      "sha256": "d923865f4085f6865f805809b85e63b21d5e3966592b2d58ee582ccbd005ec58",
+      "bytes": 7703,
+      "mode": 420
+    },
+    {
+      "path": "Sources/Library/LibraryActivityTerminationGate.swift",
+      "sha256": "21506afb86a096068424e66f3f0e06b0e11e47f83130b4b7294a8cef5d321a39",
+      "bytes": 1388,
+      "mode": 420
+    },
+    {
       "path": "Sources/Library/LibraryAlbumProjection.swift",
-      "sha256": "ebfa1736bb0beba0d9922e5b7f15945c6f60200b48d30fb1402a48c7eb8e0301",
-      "bytes": 18116,
+      "sha256": "d337cd19b986acc14479ab2ba7dc0dd3e3eca6f72874a99a78ae73886bef19f4",
+      "bytes": 18446,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "ebfa1736bb0beba0d9922e5b7f15945c6f60200b48d30fb1402a48c7eb8e0301"
     },
     {
       "path": "Sources/Library/LibraryAlbumProjectionStore.swift",
-      "sha256": "44749befd236458a91822a1d8939a637cb6adeaf998d82abe1db731ffe2b7a56",
-      "bytes": 7374,
+      "sha256": "bf382d68b7000772818a6382c462c4e6b26a5de3ce99c829d2fbf8572a1ecae1",
+      "bytes": 7595,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "44749befd236458a91822a1d8939a637cb6adeaf998d82abe1db731ffe2b7a56"
@@ -918,17 +942,23 @@
       "source_sha256": "7af8cbfece3379ea020b8211899765588726e7f1251c1997224867ee82883e3c"
     },
     {
+      "path": "Sources/Library/LibraryFileTagRepairService.swift",
+      "sha256": "bd946f92c948001abfbac3cb668fe375021758feb6a84cab78586ebd9988c4aa",
+      "bytes": 17943,
+      "mode": 420
+    },
+    {
       "path": "Sources/Library/LibraryFolderWatcher.swift",
-      "sha256": "ae53171a0f14a90fc7f832e7eb93d2c0bf0d6d2af5cf89fb067a65cf3f15a26c",
-      "bytes": 22420,
+      "sha256": "40cc6bc35faecc712ddd1f077b9ac4ca96841c76553dae458f6cc96f5242d49c",
+      "bytes": 22489,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "fee63e0ad30dc642b43d6a4821586b1f8d2651ad814dedfc86267840e652ebd9"
     },
     {
       "path": "Sources/Library/LibraryHealth.swift",
-      "sha256": "052ca3ad10e4a42057e2ef26713f52dc836102467134092a6c1ee9d41ccdc82d",
-      "bytes": 38572,
+      "sha256": "5f84d5ac2c7c341d1449b31cd4fdae5e2065dddad60c514af617eaa84d904348",
+      "bytes": 40005,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "052ca3ad10e4a42057e2ef26713f52dc836102467134092a6c1ee9d41ccdc82d"
@@ -943,16 +973,16 @@
     },
     {
       "path": "Sources/Library/LibraryHealthProjectionStore.swift",
-      "sha256": "e42b58b493401a763805fdbd0844436627bca3cefbac49247b88f9024dec5978",
-      "bytes": 25988,
+      "sha256": "8c1c054ef3171639a13cdd1dd2782b7fe4ce97f568db0616a6ea31404fd66b7f",
+      "bytes": 31174,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e42b58b493401a763805fdbd0844436627bca3cefbac49247b88f9024dec5978"
     },
     {
       "path": "Sources/Library/LibraryHygiene.swift",
-      "sha256": "dc5a140232cc5d3b906611231fd5b3b2cff7e52814fb0db2c0e16bd93bd8986f",
-      "bytes": 20895,
+      "sha256": "9f4d237691198bdca6ae48e6818100c254baacccb5239c71bc062aa01dda7b3c",
+      "bytes": 20948,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "dc5a140232cc5d3b906611231fd5b3b2cff7e52814fb0db2c0e16bd93bd8986f"
@@ -991,8 +1021,8 @@
     },
     {
       "path": "Sources/Library/LibraryScanner.swift",
-      "sha256": "60ebe817696210978418d9e17663a34210e593bb67cc7d7ccb4c93f2a35584eb",
-      "bytes": 8857,
+      "sha256": "e84b26b7fce94bb94ec571788886053784fc1c054d9b349fa835666bf079ac58",
+      "bytes": 9461,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "60ebe817696210978418d9e17663a34210e593bb67cc7d7ccb4c93f2a35584eb"
@@ -1015,8 +1045,8 @@
     },
     {
       "path": "Sources/Library/LibraryStatus.swift",
-      "sha256": "a75df19cff78cf5354590c2bb8d9ef3cc3542c82f465bef93878736130c392d1",
-      "bytes": 13570,
+      "sha256": "f89de666fd8bef3adcd69ecfbd88def720dff781ae22961c959d618a132c3d48",
+      "bytes": 17381,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "a75df19cff78cf5354590c2bb8d9ef3cc3542c82f465bef93878736130c392d1"
@@ -1031,8 +1061,8 @@
     },
     {
       "path": "Sources/Library/MetadataReader.swift",
-      "sha256": "35a23cb67477767edf9ec6846e455b5a1facfe8c7e2096dca3b0be9eded1a7d7",
-      "bytes": 21885,
+      "sha256": "3d04d48a7adab434529a1a098477126b5d50e67f456c673beda230e04fc92fa4",
+      "bytes": 28705,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "35a23cb67477767edf9ec6846e455b5a1facfe8c7e2096dca3b0be9eded1a7d7"
@@ -1087,8 +1117,8 @@
     },
     {
       "path": "Sources/Library/TagWriterService.swift",
-      "sha256": "799f5d625b1a7f250019b2100fad514dcda87fe35ecffb86fd70357e9fb71d59",
-      "bytes": 15898,
+      "sha256": "ce973eea24e2516b98ab49d795820f6b3614249a76e21f05b9f1d9d78ce4f6b4",
+      "bytes": 16141,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "799f5d625b1a7f250019b2100fad514dcda87fe35ecffb86fd70357e9fb71d59"
@@ -1111,8 +1141,8 @@
     },
     {
       "path": "Sources/Library/TrackImporter.swift",
-      "sha256": "5b7cc455bcd79c2ec0b390fc6997eb2ab5836c5317229d5dddecf631fded89f0",
-      "bytes": 11414,
+      "sha256": "28c09c632c9e2f62cc7a1b07f731b1fc8a51b49f2d587647559a628a8e91de3e",
+      "bytes": 13617,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "fe9b13952b3e10bd49c7b01e3ff8d58da47cb70d2db9ea720cfbb32ca0a6fa70"
@@ -1135,8 +1165,8 @@
     },
     {
       "path": "Sources/Library/TrackTableProjection.swift",
-      "sha256": "331b46faadd1826aa94f69f69a0b94c926af8df702fec062639d6a45c9d8bffd",
-      "bytes": 23790,
+      "sha256": "26caf43e61d43f11e4a7e75fea96887fb4f4d1a9edc8b57a2b4575116c239b93",
+      "bytes": 23959,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "1296dc0f6238d7a76ca4883a47539db5b4c192428ca02f7ab0b8e26810f16b7c"
@@ -1159,8 +1189,8 @@
     },
     {
       "path": "Sources/OpticalDisc/AudioCDRipCoordinator.swift",
-      "sha256": "a23a2005a6c6ee397eef1e70d722e3cf53a608da406dd4d99a5b0dfad80da6e8",
-      "bytes": 11948,
+      "sha256": "8edcb516e38383f3689ef25803bd7cd4213ecde9349367796b100be055173bce",
+      "bytes": 12523,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "4f1feb3686a1fc90d525c9ace0676f4966e83fd1a57ecf26e639b1c168358711"
@@ -1230,6 +1260,12 @@
       "source_sha256": "afc7843b09c14f6046c1afb4eb24b14be8d1a91e6ca0167078d56433f6b8f551"
     },
     {
+      "path": "Sources/Playback/PlayHistoryStore.swift",
+      "sha256": "8c645e21b681722cfad60c96a3e86110d96b833180b63da622518bba74fb6cb1",
+      "bytes": 4821,
+      "mode": 420
+    },
+    {
       "path": "Sources/Playback/PlayQualificationTracker.swift",
       "sha256": "9d9e75ca8869c93f85fd5275aeac741db7991a18c47cb36d4087967ad3c39a38",
       "bytes": 1747,
@@ -1239,32 +1275,32 @@
     },
     {
       "path": "Sources/Playback/PlaybackEngine.swift",
-      "sha256": "bf02e4e636764c0b7c9bf597444f25c84687dd3a8fefe74a13fa16cbae0f41ff",
-      "bytes": 32818,
+      "sha256": "181a84bbd9eb5fa929d6747bc69c29c0fc8516b84793e2305b8b62250b7b8de5",
+      "bytes": 33913,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "5bc233b55c3092df0904833bc16852474a31a47e9c13c436143f8b76c6a3f9b1"
     },
     {
       "path": "Sources/Playback/PlaybackQueue.swift",
-      "sha256": "f231b472394c70d535b348668082988bc6251d5c105aa5471ff9619d2193070f",
-      "bytes": 19143,
+      "sha256": "e7e475381e1915d50455026b6a0819bf3a0cd949468b663b580e2abb3c212b93",
+      "bytes": 20894,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "f231b472394c70d535b348668082988bc6251d5c105aa5471ff9619d2193070f"
     },
     {
       "path": "Sources/Playback/PlaybackSession.swift",
-      "sha256": "d8888b10bf28b8fdc24d6bb6a9edc9a12552f75c7f8b1bd83b5132b859e80a37",
-      "bytes": 5312,
+      "sha256": "ddf6a2b414028a51c20a49777ba091cda7f2f0487a60b21d23222c3948aa5286",
+      "bytes": 5559,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "d8888b10bf28b8fdc24d6bb6a9edc9a12552f75c7f8b1bd83b5132b859e80a37"
     },
     {
       "path": "Sources/Playback/PlaybackStart.swift",
-      "sha256": "0eb7505dfbd06bf3183cf5c3776e1f8e8d0a31c39eba049029f0228e9edf52e1",
-      "bytes": 1047,
+      "sha256": "0d631a57bfdda5eacd7ceaa5a451cbf98d268cfc1ffa50f4365a35daa572ed79",
+      "bytes": 1230,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "0eb7505dfbd06bf3183cf5c3776e1f8e8d0a31c39eba049029f0228e9edf52e1"
@@ -1538,8 +1574,8 @@
     },
     {
       "path": "Sources/ServicePane/ServicePaneItem.swift",
-      "sha256": "06ebca60b75560cb4485cd04859b47ff49bd999fd6dc4086e70f5720e29cae6e",
-      "bytes": 1094,
+      "sha256": "9580888191a90a41eee7c4a5b53bf208cb0cd5fe688700637371044fa8e5d816",
+      "bytes": 1115,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "06ebca60b75560cb4485cd04859b47ff49bd999fd6dc4086e70f5720e29cae6e"
@@ -1554,16 +1590,16 @@
     },
     {
       "path": "Sources/ServicePane/ServicePaneView.swift",
-      "sha256": "31e6d3db2d243978eb22934feff9a15d5679c6076dc32bfc3faec09be98f93a8",
-      "bytes": 34019,
+      "sha256": "1c5cef7c79d36bb601223899df08c3e0f9f9b311a0a4f751d28d9875360571a0",
+      "bytes": 34301,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "17f190262418b9c6f3e917095ec2b047b088fe167624a23c0d8549f2079d7d4d"
     },
     {
       "path": "Sources/ServicePane/SidebarNavigationRow.swift",
-      "sha256": "b14d41d2fa1faf0e4ffd8334d1dc525834ff298c6c0a88d9c32ae8c78d358e8b",
-      "bytes": 4951,
+      "sha256": "2998ac5b7d7f031ca1e01150e847d2bfaaf92acd38cf0a64539edf7e28e6e9b6",
+      "bytes": 2708,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "b14d41d2fa1faf0e4ffd8334d1dc525834ff298c6c0a88d9c32ae8c78d358e8b"
@@ -1616,6 +1652,18 @@
       "source_sha256": "baaf3d12e778254abd31b3d1787f450b50b57fbce5d1d2bc4075d961421c679f"
     },
     {
+      "path": "Sources/Utils/LibraryViewState.swift",
+      "sha256": "68697193bd46f11a46698e057ca1bc6920b110606bf356bfc2c409297501fbb9",
+      "bytes": 9331,
+      "mode": 420
+    },
+    {
+      "path": "Sources/Utils/MainPlayerReadability.swift",
+      "sha256": "55968a3e94447a57b3038bed6e2afb02c7fb34f3c809f644e7487268681f43e4",
+      "bytes": 690,
+      "mode": 420
+    },
+    {
       "path": "Sources/Utils/MiniPlayerStyle.swift",
       "sha256": "97aa541ef6995d7315bce987ef2f6a6e2e9fe9258ed66fa54b8497c9bd56e60e",
       "bytes": 770,
@@ -1641,8 +1689,8 @@
     },
     {
       "path": "Sources/Utils/PlaybackSettings.swift",
-      "sha256": "d0f0df9a0ae91f12db7656f5f08badb9f2b39c5e6b0602bb23ad31acc948baa7",
-      "bytes": 1868,
+      "sha256": "dbb5b112ee134fa7cb6133ea39980d79bb659cfbca84030511fc61b44c98a130",
+      "bytes": 2284,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "d0f0df9a0ae91f12db7656f5f08badb9f2b39c5e6b0602bb23ad31acc948baa7"
@@ -1673,8 +1721,8 @@
     },
     {
       "path": "Sources/Utils/PlayerWindowMetrics.swift",
-      "sha256": "9fb49a8320770a4232158136249a6d9b6e492bc3ee29f5464475543cc0a33307",
-      "bytes": 3663,
+      "sha256": "18f93426d2ae859352e4fc33120f085cb4079ccaa14e2c46d999c2e8c8bcbf94",
+      "bytes": 3867,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "494413812ae0693c109e929b42de55ca7a367924fc8621d05690dc40d10f9224"
@@ -1729,8 +1777,8 @@
     },
     {
       "path": "Sources/Utils/TrackTableColumnPrefs.swift",
-      "sha256": "8c1145de840cb9a8ebbcfd598326fc34630aaab4251003a52fc716fc2d373537",
-      "bytes": 9811,
+      "sha256": "91b1d32e29fc76f12193998367a1ae266b82267828d2a388d807700b664d485a",
+      "bytes": 10270,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "82e79214f3d10e500b285984a18a116fd5f9955560b0c2406735cf018d892019"
@@ -1776,6 +1824,12 @@
       "source_sha256": "d90d6f5167363132476103909ab0745302a88a33a911fa5b4d1562c6c3d7f86a"
     },
     {
+      "path": "Sources/Views/AlbumCardButtons.swift",
+      "sha256": "9714f68eaaad6dd101b1a7b17070ecc8ab00d9c7fbb06256da805f66ab9020cd",
+      "bytes": 5018,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/AlbumDetailView.swift",
       "sha256": "7f6708b3729abb16a80693843aa05a4512792b79440ed952d37cab66706d9398",
       "bytes": 9169,
@@ -1785,35 +1839,41 @@
     },
     {
       "path": "Sources/Views/AlbumGridFilter.swift",
-      "sha256": "b097feece66e888605853506e276af64ccb2fee7c38c9737fc25650817861f73",
-      "bytes": 5820,
+      "sha256": "1578d8b580cffd05bd3d976094b3c0e945e5883ebeb1122db0a276329bdaf1ee",
+      "bytes": 6532,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "b097feece66e888605853506e276af64ccb2fee7c38c9737fc25650817861f73"
     },
     {
       "path": "Sources/Views/AlbumGridItem.swift",
-      "sha256": "5a82351c9754ceb63bb4c378df7f72c523b2c6b6a12199b3baf5b6272a8f7ff3",
-      "bytes": 3123,
+      "sha256": "659dfa57a442c94480b79e5d79a21563bb4f49230a667fa91bd3d5665c6ed66a",
+      "bytes": 3540,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "5a82351c9754ceb63bb4c378df7f72c523b2c6b6a12199b3baf5b6272a8f7ff3"
     },
     {
       "path": "Sources/Views/AlbumGridView.swift",
-      "sha256": "7fa39ceef46578e6d30564ed3d3134c1a1baedebcb60328297b0050d15764171",
-      "bytes": 16318,
+      "sha256": "cebcb67312a7ffc86e7d96041c7436a4be457e192df06225d77753982f17fc0e",
+      "bytes": 21234,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "7fa39ceef46578e6d30564ed3d3134c1a1baedebcb60328297b0050d15764171"
     },
     {
       "path": "Sources/Views/AlbumSortOrder.swift",
-      "sha256": "7043765dd4f05e1419cbf45ba2c6e977c0c7842eca01480c5e0ac6c0e3edb42c",
-      "bytes": 238,
+      "sha256": "eef7278422a72a1e7b76ed1345e38fe453ced40abb6b04c05c51938d1594a65e",
+      "bytes": 284,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "7043765dd4f05e1419cbf45ba2c6e977c0c7842eca01480c5e0ac6c0e3edb42c"
+    },
+    {
+      "path": "Sources/Views/ArtistDetailView.swift",
+      "sha256": "1549000c20b5a99c45a7fa2128bc677f6069c36a360a12aac34459e21b857281",
+      "bytes": 1692,
+      "mode": 420
     },
     {
       "path": "Sources/Views/ArtworkThumbnailView.swift",
@@ -1889,8 +1949,8 @@
     },
     {
       "path": "Sources/Views/EmptyTitlesView.swift",
-      "sha256": "42210a522b8b100584742961202190e813044c52066005e4e13a8ac1522b49bf",
-      "bytes": 8887,
+      "sha256": "d7d6997dda58eec3dc53385aaa622684301729e4a91575b0df57ab6f3d9e4d33",
+      "bytes": 8947,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "42210a522b8b100584742961202190e813044c52066005e4e13a8ac1522b49bf"
@@ -1921,8 +1981,8 @@
     },
     {
       "path": "Sources/Views/FilledCommentsView.swift",
-      "sha256": "547436a777740fccd36e01172bd2a57096beb101deabc894f4b466c51d1c580c",
-      "bytes": 10335,
+      "sha256": "db7b71f40c442c91a3b8006195ec10fc076ba7d4e237cd54e87febd4810662bf",
+      "bytes": 10425,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "547436a777740fccd36e01172bd2a57096beb101deabc894f4b466c51d1c580c"
@@ -1977,8 +2037,8 @@
     },
     {
       "path": "Sources/Views/InconsistentNamesView.swift",
-      "sha256": "2d7087651501985d6d9bac48e8c4a805abd4d4c2425c4ee9a6a54a2d0f3fdd28",
-      "bytes": 10345,
+      "sha256": "0377bdb3896e6f0197af99b6fffa05c41e4bdd51928678360e25edc0c617d6d7",
+      "bytes": 10405,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "2d7087651501985d6d9bac48e8c4a805abd4d4c2425c4ee9a6a54a2d0f3fdd28"
@@ -1991,9 +2051,15 @@
       "mode": 420
     },
     {
+      "path": "Sources/Views/LibraryActivityView.swift",
+      "sha256": "701cada05bd11c905842ac00914a8f9b510b24eeb1f3a19c7d9c3ca8e3d3b1dc",
+      "bytes": 6125,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/LibraryContentView.swift",
-      "sha256": "300b53e0e3406c4af21071056dd6572fa9e07aa9ec20ed4fe86388555298b802",
-      "bytes": 8819,
+      "sha256": "9fef1673d624cf4ed8286e5402abad1ca24b861bb870e00e26ac1a69aed9fb84",
+      "bytes": 9711,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "77eaa218664f9d9d93a0bc89d634180153c3e7ea3205d6c7fab954908085b655"
@@ -2007,6 +2073,12 @@
       "source_sha256": "bffc42a48b9e69bf7dc6f4ef5a5f58cb44bee626b6ea526019dfec7998a4932d"
     },
     {
+      "path": "Sources/Views/LibraryEmptyStateAction.swift",
+      "sha256": "b1f7866726454e7911057739576a02ef11c6acda5279a6c65bc7c1586fb92df6",
+      "bytes": 2032,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/LibraryFolderSelectionProvider.swift",
       "sha256": "990f02ab23d20d2bcb35fde378b299244eb0c4165d5f47685a0adba2729b579c",
       "bytes": 3764,
@@ -2016,32 +2088,38 @@
     },
     {
       "path": "Sources/Views/LibraryHealthDashboardView.swift",
-      "sha256": "6fa9214056da4f36a8a4f173974f679341d4bd0c0b100c0511b94e3cff7b4d70",
-      "bytes": 6148,
+      "sha256": "6c0263076bd92bef60381b063437e6dc22e617218f1345c59535b7cf3520d35d",
+      "bytes": 6383,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "6fa9214056da4f36a8a4f173974f679341d4bd0c0b100c0511b94e3cff7b4d70"
     },
     {
       "path": "Sources/Views/LibraryHealthDetailView.swift",
-      "sha256": "019d2c90e3bb602a6a4782b82d6a870eb5a7e1558657c12b512183d94b0e6447",
-      "bytes": 33148,
+      "sha256": "0fd5c8a3271188992160fccc7a8c686d06b0ae28d22577f3c6e961dd418cd71a",
+      "bytes": 38194,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "019d2c90e3bb602a6a4782b82d6a870eb5a7e1558657c12b512183d94b0e6447"
     },
     {
+      "path": "Sources/Views/LibraryHealthStatusPresentation.swift",
+      "sha256": "e907780888024833d3df9ce1071274f5f885d4b01d70a80e023214825bac72e6",
+      "bytes": 1598,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/LibraryItemActionHandler.swift",
-      "sha256": "156acd453634a6a74f1c6c06118c4bc9588fb4014acf8baa29ff7384a46efc81",
-      "bytes": 53419,
+      "sha256": "6e547f05996febf7330032ba0f37f3460b6ec842f04a89f93660444d7eee5095",
+      "bytes": 79302,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "039ddaf36879f878f366a8f55e5a10b0ed817f4c8571f7ddfd89ca8371d56d4a"
     },
     {
       "path": "Sources/Views/LibraryNavigationCoordinator.swift",
-      "sha256": "a3a811162640f420c89e90525631c54e27fa85deee0ee4de27549cfb69ee9af7",
-      "bytes": 5131,
+      "sha256": "b91e65252ca8497be48d663ca3589199f8266471672dbeba0c642f68356bbfbf",
+      "bytes": 5834,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "a3a811162640f420c89e90525631c54e27fa85deee0ee4de27549cfb69ee9af7"
@@ -2055,12 +2133,24 @@
       "source_sha256": "ae9bf59e162b4efc2f6a1e9fda87e72c75dbb2b49d31756f0a57727fbe415543"
     },
     {
+      "path": "Sources/Views/LibrarySearchField.swift",
+      "sha256": "c5ee316e01c748b98b58c6e017afb8802e9ae32acf06d8159e051046ccd62b62",
+      "bytes": 1883,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/LibraryStatusBar.swift",
-      "sha256": "e49be06744502fc3cd31bea822d5ddd7370f4968e76f54dcdd5dfcc09c06d3d9",
-      "bytes": 3716,
+      "sha256": "f33cdb3be8f71d7c5747c45a45d83b30ab401a7908611527f5f71d66b5119a42",
+      "bytes": 5560,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e49be06744502fc3cd31bea822d5ddd7370f4968e76f54dcdd5dfcc09c06d3d9"
+    },
+    {
+      "path": "Sources/Views/LibraryViewControls.swift",
+      "sha256": "0eeaa6800fad047cac2f01abbd05a30ae7f6f07d160c92f7080b830df1e6c18b",
+      "bytes": 4400,
+      "mode": 420
     },
     {
       "path": "Sources/Views/LowBitrateView.swift",
@@ -2104,16 +2194,16 @@
     },
     {
       "path": "Sources/Views/MainView.swift",
-      "sha256": "2619a1e6223e7e2495116912d5364d2ab8ff1720b4bacd0824f4dde8771b8d7b",
-      "bytes": 16672,
+      "sha256": "f9c9b4474766afc6194eca40886d969bd2d87eab7a77320acc97f74b176abe92",
+      "bytes": 16970,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "4469b487861aeb20b401e16cc56cfc7e04ba49e79b7006474ff86bc45a06bbe1"
     },
     {
       "path": "Sources/Views/MiniPlayerView.swift",
-      "sha256": "a7f2c07e1c7740b76296aa5e9c346a9367e232081dda901b3483395d5cc46b0f",
-      "bytes": 49598,
+      "sha256": "179b70b1aa056917cde1dedeeb57e57434000604a87022a5a67110211de0e8e4",
+      "bytes": 49913,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "b36d210dd4e1582602215e50f62edb424a7e6a778b08a684900c686dcead786f"
@@ -2136,8 +2226,8 @@
     },
     {
       "path": "Sources/Views/MissingArtistView.swift",
-      "sha256": "0e30f41e91647eb2a455c0c62efd7092202b6aaf334ec5a08c2a01c78f45b0f6",
-      "bytes": 8848,
+      "sha256": "90e5deae089f3fdb993f0189c25f16be0ad689e329aaac071582338299098750",
+      "bytes": 8908,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "0e30f41e91647eb2a455c0c62efd7092202b6aaf334ec5a08c2a01c78f45b0f6"
@@ -2160,48 +2250,54 @@
     },
     {
       "path": "Sources/Views/MissingTrackNumberView.swift",
-      "sha256": "e8bad86c9fe1e3421778dbf05d05a7313db32ae7aa72d39d786be39d8540d508",
-      "bytes": 10047,
+      "sha256": "90c218c23c69729039d2de18f7a83efcdd34ceef1406fb281c99d84e4fa60f77",
+      "bytes": 10107,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e8bad86c9fe1e3421778dbf05d05a7313db32ae7aa72d39d786be39d8540d508"
     },
     {
       "path": "Sources/Views/MissingYearView.swift",
-      "sha256": "990eba310d7f2a4d96eb7bebb2d642e327fb9d44b1becb4cf9aaa1af39053657",
-      "bytes": 15153,
+      "sha256": "6ead778c729be0197e05d2f5aef070c7dfdbee521deb181ea687895652f1a55c",
+      "bytes": 15183,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "1608bf0a6c4341e99d8c1d459828a268c104d0412e4df16b25cfe485cddc5f7e"
     },
     {
       "path": "Sources/Views/NowPlayingBar.swift",
-      "sha256": "cd6cf5769dfe7f212e6a46413156f5685b868f5df8f4465e3a8ec64fab903794",
-      "bytes": 65931,
+      "sha256": "5d748d81a0932bd2eed647782d6d1da377693b7acf3cc57a8c4b7540f1d4c3ef",
+      "bytes": 66911,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "247f4c19396d43ec59c965afe16c38c8ec6557a5fd8ac08d3ba69335dc0f726e"
     },
     {
       "path": "Sources/Views/NowPlayingLayoutStudio.swift",
-      "sha256": "4b14eb9ee1e331d4b53f3f02f15622a3fc633b8f6168454f0ae09dbd1cf1236c",
-      "bytes": 15397,
+      "sha256": "a0ed814e6dd74d56a5a73fb33540a2b3763ffaac72ac95f171d2ceb42c5ee2ed",
+      "bytes": 15529,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "4b14eb9ee1e331d4b53f3f02f15622a3fc633b8f6168454f0ae09dbd1cf1236c"
     },
     {
       "path": "Sources/Views/NowPlayingPaneView.swift",
-      "sha256": "a2df2e268824de07f9413cb68e6c25f9ca0a756f8eee28d42df90fc5df005dda",
-      "bytes": 6232,
+      "sha256": "82d97feda6893539bf90977570732d6d0e2ea2c9277e57369bd231fb7bc820ba",
+      "bytes": 7401,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "4a09f18d8e6cc885fd60f836d12d342d524576be3dafb06ce0c188002ba0f867"
     },
     {
+      "path": "Sources/Views/PlayHistoryView.swift",
+      "sha256": "4d3dce7bf905d7b5dc036a7a34306c9db9faacec9174a69778017794a93e4e36",
+      "bytes": 10384,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/PlayQueueView.swift",
-      "sha256": "a4f9df7a92bf4e9c91c538ac42cf7612b0ece97429ab740f4998b6894c47a37d",
-      "bytes": 13066,
+      "sha256": "eebd1240d3a10a3e50b5c48f89a3fcbe256fa18cd5b1633bf469d2e011ae28a4",
+      "bytes": 13476,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "21b23aeba090c87f108a75b9a2931ddd8651f105ed5ab2a059be44ed5ba61fe6"
@@ -2216,8 +2312,8 @@
     },
     {
       "path": "Sources/Views/PlaylistContentView.swift",
-      "sha256": "f9cc0282d2bde9a6db8760765737f96fb5870fd0e8e459b72035044e100722d9",
-      "bytes": 9544,
+      "sha256": "e92516b5d7b49d66afc7a16df232516be72b6b121cca12e50626741f743805c7",
+      "bytes": 9819,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "f9cc0282d2bde9a6db8760765737f96fb5870fd0e8e459b72035044e100722d9"
@@ -2264,8 +2360,8 @@
     },
     {
       "path": "Sources/Views/SettingsView.swift",
-      "sha256": "bcb8e190029bc6e7c02576050584a0a3eeebad1701a1fb800a4e84dd9e275adf",
-      "bytes": 43775,
+      "sha256": "2a36bd8a10701c4da2813ff03f25d2f09d96c47c408b5013ea97f3df0982722a",
+      "bytes": 45135,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "a81bd56dbcba48b94a3bf4e2f212fac70e836b43073a3ba556c77f1dd501877a"
@@ -2280,8 +2376,8 @@
     },
     {
       "path": "Sources/Views/SmartPlaylistEditorView.swift",
-      "sha256": "e0b326dbe1915f39f865035dfd77df38d02c32322b58a28970cce6f135e2ccf9",
-      "bytes": 12028,
+      "sha256": "bece60adf4c7e05f10510c8c2d8e83131ed4df51d5f8d8ef35ad7cfc6bf0164a",
+      "bytes": 12089,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e0b326dbe1915f39f865035dfd77df38d02c32322b58a28970cce6f135e2ccf9"
@@ -2296,19 +2392,25 @@
     },
     {
       "path": "Sources/Views/TrackInfoTarget.swift",
-      "sha256": "e89bf106359407327d1e5f336d082246899db56245913041182b7754a324a64b",
-      "bytes": 2893,
+      "sha256": "b0a301ddf33d6930286a790cfe500a5ae16a3d6f38704510f64803e75ad15401",
+      "bytes": 2940,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e89bf106359407327d1e5f336d082246899db56245913041182b7754a324a64b"
     },
     {
       "path": "Sources/Views/TrackInfoView.swift",
-      "sha256": "881125f6e9e5bfe50fcaf4f27f7d042c3de094eb2989376726c9e2fe0ff2fff0",
-      "bytes": 39937,
+      "sha256": "0bda202d6d21c4f9dfa20e4b4f3b1a3a9a9e0d3d38d003453b81d4cc0d0ce755",
+      "bytes": 44061,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "881125f6e9e5bfe50fcaf4f27f7d042c3de094eb2989376726c9e2fe0ff2fff0"
+    },
+    {
+      "path": "Sources/Views/TrackMetadataSelectionState.swift",
+      "sha256": "8fdf762ea93d5d8524ddfff5617dbf76a860f6bedaea866997491a5f81359439",
+      "bytes": 1073,
+      "mode": 420
     },
     {
       "path": "Sources/Views/TrackStarRatingControl.swift",
@@ -2319,17 +2421,23 @@
       "source_sha256": "7ac2e5f0bfb63c680193ceae1507275bfcaa27687a0535a7a6bd61adf28fc23a"
     },
     {
+      "path": "Sources/Views/TrackTableFilterState.swift",
+      "sha256": "69878db32d7241c909c8195baf4e04e552c02eab9fb070c0348ece08b3c3377b",
+      "bytes": 3853,
+      "mode": 420
+    },
+    {
       "path": "Sources/Views/TrackTableProjectionView.swift",
-      "sha256": "f56d664a1cb8a3fd2fd8326bbfea08a72506918d48b8ff8231b910a4c6422f7b",
-      "bytes": 49192,
+      "sha256": "0862be360df38509703d3461d3931fe03f4b6d05faaaedd812d92776a41fb8fc",
+      "bytes": 48979,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "f56d664a1cb8a3fd2fd8326bbfea08a72506918d48b8ff8231b910a4c6422f7b"
     },
     {
       "path": "Sources/Views/TrackTableView.swift",
-      "sha256": "a10c7c114463a7fc111bfb2046a8ac8b8079e865d95e3acd4bf92097bd84b392",
-      "bytes": 28682,
+      "sha256": "36381bc1fa3a5c62a0d23c2d6068793310776c9014fdf1cdbc1732b6a39728f8",
+      "bytes": 27600,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "debd7f0caf70c7fde9fc8cd119d9f085715bb5876940c83525d330973ba22dc4"
@@ -2344,8 +2452,8 @@
     },
     {
       "path": "TESTING.md",
-      "sha256": "18371a3642ed3d362750e57e09bd1f7915127af5c0e111162968221d04c6181b",
-      "bytes": 40208,
+      "sha256": "fc4b5eab50e94392c4c92ec3109c8accd2252bc58b6ffb30b8145309d9d67608",
+      "bytes": 81841,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -2549,11 +2657,17 @@
     },
     {
       "path": "Tests/SongbirdTests/AlbumArtworkScopeTests.swift",
-      "sha256": "d5086956d3669314a6057aa0a821a014b1ab38fcd115103d32fdaf04364cb119",
-      "bytes": 10843,
+      "sha256": "fb8a9436ae3e19faff7a4011689f74aac628c64e6ac46244dcb8c3190d24396d",
+      "bytes": 10872,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "d5086956d3669314a6057aa0a821a014b1ab38fcd115103d32fdaf04364cb119"
+    },
+    {
+      "path": "Tests/SongbirdTests/AlbumCardButtonTests.swift",
+      "sha256": "93aad54d2b9a2de0f058b172c2606ddd4f12d4e4524309d466787e874e385454",
+      "bytes": 4014,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/AlbumFavoriteMigrationTests.swift",
@@ -2565,16 +2679,16 @@
     },
     {
       "path": "Tests/SongbirdTests/AlbumGridInteractionTests.swift",
-      "sha256": "ae5f8c70ea4fc97bb996a03311138596ee9fa008fa13d575f8713c07fac11434",
-      "bytes": 9958,
+      "sha256": "bd66661144b6ddfae42a54deda4a7f263f52a6b2709753de9f4b8bc2e5cae662",
+      "bytes": 20480,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "ae5f8c70ea4fc97bb996a03311138596ee9fa008fa13d575f8713c07fac11434"
     },
     {
       "path": "Tests/SongbirdTests/AlbumGroupingTests.swift",
-      "sha256": "cf1b6f73094f14ccd5628b09526716b272124343006b62973cbda5f8d8972431",
-      "bytes": 7555,
+      "sha256": "b05e4d13e56c4e37dee2995af1b9e7352bb0c1614400db69f921a4c6e15b19f0",
+      "bytes": 9350,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "cf1b6f73094f14ccd5628b09526716b272124343006b62973cbda5f8d8972431"
@@ -2886,10 +3000,16 @@
       "source_sha256": "6f77059f8a3ad3b6574596e4b3cb2792cd6f5cc2e19ade286722a9ed92e41135"
     },
     {
+      "path": "Tests/SongbirdTests/FileLocationPresentationTests.swift",
+      "sha256": "a44c4738d152bb9a3466682ee451935c4071515647438f15c133fa2fd64da798",
+      "bytes": 1672,
+      "mode": 420
+    },
+    {
       "origin": "folder-artwork-discovery",
       "path": "Tests/SongbirdTests/FolderArtworkTests.swift",
-      "sha256": "4f1df918a5aa8d1f87e638a7d46f7ec92dcf8582e36214af1b26ed71e31e7927",
-      "bytes": 13798,
+      "sha256": "e6980b1b4ff77a37b8bb01b9cffaf698682383f3122ca46b85dd8c621d3166e5",
+      "bytes": 13827,
       "mode": 420
     },
     {
@@ -2908,6 +3028,12 @@
       "source_sha256": "aaee30fa1fe3f46ac9ead92340c08ed3bb5f39964544600bf57873cf34ae63f4"
     },
     {
+      "path": "Tests/SongbirdTests/HealthMetadataPresentationTests.swift",
+      "sha256": "2cf09a17abefb0f1dccbbbfa14347e5e94f03c4111eb4056e84ea8fd5d150599",
+      "bytes": 3568,
+      "mode": 420
+    },
+    {
       "origin": "lastfm-browser-sign-in",
       "path": "Tests/SongbirdTests/LastFMAuthenticationTests.swift",
       "sha256": "f193849c65ee9a21df1d409f2f0e0b7a09e5e77faba9f7f0f4c006c0bdf08d68",
@@ -2922,6 +3048,18 @@
       "origin": "project-authored local legal delivery, focused regression or candidate control/documentation remediation"
     },
     {
+      "path": "Tests/SongbirdTests/LibraryActivityTerminationTests.swift",
+      "sha256": "7127b7000c051b72cec1f79c4eca1ada132f7671283593a617e2929afbde03e6",
+      "bytes": 1880,
+      "mode": 420
+    },
+    {
+      "path": "Tests/SongbirdTests/LibraryActivityTests.swift",
+      "sha256": "ab637e011870043dd61873781abf65caa60abf0fea00af1bcc74f682b1fcd885",
+      "bytes": 13339,
+      "mode": 420
+    },
+    {
       "path": "Tests/SongbirdTests/LibraryAlbumProjectionStoreRepairTests.swift",
       "sha256": "9574f03b84b50bb3654f6ab2be57b4f68c5fe88a93fbe990fae9983af5db62a0",
       "bytes": 6802,
@@ -2930,12 +3068,30 @@
       "source_sha256": "9574f03b84b50bb3654f6ab2be57b4f68c5fe88a93fbe990fae9983af5db62a0"
     },
     {
+      "path": "Tests/SongbirdTests/LibraryCollectionControlsTests.swift",
+      "sha256": "bb32b2a0c7be3ac13b51c29957d927408e849f3bb2d420f111f339b461f62af4",
+      "bytes": 7501,
+      "mode": 420
+    },
+    {
       "path": "Tests/SongbirdTests/LibraryContentNavigationTests.swift",
-      "sha256": "4004f17740ba0f584858478db3cdc66321d9de9be9434162e06898b81dba6785",
-      "bytes": 2328,
+      "sha256": "65b8390182933ad259421a68819744022ff36b8ee277530a1a7d03c4df9fc915",
+      "bytes": 2359,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "4004f17740ba0f584858478db3cdc66321d9de9be9434162e06898b81dba6785"
+    },
+    {
+      "path": "Tests/SongbirdTests/LibraryFileArtworkRepairTests.swift",
+      "sha256": "f69281424f974bb1eb943473c9b5521ce8bd5d6788405d9f933b00d8927cc085",
+      "bytes": 16770,
+      "mode": 420
+    },
+    {
+      "path": "Tests/SongbirdTests/LibraryFileTagRepairTests.swift",
+      "sha256": "faf1fb044522e772531f4b31f2beca91713bd1f2f36ab85a759ce0ce1bcd83cf",
+      "bytes": 23944,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/LibraryFolderWatcherImportLifecycleTests.swift",
@@ -2955,8 +3111,8 @@
     },
     {
       "path": "Tests/SongbirdTests/LibraryHealthProjectionStoreTests.swift",
-      "sha256": "e9b025bb5320d3b7a887de0f811307f530c2b668b9d514ff0fdd079df137cff9",
-      "bytes": 7209,
+      "sha256": "381ebf64aaacfeba181dbe3b51fdc0bfc54b816d158c8ac301be79be8c9723ff",
+      "bytes": 11127,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "e9b025bb5320d3b7a887de0f811307f530c2b668b9d514ff0fdd079df137cff9"
@@ -2979,24 +3135,30 @@
     },
     {
       "path": "Tests/SongbirdTests/LibraryItemActionHandlerTests.swift",
-      "sha256": "19fb3cee6599b2c2aba872757aa51363d22fa09c93314c75f2a8f429c05fc42f",
-      "bytes": 37009,
+      "sha256": "171ecc4731ff04ec70d5daa429d4d7982bb16dc4b231f372dc04874ced36fb5d",
+      "bytes": 37038,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json",
       "source_sha256": "964aafadaea21329a9710c92fe596dacfd75f95f29597b16b21b61eafe1961a9"
     },
     {
       "path": "Tests/SongbirdTests/LibraryNavigationCoordinatorTests.swift",
-      "sha256": "7b644d90b97d9e2da1829f752b015877e3013fc7b346cb8932922d9587fba162",
-      "bytes": 2508,
+      "sha256": "7ba49d538ffa837942184105f07237f7fbe026e999b5fc3046b5449eaad3edb7",
+      "bytes": 7976,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "7b644d90b97d9e2da1829f752b015877e3013fc7b346cb8932922d9587fba162"
     },
     {
+      "path": "Tests/SongbirdTests/LibraryNoticeSourceRegressionTests.swift",
+      "sha256": "b665958bb3bb8aa85e99ef1d8884e628ce576c1ede6cab1f3b68a40e28eb4692",
+      "bytes": 2505,
+      "mode": 420
+    },
+    {
       "path": "Tests/SongbirdTests/LibraryResetServiceTests.swift",
-      "sha256": "2a440414cb073cb7411ef4dc6e22e5f2429d4657d679f5b142b78727b59f9b6b",
-      "bytes": 10240,
+      "sha256": "fb7c183428fd2425dff22609c785fe2719e16c9ba9f9b32ac1a7cf5fcb5adf7e",
+      "bytes": 10271,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "2a440414cb073cb7411ef4dc6e22e5f2429d4657d679f5b142b78727b59f9b6b"
@@ -3041,6 +3203,18 @@
       "source_sha256": "c86b16b441cc552da0b5c5f4e446cd5b022113c1b0d5beb5976bb7a5bb4fd07f"
     },
     {
+      "path": "Tests/SongbirdTests/MetadataActivityIntegrationTests.swift",
+      "sha256": "33acea54fcc2b4ae59adf91b543724df59b382cc58dddda19f2b613c8eafffac",
+      "bytes": 8575,
+      "mode": 420
+    },
+    {
+      "path": "Tests/SongbirdTests/MetadataReaderArtworkKeyTests.swift",
+      "sha256": "eed119a95742cfa2035c0eb74b2dec3f35b437f67da19cf9a4c837c639f0c957",
+      "bytes": 1844,
+      "mode": 420
+    },
+    {
       "path": "Tests/SongbirdTests/MultiDiscAlbumTitleTests.swift",
       "sha256": "3fcdf74818c846a656553b5ff692d56548e3f580541d822519efebd95d563d94",
       "bytes": 3791,
@@ -3062,6 +3236,12 @@
       "bytes": 13157,
       "mode": 420,
       "origin": "project-authored implementation, evidence or documentation"
+    },
+    {
+      "path": "Tests/SongbirdTests/PlayHistoryStoreTests.swift",
+      "sha256": "34bfefd16bcf98e4528151e5497f816f3dbb20d5d0d9a8ca79ea75b106e86fcc",
+      "bytes": 4315,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/PlayQualificationTrackerTests.swift",
@@ -3095,12 +3275,24 @@
       "source_sha256": "3bf28365aa559f420fa138c802334d5ff39ef8a140f069b892d37ee9d87ad582"
     },
     {
+      "path": "Tests/SongbirdTests/PlaybackSettingsDefaultsTests.swift",
+      "sha256": "f61e55d60899ffe00576670167cec5bb72023b0dfe3f47e51076d9df30344503",
+      "bytes": 3536,
+      "mode": 420
+    },
+    {
       "path": "Tests/SongbirdTests/PlayerWindowConfigurationTests.swift",
       "sha256": "31a99c91fdadbc70f50f9536088977db7ce47cc22e387b221d4eabb831dc0533",
       "bytes": 6350,
       "mode": 420,
       "origin": "unchanged-copy",
       "source_sha256": "31a99c91fdadbc70f50f9536088977db7ce47cc22e387b221d4eabb831dc0533"
+    },
+    {
+      "path": "Tests/SongbirdTests/QueueClearUndoTests.swift",
+      "sha256": "91a870aa31d97e73e5dae86ebce5493111c3309e745cdae638932ad325d15f0f",
+      "bytes": 2512,
+      "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/QueueDeletionStabilityTests.swift",
@@ -3120,8 +3312,8 @@
     },
     {
       "path": "Tests/SongbirdTests/ResizableDividerTests.swift",
-      "sha256": "4ee07f5356862378938a9b6168b5a87983339517cf46423573333d78d37a00d4",
-      "bytes": 2078,
+      "sha256": "3ba4642cf24ce0d61f4f9774bbacdfc111ff008d41d7352deb1ef3535aadf2ad",
+      "bytes": 2340,
       "mode": 420,
       "origin": "back-navigation-crash"
     },
@@ -3215,14 +3407,14 @@
     {
       "origin": "column-context-menu-fix",
       "path": "Tests/SongbirdTests/TrackTableColumnMenuTests.swift",
-      "sha256": "06aef5c0704b77f65506861c04d8b5ae3a592ccb5d7259c9717dc6a5df75207b",
-      "bytes": 3197,
+      "sha256": "bdb304f1fe8733b1717f44b25cd99de6aee8d2a8b6e08febc4ba83d005cc79a3",
+      "bytes": 4949,
       "mode": 420
     },
     {
       "path": "Tests/SongbirdTests/TrackTableColumnPrefsTests.swift",
-      "sha256": "217a80f587de145223334de9315324695bb1b4713df25c038862f75c2ca1ef12",
-      "bytes": 7476,
+      "sha256": "fd6c57cdc56f9c81634eea3f725412b1e635cc5a3ce5e6209143b148dda31f8b",
+      "bytes": 7488,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "498c4ff55f0f4526907df7cfeb0a69d6f53783375973524fc2ba3e385627eb47"
@@ -3253,7 +3445,7 @@
     },
     {
       "path": "Tests/SongbirdTests/UsabilityRemediationTests.swift",
-      "sha256": "64b703ff0db4352e5a45440f2a6fed6dd632db6a1035409154035db10ebf1be1",
+      "sha256": "8f26a6c3b02c8cd2bffb4fa157c9440c43ba0ed0e70356f4ddb1cd3b518dfed7",
       "bytes": 42508,
       "mode": 420,
       "origin": "candidate-modification; original source hash retained",
@@ -12492,8 +12684,8 @@
     },
     {
       "path": "build.sh",
-      "sha256": "29c9f9086602677b3c89dddf69e8534bfbe8ce148eeba8a29bd2f885a35f1b80",
-      "bytes": 1109,
+      "sha256": "4f15d15d4e846e68ae81a5de753a4e7b8c6cb918b7c0b1fb668b6a3b292e3f06",
+      "bytes": 1647,
       "mode": 493,
       "origin": "unchanged-copy",
       "source_sha256": "29c9f9086602677b3c89dddf69e8534bfbe8ce148eeba8a29bd2f885a35f1b80"
@@ -12532,8 +12724,8 @@
     },
     {
       "path": "docs/.INDEX.md",
-      "sha256": "d200f7e501af3655349b650f3df8f2c8029bdae1f5a3742529ffc8cbcdae534a",
-      "bytes": 3813,
+      "sha256": "6c0cbb627f35ddc36029b319bb0030f1e39a0714f5ff2a2670846f0cea35b917",
+      "bytes": 4272,
       "mode": 420,
       "origin": "candidate-modification; preparation origin retained in publication/changes.json"
     },
@@ -12620,6 +12812,12 @@
       "mode": 420
     },
     {
+      "path": "docs/exec-plans/active/missing-artwork-sort.md",
+      "sha256": "bd074003008a2b84bbac484fcbb2fb2ec1ad412391f494fafeaea65dd1129f62",
+      "bytes": 2623,
+      "mode": 420
+    },
+    {
       "path": "docs/exec-plans/active/ready-to-share.md",
       "sha256": "034b54cb6481a0dffbb0cdeedab47f67ea550d3d0fc54c15f9bc8c866c571c8b",
       "bytes": 6455,
@@ -12634,6 +12832,12 @@
       "origin": "project-authored local legal delivery, focused regression or candidate control/documentation remediation"
     },
     {
+      "path": "docs/exec-plans/active/ui-improvements.md",
+      "sha256": "fedab5c5baf7b40975fd01b405faa606dae60555bf18f602f51d7c8e1b935416",
+      "bytes": 6325,
+      "mode": 420
+    },
+    {
       "path": "docs/exec-plans/completed/README.md",
       "sha256": "ca9cbdb1303ca98ca809adcb04d5bb93c15ce09969a358a1e0e6187dd7c99b84",
       "bytes": 181,
@@ -12641,11 +12845,23 @@
       "origin": "baseline-documentation"
     },
     {
+      "path": "docs/exec-plans/completed/artist-album-view.md",
+      "sha256": "61bc8c9f1f715d8112293fc6806fcbf1388f612be0485d6526980293a79b9482",
+      "bytes": 3245,
+      "mode": 420
+    },
+    {
       "path": "docs/exec-plans/completed/back-navigation-crash.md",
       "sha256": "aaca4fc20fbc36ee18b9f483921796184476ece207536987dd6c9c4ff1928e8a",
       "bytes": 4781,
       "mode": 420,
       "origin": "back-navigation-crash"
+    },
+    {
+      "path": "docs/exec-plans/completed/file-tag-recovery.md",
+      "sha256": "1e175f43dee981bacab5a8cd77b9d86b9ebe2dadb3692fa1450cc44110f435c9",
+      "bytes": 6784,
+      "mode": 420
     },
     {
       "origin": "folder-artwork-discovery",
@@ -12875,8 +13091,8 @@
     },
     {
       "path": "scripts/ai-usability",
-      "sha256": "4a102e70c2f22287d882912d5e94f5c196b0fc4e16f32882ad78206b444cd717",
-      "bytes": 15283,
+      "sha256": "c6ac271dddbc118371585fe3071bd7e375fc0a27f676e1bf6579fedae1cdd98e",
+      "bytes": 15187,
       "mode": 493,
       "origin": "candidate-modification; original source hash retained",
       "source_sha256": "d24977c924ca304b236b19ce81ff2413711cdd96d31d4eb424f1c9252a028ae8"
@@ -12996,8 +13212,8 @@
     },
     {
       "path": "scripts/tests/test-usability-run-manifest.zsh",
-      "sha256": "84ef8e0371a033d4eff8bdeb3c9c46230b46463d7689e1922d6b0c23b7210af3",
-      "bytes": 1498,
+      "sha256": "a6d61d3dc7d667de5d6c690141267ef38c5fcd6a9f272702e2c16881e22f2713",
+      "bytes": 2433,
       "mode": 493,
       "origin": "unchanged-copy",
       "source_sha256": "84ef8e0371a033d4eff8bdeb3c9c46230b46463d7689e1922d6b0c23b7210af3"
@@ -13066,6 +13282,12 @@
       "mode": 420
     },
     {
+      "path": "scripts/tests/test_source_provenance.py",
+      "sha256": "e59b66bb8a8f1a56a26a3fb1f2b0599f9a767c29eb904305c82cd496a81bcef7",
+      "bytes": 1986,
+      "mode": 420
+    },
+    {
       "path": "scripts/tests/test_verify_publication.py",
       "sha256": "c9289034d95116b0618513efd82a010a430b12e3cf02406bd66bd74f14778212",
       "bytes": 16743,
@@ -13081,6 +13303,12 @@
       "source_sha256": "96dddc58750d6bca18c399157d762dca89c5a482d1526632ed3de3483cbac0ce"
     },
     {
+      "path": "scripts/usability/source-provenance",
+      "sha256": "2f302e51a47719d876260a908789c5e52ce9f3450de50c8d7280b72d002b1383",
+      "bytes": 2481,
+      "mode": 493
+    },
+    {
       "path": "scripts/usability/ui",
       "sha256": "b4556c1bd53d52168276160a78281de44e8929062e1b7d0709765baabe371ea0",
       "bytes": 4650,
@@ -13090,8 +13318,8 @@
     },
     {
       "path": "scripts/usability/update-run-manifest",
-      "sha256": "bb1db14514846a1da9870c4d49c7dc50ef3d5ab3f1cd277aa2d40b272b929c3c",
-      "bytes": 1979,
+      "sha256": "19002040d9c857e551c89cefb42acab3ed92a6d10e968db166ef2faf8ed5a1cc",
+      "bytes": 2155,
       "mode": 493,
       "origin": "unchanged-copy",
       "source_sha256": "bb1db14514846a1da9870c4d49c7dc50ef3d5ab3f1cd277aa2d40b272b929c3c"

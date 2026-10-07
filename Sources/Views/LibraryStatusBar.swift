@@ -4,7 +4,16 @@ public struct LibraryStatusBar: View {
     @EnvironmentObject private var importProgress: ImportProgressState
     @EnvironmentObject private var notices: UserNoticeState
     @EnvironmentObject private var summary: LibrarySummaryState
+    @EnvironmentObject private var activity: LibraryActivityStore
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showsActivity = false
+    private let openHealth: () -> Void
+    private let openSettings: () -> Void
+
+    public init(openHealth: @escaping () -> Void = {}, openSettings: @escaping () -> Void = {}) {
+        self.openHealth = openHealth
+        self.openSettings = openSettings
+    }
 
     private static let barHeight: CGFloat = 22
 
@@ -20,6 +29,35 @@ public struct LibraryStatusBar: View {
                 restingContent
             }
             Spacer()
+            if importProgress.value.isRunning, let notice = notices.notice, notice.severity.isSticky {
+                Button {
+                    showsActivity = true
+                } label: {
+                    Label(notice.severity.activityTitle, systemImage: icon(for: notice.severity))
+                }
+                .foregroundStyle(color(for: notice.severity))
+                .buttonStyle(.borderless)
+                .help(notice.message)
+                .accessibilityIdentifier("activity.currentWarning")
+            }
+            Button {
+                showsActivity.toggle()
+            } label: {
+                Label(activity.attentionCount > 0 ? "Activity (\(activity.attentionCount))" : "Activity",
+                      systemImage: "list.bullet.rectangle")
+            }
+            .buttonStyle(.borderless)
+            .help("Show full messages and recent library operations")
+            .accessibilityIdentifier("activity.show")
+            .popover(isPresented: $showsActivity, arrowEdge: .top) {
+                LibraryActivityView(openHealth: {
+                    showsActivity = false
+                    openHealth()
+                }, openSettings: {
+                    showsActivity = false
+                    openSettings()
+                }).environmentObject(activity)
+            }
         }
         .font(.caption)
         .padding(.horizontal, 10)
@@ -48,6 +86,8 @@ public struct LibraryStatusBar: View {
         }
         Text(importProgress.value.message)
             .foregroundColor(textColor)
+            .lineLimit(1)
+            .help(importProgress.value.message)
         if importProgress.value.phase == .cancelling {
             Button("Cancelling…") {}
                 .disabled(true)
@@ -69,6 +109,8 @@ public struct LibraryStatusBar: View {
                 .foregroundStyle(color(for: notice.severity))
             Text(notice.message)
                 .foregroundColor(textColor)
+                .lineLimit(1)
+                .help(notice.message)
             if notice.isDismissible {
                 Button("Dismiss") {
                     LibraryStatus.shared.dismissCurrentNotice()

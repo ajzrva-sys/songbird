@@ -34,6 +34,29 @@ This map describes the 2026-08-02 working tree, including uncommitted files. His
 
 ## App Composition and Control Flow
 
+### UI presentation and Activity — 2026-10-06
+
+Searchable collections share `LibrarySearchField`, their existing search coordinator
+and projection debounce; leaf views retain focus for table keyboard guards.
+`TrackTableFilterState`, `LibraryEmptyStateAction`, `LibraryViewControls` and the
+Health/metadata presentation helpers derive UI state without saving new model fields.
+Main-player height uses a separate preference with a read-only fallback to the
+legacy height; its content minimum never rewrites mini-player geometry.
+
+`PlaybackQueue` tracks mutations and owns the shared clear-remaining Undo token,
+including occurrence IDs and effective shuffle order. Transport changes and seeking
+invalidate that token; backend audio timing remains unchanged.
+
+`LibraryStatus` owns an observable `LibraryActivityStore`. Explicit operations use
+UUIDs for progress, cancellation and completion; notices can correlate to those IDs.
+Live messages and cancellation closures stay in memory. `LibraryActivityStorage`
+serializes controlled records to versioned, atomic JSON in the validated profile,
+without a SwiftData migration. Startup recovers unfinished operations as Interrupted.
+`AppDelegate` flushes on quit with a bounded termination gate. The collapsed footer
+opens Activity while keeping import progress and warnings independently available.
+Metadata submissions capture `TrackMetadataWritePolicy`; structured file results
+report catalog success separately from partial supported-tag failures.
+
 `SongbirdApp.init()` creates one `PlaybackSession`, `LibrarySnapshotStore`, `LibraryAlbumProjectionStore`, navigation coordinator, search coordinator, and library action handler. The main scene injects those objects and `MediaLibrary.shared.container` into `MainView` and its descendants. `AppDelegate` receives the playback session for application-level actions.
 
 `MainView` owns the sidebar/content/player-bar layout. A `NavigationStack` routes root sidebar destinations and album/artist/genre detail routes. `LibraryItemActionHandler` is the shared mutation/action boundary for views; future UI work should extend that boundary rather than give individual views unrelated persistence flows.

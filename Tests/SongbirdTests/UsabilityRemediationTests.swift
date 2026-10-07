@@ -62,7 +62,7 @@ struct UsabilityRemediationTests {
             desiredSidebar: 420,
             desiredRightPane: 360
         )
-        #expect(minimum.sidebar == 180)
+        #expect(minimum.sidebar == 194)
         #expect(minimum.rightPane == 200)
 
         let roomy = PlayerWindowLayoutPolicy.paneWidths(
@@ -73,7 +73,7 @@ struct UsabilityRemediationTests {
             desiredRightPane: 360
         )
         #expect(roomy.sidebar == 420)
-        #expect(roomy.rightPane == 344)
+        #expect(roomy.rightPane == 358)
         #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 260, windowHeight: 520) == 260)
         #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 420, windowHeight: 900) == 420)
         #expect(PlayerWindowLayoutPolicy.sidebarArtworkSide(sidebarWidth: 180, windowHeight: 450) == 180)

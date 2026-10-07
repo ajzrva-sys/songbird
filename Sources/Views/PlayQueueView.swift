@@ -66,8 +66,9 @@ public struct PlayQueueView: View {
                 Spacer()
                 if queue.upcomingEntries.isEmpty == false {
                     Button("Clear Up Next") {
-                        latestUndo = .upcoming(queue.clearUpcomingReturningSnapshot())
-                        undoMessage = "Cleared Up Next."
+                        queue.clearUpcomingWithUndo()
+                        latestUndo = nil
+                        undoMessage = nil
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(secondaryColor)
@@ -82,6 +83,17 @@ public struct PlayQueueView: View {
                 }
             }
             .padding()
+
+            if queue.canUndoClearUpcoming {
+                HStack {
+                    Text("Cleared remaining tracks.").font(.caption).foregroundStyle(secondaryColor)
+                    Button("Undo") { queue.undoClearUpcoming() }
+                        .controlSize(.small)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 6)
+            }
 
             if let undoMessage, latestUndo != nil {
                 HStack {

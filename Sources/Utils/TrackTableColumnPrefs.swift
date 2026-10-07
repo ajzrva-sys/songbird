@@ -40,6 +40,7 @@ public enum TrackTableColumnPrefs {
         .init(id: TrackSortColumn.dateAdded.rawValue, visible: false, width: 90),
         .init(id: TrackSortColumn.dateModified.rawValue, visible: false, width: 90),
         .init(id: TrackSortColumn.discNumber.rawValue, visible: false, width: 84),
+        .init(id: TrackSortColumn.filePath.rawValue, visible: false, width: 220),
         .init(id: TrackSortColumn.kind.rawValue, visible: false, width: 70),
         .init(id: TrackSortColumn.lastPlayed.rawValue, visible: false, width: 110),
         .init(id: TrackSortColumn.starRating.rawValue, visible: false, width: 70),
@@ -56,6 +57,7 @@ public enum TrackTableColumnPrefs {
              .sortAlbumArtist, .sortArtist, .sortComposer, .work:
             return 140
         case .comments, .description, .sortTitle: return 180
+        case .filePath: return 220
         case .genre, .grouping, .releaseDate: return 100
         case .beatsPerMinute, .lastPlayed, .lastSkipped, .movementNumber:
             return 110
@@ -75,8 +77,8 @@ public enum TrackTableColumnPrefs {
         switch column {
         case .title: return 120
         case .artist, .album, .albumArtist, .composer, .comments, .description,
-             .movementName, .sortAlbum, .sortAlbumArtist, .sortArtist, .sortComposer,
-             .sortTitle, .work:
+             .filePath, .movementName, .sortAlbum, .sortAlbumArtist, .sortArtist,
+             .sortComposer, .sortTitle, .work:
             return 80
         case .genre, .grouping:
             return 60
@@ -215,5 +217,15 @@ public enum TrackTableColumnPrefs {
         guard let idx = prefs.firstIndex(where: { $0.id == id }),
               let column = TrackSortColumn(rawValue: id) else { return }
         prefs[idx].width = Double(clampedWidth(width, for: column))
+    }
+
+    public static func setVisible(
+        _ prefs: inout [TrackColumnPref],
+        column: TrackSortColumn,
+        visible: Bool
+    ) {
+        guard column.isSupported,
+              let index = prefs.firstIndex(where: { $0.column == column }) else { return }
+        prefs[index].visible = column == .title || visible
     }
 }

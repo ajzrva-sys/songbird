@@ -22,6 +22,7 @@ struct NowPlayingPaneView: View {
             } else {
                 trackList
             }
+            queueControls
         }
         .background(SongbirdTheme.background(for: colorScheme))
     }
@@ -29,7 +30,8 @@ struct NowPlayingPaneView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
+          HStack(spacing: 6) {
             Image(systemName: "play.fill")
                 .font(.system(size: 10))
                 .foregroundColor(.accentColor)
@@ -37,9 +39,11 @@ struct NowPlayingPaneView: View {
                 .font(.headline)
                 .foregroundColor(textColor)
             Spacer()
-            Text("\(allQueued.count) \(allQueued.count == 1 ? "track" : "tracks")")
+          }
+            Text("\(allQueued.count) \(allQueued.count == 1 ? "track" : "tracks") · \(LibraryStatusPresentation.formatDuration(allQueued.reduce(0) { $0 + max(0, $1.duration) }))")
                 .font(.caption)
                 .foregroundColor(secondaryColor)
+                .accessibilityLabel("\(allQueued.count) tracks, total duration \(LibraryStatusPresentation.formatDuration(allQueued.reduce(0) { $0 + max(0, $1.duration) }))")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -47,25 +51,35 @@ struct NowPlayingPaneView: View {
 
     // MARK: - Track list
 
+    private var queueControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if queue.canUndoClearUpcoming {
+                HStack {
+                    Text("Cleared remaining tracks.").font(.caption)
+                    Spacer(minLength: 0)
+                    Button("Undo") { queue.undoClearUpcoming() }
+                }
+            }
+            Button("Clear Remaining Tracks") { queue.clearUpcomingWithUndo() }
+                .disabled(queue.upcomingEntries.isEmpty)
+        }
+        .controlSize(.small)
+        .padding(10)
+    }
+
     private var trackList: some View {
         List {
             if let current = queue.currentEntry {
-                Section("Now Playing") {
-                    paneRow(current, isCurrent: true)
-                }
+                paneRow(current, isCurrent: true)
             }
-            if queue.upcomingEntries.isEmpty == false {
-                Section("Up Next") {
-                    ForEach(queue.displayedUpcomingEntries) { entry in
-                        paneRow(entry, isCurrent: false)
-                    }
-                    .onMove { source, destination in
-                        queue.moveDisplayedUpcoming(
-                            fromOffsets: source,
-                            toOffset: destination
-                        )
-                    }
-                }
+            ForEach(queue.displayedUpcomingEntries) { entry in
+                paneRow(entry, isCurrent: false)
+            }
+            .onMove { source, destination in
+                queue.moveDisplayedUpcoming(
+                    fromOffsets: source,
+                    toOffset: destination
+                )
             }
         }
         .listStyle(.inset)
@@ -76,7 +90,8 @@ struct NowPlayingPaneView: View {
 
     private func paneRow(_ entry: PlaybackQueueEntry, isCurrent: Bool) -> some View {
         let track = entry.track
-        return HStack(spacing: 6) {
+        return VStack(alignment: .leading, spacing: 4) {
+          HStack(spacing: 6) {
             if isCurrent {
                 Image(systemName: "speaker.wave.2.fill")
                     .font(.system(size: 9))
@@ -98,11 +113,23 @@ struct NowPlayingPaneView: View {
             Text(formatDuration(track.duration))
                 .font(.caption2.monospacedDigit())
                 .foregroundColor(secondaryColor)
+          }
+          .contentShape(Rectangle())
+          .onTapGesture(count: 2) {
+              actions.requestPlayQueueEntry(entryID: entry.id)
+          }
+          if !isCurrent {
+              HStack(spacing: 8) {
+                  Button("Play Next") { queue.moveNext(entryID: entry.id) }
+                  Button("Remove") { queue.removeUpcoming(entryID: entry.id) }
+                  Spacer(minLength: 0)
+              }
+              .buttonStyle(.borderless)
+              .controlSize(.small)
+              .font(.caption)
+          }
         }
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            actions.requestPlayQueueEntry(entryID: entry.id)
-        }
         .contextMenu {
             if let snapshot = librarySnapshots.trackSnapshot(id: track.id) {
                 TrackContextMenu(

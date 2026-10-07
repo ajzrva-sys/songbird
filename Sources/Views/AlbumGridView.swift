@@ -10,7 +10,8 @@ enum AlbumGridLayout {
     static func columns(artworkSize: CGFloat, spacing: CGFloat) -> [GridItem] {
         [GridItem(
             .adaptive(minimum: artworkSize, maximum: artworkSize),
-            spacing: spacing
+            spacing: spacing,
+            alignment: .top
         )]
     }
 
@@ -71,6 +72,7 @@ struct AlbumGridSelectionState: Equatable {
 
 public struct AlbumGridView: View {
     public let scope: AlbumGridScope
+    public let showsTitle: Bool
     @EnvironmentObject private var librarySnapshots: LibrarySnapshotStore
     @EnvironmentObject private var albumProjectionStore: LibraryAlbumProjectionStore
     @EnvironmentObject private var actions: LibraryItemActionHandler
@@ -96,6 +98,7 @@ public struct AlbumGridView: View {
     @State private var summaryOwner = LibraryContentSummaryOwner()
     @State private var pendingScrollRestore = true
     @State private var scrollAnchorID: String?
+    @FocusState private var searchFocused: Bool
 
     private var artworkSize: CGFloat {
         CGFloat(AlbumGridSettings.normalizedArtworkSize(storedArtworkSize))
@@ -111,9 +114,11 @@ public struct AlbumGridView: View {
 
     public init(
         initialSortOrder: AlbumSortOrder = .title,
-        scope: AlbumGridScope = .all
+        scope: AlbumGridScope = .all,
+        showsTitle: Bool = true
     ) {
         self.scope = scope
+        self.showsTitle = showsTitle
         _sortOrder = State(initialValue: initialSortOrder)
     }
 
@@ -134,19 +139,25 @@ public struct AlbumGridView: View {
         )
     }
 
+    private var isGridProjectionCurrent: Bool {
+        gridProjection.request == gridProjectionRequest
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(pageTitle).font(.title2.weight(.semibold))
-                    Text("\(gridProjection.groups.count) albums")
+                    if showsTitle {
+                        Text(pageTitle).font(.title2.weight(.semibold))
+                    }
+                    Text(isGridProjectionCurrent ? "\(gridProjection.groups.count) albums" : "Updating albums…")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Toggle("Favorites Only", isOn: $favoritesOnly)
                     .toggleStyle(.button)
-                if case .all = scope {
+                if allowsSorting {
                     Picker("Sort", selection: $sortOrder) {
                         ForEach(AlbumSortOrder.allCases) { order in
                             Text(order.rawValue).tag(order)
@@ -154,6 +165,14 @@ public struct AlbumGridView: View {
                     }
                     .pickerStyle(.menu)
                 }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            Divider()
+            HStack(spacing: 12) {
+                LibrarySearchField(scopeTitle: pageTitle, focused: $searchFocused)
+                Spacer(minLength: 0)
+                AlbumGridViewControls(artworkSize: $storedArtworkSize, gridSpacing: $storedGridSpacing)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
@@ -198,49 +217,53 @@ public struct AlbumGridView: View {
                 guard pendingScrollRestore, gridProjection.orderedIDs.isEmpty == false else { return }
                 restoreScrollIfNeeded()
             }
+            .overlay {
+                switch albumProjectionStore.state {
+                case .loading(let previous) where previous == nil:
+                    ProgressView("Loading Albums…")
+                case .failed(let message, let previous) where previous == nil:
+                    ContentUnavailableView {
+                        Label("Albums Could Not Load", systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(message)
+                    } actions: {
+                        Button("Retry") {
+                            Task {
+                                await albumProjectionStore.update(
+                                    from: librarySnapshots.snapshot,
+                                    force: true
+                                )
+                            }
+                        }
+                    }
+                case .loaded where librarySnapshots.snapshot.albums.isEmpty:
+                    ContentUnavailableView {
+                        Label("No Albums", systemImage: "square.stack")
+                    } description: {
+                        Text("Import music to populate albums.")
+                    } actions: {
+                        Button("Import Music…") { ImportSetupWindowPresenter.show() }
+                    }
+                case .loaded where !isGridProjectionCurrent && gridProjection.groups.isEmpty:
+                    ProgressView("Updating Albums…")
+                case .loaded where gridProjection.groups.isEmpty:
+                    albumEmptyState
+                default:
+                    EmptyView()
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if isRefreshingAlbums {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(12)
+                }
+            }
         }
         .accessibilityIdentifier("library.albumGrid")
         .background(bgColor)
         .onAppear { LibraryStatus.shared.summary.activate(owner: summaryOwner) }
         .onDisappear { LibraryStatus.shared.summary.clear(owner: summaryOwner) }
-        .overlay {
-            switch albumProjectionStore.state {
-            case .loading(let previous) where previous == nil:
-                ProgressView("Loading Albums…")
-            case .failed(let message, let previous) where previous == nil:
-                ContentUnavailableView {
-                    Label("Albums Could Not Load", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(message)
-                } actions: {
-                    Button("Retry") {
-                        Task {
-                            await albumProjectionStore.update(
-                                from: librarySnapshots.snapshot,
-                                force: true
-                            )
-                        }
-                    }
-                }
-            case .loaded where librarySnapshots.snapshot.albums.isEmpty:
-                ContentUnavailableView(
-                    "No Albums",
-                    systemImage: "square.stack",
-                    description: Text("Import music to populate albums.")
-                )
-            case .loaded where gridProjection.groups.isEmpty:
-                albumEmptyState
-            default:
-                EmptyView()
-            }
-        }
-        .overlay(alignment: .topTrailing) {
-            if case .loading(let previous) = albumProjectionStore.state, previous != nil {
-                ProgressView()
-                    .controlSize(.small)
-                    .padding(12)
-            }
-        }
         .task(id: albumSnapshotProjectionInput) {
             await albumProjectionStore.update(from: librarySnapshots.snapshot)
         }
@@ -289,8 +312,21 @@ public struct AlbumGridView: View {
     }
 
     private var pageTitle: String {
-        if case .recentlyAdded = scope { return "Recently Added" }
-        return "Albums"
+        switch scope {
+        case .all: "Albums"
+        case .recentlyAdded: "Recently Added"
+        case .artist(let name): name
+        }
+    }
+
+    private var allowsSorting: Bool {
+        if case .recentlyAdded = scope { return false }
+        return true
+    }
+
+    private var isRefreshingAlbums: Bool {
+        if case .loading(let previous) = albumProjectionStore.state, previous != nil { return true }
+        return !isGridProjectionCurrent && !gridProjection.groups.isEmpty
     }
 
     private func open(_ group: LibraryAlbumGroupSnapshot) {
@@ -314,25 +350,51 @@ public struct AlbumGridView: View {
 
     @ViewBuilder
     private var albumEmptyState: some View {
+        if case .artist(let name) = scope,
+           librarySearch.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !favoritesOnly {
+            ContentUnavailableView(
+                "No Albums",
+                systemImage: "square.stack",
+                description: Text("Albums containing tracks by \(name) appear here.")
+            )
+        } else {
+            filteredAlbumEmptyState
+        }
+    }
+
+    @ViewBuilder
+    private var filteredAlbumEmptyState: some View {
         switch AlbumGridEmptyReason.resolve(
             searchText: librarySearch.query,
             favoritesOnly: favoritesOnly
         ) {
         case .noFavorites:
-            ContentUnavailableView(
-                "No Favorite Albums",
-                systemImage: "heart",
-                description: Text("Mark an album as a favorite, or turn off the Favorites filter.")
-            )
+            ContentUnavailableView {
+                Label("No Favorite Albums", systemImage: "heart")
+            } description: {
+                Text("Mark an album as a favorite, or turn off the Favorites filter.")
+            } actions: {
+                Button("Show All Albums") { favoritesOnly = false }
+            }
         case .search(let query, let favoritesOnly):
             if favoritesOnly {
                 ContentUnavailableView {
                     Label("No Favorite Albums Match", systemImage: "heart.slash")
                 } description: {
                     Text("No favorite albums match “\(query)”. Clear the search or turn off the Favorites filter.")
+                } actions: {
+                    Button("Clear Search") { librarySearch.clear() }
+                    Button("Show All Albums") { self.favoritesOnly = false }
                 }
             } else {
-                ContentUnavailableView.search(text: query)
+                ContentUnavailableView {
+                    Label("No Albums Match", systemImage: "magnifyingglass")
+                } description: {
+                    Text("No albums match “\(query)”.")
+                } actions: {
+                    Button("Clear Search") { librarySearch.clear() }
+                }
             }
         }
     }
@@ -412,6 +474,10 @@ public struct AlbumCard: View {
     let textColor: Color
     let secondaryTextColor: Color
     let colorScheme: ColorScheme
+    var selectionAction: ((NSEvent.ModifierFlags) -> Void)? = nil
+    var openAction: (() -> Void)? = nil
+    var playAction: (() -> Void)? = nil
+    var showsPlayAction = false
 
     public var body: some View {
         VStack(alignment: .leading) {
@@ -433,23 +499,55 @@ public struct AlbumCard: View {
                         .accessibilityHidden(true)
                 }
             }
+            .overlay { selectionOverlay }
+            .overlay(alignment: .bottomTrailing) {
+                if let playAction {
+                    AlbumCardPlayButton(title: title, action: playAction, isRevealed: showsPlayAction)
+                        .padding(8)
+                }
+            }
 
-            Text(title)
-                .font(.caption.bold())
-                .foregroundColor(textColor)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(discCount > 1 ? "\(artist) · \(discCount) discs" : artist)
-                .font(.caption2)
-                .foregroundColor(secondaryTextColor)
-                .lineLimit(1)
-            if let displayDetail {
-                Text(displayDetail)
+            if let openAction {
+                AlbumCardOpenButton(
+                    title: title,
+                    textColor: textColor,
+                    action: openAction,
+                    selectionAction: selectionAction
+                )
+            } else {
+                titleLabel
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(discCount > 1 ? "\(artist) · \(discCount) discs" : artist)
                     .font(.caption2)
                     .foregroundColor(secondaryTextColor)
                     .lineLimit(1)
+                if let displayDetail {
+                    Text(displayDetail)
+                        .font(.caption2)
+                        .foregroundColor(secondaryTextColor)
+                        .lineLimit(1)
+                }
             }
+            .overlay { selectionOverlay }
+            .help(artist)
         }
         .cornerRadius(10)
+    }
+
+    private var titleLabel: some View {
+        Text(title)
+            .font(.caption.bold())
+            .foregroundColor(textColor)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .help(title)
+    }
+
+    @ViewBuilder
+    private var selectionOverlay: some View {
+        if let selectionAction, let playAction {
+            MacClickActivationView(singleClick: selectionAction, doubleClick: playAction)
+        }
     }
 }

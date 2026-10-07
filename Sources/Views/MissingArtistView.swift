@@ -194,7 +194,7 @@ public struct MissingArtistView: View {
             if reviewItems.isEmpty { showReview = false }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save artist: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save artist: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -223,7 +223,7 @@ public struct MissingArtistView: View {
             showReview = false
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save artists: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save artists: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 

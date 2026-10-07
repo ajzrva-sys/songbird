@@ -29,6 +29,7 @@ public struct TrackInfoView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var libraryActions: LibraryItemActionHandler
+    @AppStorage(LibrarySettings.writeTagsToFilesKey) private var writeTagsToFiles = false
 
     private let trackTargets: [TrackInfoTarget]
     private let closeState: TrackInfoCloseState
@@ -58,8 +59,8 @@ public struct TrackInfoView: View {
     @State private var discNumber: String = ""
     @State private var discTotal: String = ""
     @State private var beatsPerMinute: String = ""
-    @State private var rating: Int = 0
-    @State private var isLoved = false
+    @State private var ratingSelection = TrackMetadataSelectionState(values: [0])
+    @State private var favoriteSelection = TrackMetadataSelectionState(values: [false])
     @State private var mixedFields: Set<String> = []
     @State private var editedFields: Set<String> = []
 
@@ -82,6 +83,11 @@ public struct TrackInfoView: View {
     @State private var saveError: String?
 
     private var isMulti: Bool { trackTargets.count > 1 }
+    private var rating: Int { ratingSelection.value ?? 0 }
+    private var isLoved: Bool { favoriteSelection.value ?? false }
+    private var writePolicy: TrackMetadataWritePolicy {
+        writeTagsToFiles ? .catalogAndFileTags : .catalogOnly
+    }
     private var secondaryColor: Color { SongbirdTheme.secondaryText(for: colorScheme) }
     private var yearError: String? {
         numericError(year, label: "Year", range: 0...9999)
@@ -234,6 +240,7 @@ public struct TrackInfoView: View {
                     }
 
                     denseField("Comment", text: $comment, key: "comment")
+                    fileLocationBlock
                     technicalSummary
                         .padding(.leading, 88)
                     ForEach(validationErrors, id: \.self) { error in
@@ -251,12 +258,24 @@ public struct TrackInfoView: View {
             }
             .frame(maxWidth: .infinity)
 
+            VStack(alignment: .leading, spacing: 4) {
+                Text(editedFields.isEmpty && !artworkEdited
+                    ? "No changes"
+                    : "\(editedFields.count + (artworkEdited ? 1 : 0)) field\(editedFields.count + (artworkEdited ? 1 : 0) == 1 ? "" : "s") changed · \(trackTargets.count) selected track\(trackTargets.count == 1 ? "" : "s")")
+                    .font(.caption)
+                Label(writePolicy.title, systemImage: writeTagsToFiles ? "doc.badge.gearshape" : "music.note.list")
+                    .font(.caption.weight(.semibold))
+                Text("Favorites and ratings stay in Songbird. File-tag failures appear in Activity.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             HStack {
                 Spacer()
                 Button("Cancel") { requestClose() }
                     .keyboardShortcut(.cancelAction)
                     .disabled(isSaving)
-                Button(isSaving ? "Saving…" : "OK") { submitChanges() }
+                Button(isSaving ? "Saving…" : "Save Changes") { submitChanges() }
                 .keyboardShortcut(.defaultAction)
                 .disabled(canSave == false || isSaving)
             }
@@ -276,8 +295,8 @@ public struct TrackInfoView: View {
             minWidth: 700,
             idealWidth: 760,
             maxWidth: .infinity,
-            minHeight: 320,
-            idealHeight: 340,
+            minHeight: 400,
+            idealHeight: 440,
             maxHeight: .infinity,
             alignment: .topLeading
         )
@@ -528,34 +547,106 @@ public struct TrackInfoView: View {
     }
 
     private var favoriteEditor: some View {
-        Button {
-            isLoved.toggle()
-            mixedFields.remove("favorite")
-            editedFields.insert("favorite")
-        } label: {
-            Image(systemName: isLoved ? "heart.fill" : "heart")
-                .foregroundStyle(isLoved ? Color.accentColor : .secondary)
+        HStack(spacing: 6) {
+            Button {
+                chooseFavorite(!isLoved)
+            } label: {
+                Image(systemName: isLoved ? "heart.fill" : "heart")
+                    .foregroundStyle(isLoved ? Color.accentColor : .secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(favoriteSelection.isMixed ? "Set all selected tracks as Favorites" : (isLoved ? "Remove from Favorites" : "Add to Favorites"))
+            .help(favoriteSelection.isMixed ? "Mixed favorites — unchanged" : (isLoved ? "Remove from Favorites" : "Add to Favorites"))
+            if favoriteSelection.isMixed {
+                Text("Mixed").font(.caption).foregroundStyle(.secondary)
+                    .help("Mixed favorites — unchanged")
+            }
+            if isMulti {
+                Menu {
+                    Button("Set All as Favorites") { chooseFavorite(true) }
+                    Button("Remove All from Favorites") { chooseFavorite(false) }
+                    Button("Leave Unchanged") {
+                        favoriteSelection.leaveUnchanged()
+                        editedFields.remove("favorite")
+                    }
+                } label: { Image(systemName: "chevron.down") }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .accessibilityLabel("Favorite choices for selected tracks")
+            }
         }
-        .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .help(isLoved ? "Remove from Favorites" : "Add to Favorites")
+    }
+
+    private func chooseFavorite(_ value: Bool) {
+        favoriteSelection.choose(value)
+        editedFields.insert("favorite")
     }
 
     private var ratingEditor: some View {
         HStack(spacing: 3) {
             ForEach(1...5, id: \.self) { value in
                 Button {
-                    rating = rating == value ? 0 : value
-                    mixedFields.remove("rating")
-                    editedFields.insert("rating")
+                    chooseRating(rating == value ? 0 : value)
                 } label: {
                     Image(systemName: value <= rating ? "star.fill" : "star")
                         .foregroundStyle(value <= rating ? Color.accentColor : .secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isMulti ? "Set rating \(value) of 5 for all selected tracks" : "Rate \(value) of 5")
                 .help("Rate \(value) of 5")
             }
+            if ratingSelection.isMixed {
+                Text("Mixed").font(.caption).foregroundStyle(.secondary)
+                    .help("Mixed ratings — unchanged")
+            }
+            Menu {
+                Button("Clear Rating") { chooseRating(0) }
+                if isMulti {
+                    Button("Leave Unchanged") {
+                        ratingSelection.leaveUnchanged()
+                        editedFields.remove("rating")
+                    }
+                }
+            } label: { Image(systemName: "chevron.down") }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .accessibilityLabel("Rating choices")
         }
+    }
+
+    private func chooseRating(_ value: Int) {
+        ratingSelection.choose(value)
+        editedFields.insert("rating")
+    }
+
+    private var fileLocationBlock: some View {
+        Group {
+            if let location = displayedFileLocation {
+                GridRow {
+                    denseLabel("Location")
+                    Text(location)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .lineLimit(2)
+                        .help(location)
+                    Color.clear.frame(height: 1)
+                }
+            }
+        }
+    }
+
+    private var displayedFileLocation: String? {
+        if isMulti {
+            let paths = Set(trackTargets.map(\.path))
+            if paths.count == 1, let only = paths.first, only.isEmpty == false {
+                return only
+            }
+            return "\(trackTargets.count) files · mixed locations"
+        }
+        guard let path = trackTargets.first?.path, path.isEmpty == false else { return nil }
+        return path
     }
 
     private var technicalSummary: some View {
@@ -591,8 +682,8 @@ public struct TrackInfoView: View {
         discNumber = first.discNumber == 0 ? "" : "\(first.discNumber)"
         discTotal = first.discTotal == 0 ? "" : "\(first.discTotal)"
         beatsPerMinute = first.beatsPerMinute == 0 ? "" : "\(first.beatsPerMinute)"
-        rating = first.rating
-        isLoved = first.isLoved
+        ratingSelection = TrackMetadataSelectionState(values: trackTargets.map(\.rating))
+        favoriteSelection = TrackMetadataSelectionState(values: trackTargets.map(\.isLoved))
         artworkData = first.artworkData
         artworkRevision = UUID()
         artworkCleared = false
@@ -616,15 +707,6 @@ public struct TrackInfoView: View {
             mixedFields.insert("beatsPerMinute")
             beatsPerMinute = ""
         }
-        if trackTargets.contains(where: { $0.rating != first.rating }) {
-            mixedFields.insert("rating")
-            rating = 0
-        }
-        if trackTargets.contains(where: { $0.isLoved != first.isLoved }) {
-            mixedFields.insert("favorite")
-            isLoved = false
-        }
-
         let arts = trackTargets.map(\.artworkData)
         if arts.contains(where: { $0 != first.artworkData }) {
             artworkMixed = true
@@ -734,6 +816,7 @@ public struct TrackInfoView: View {
     ) {
         guard canSave, !isSaving else { return }
         let changeSet = metadataChangeSet()
+        let submittedWritePolicy = writePolicy
         guard !changeSet.edits.isEmpty else {
             closeWindow()
             return
@@ -747,7 +830,7 @@ public struct TrackInfoView: View {
                 closeState.isSaving = false
             }
             do {
-                switch try await libraryActions.applyTrackMetadata(changeSet, decisions: decisions) {
+                switch try await libraryActions.applyTrackMetadata(changeSet, decisions: decisions, writePolicy: submittedWritePolicy) {
                 case .saved:
                     metadataConflicts = []
                     closeWindow()
@@ -786,8 +869,8 @@ public struct TrackInfoView: View {
         number("discNumber", .discNumber, discNumber)
         number("discTotal", .discTotal, discTotal)
         number("beatsPerMinute", .beatsPerMinute, beatsPerMinute)
-        if editedFields.contains("rating") { edits[.rating] = .number(rating) }
-        if editedFields.contains("favorite") { edits[.favorite] = .flag(isLoved) }
+        if let edit = ratingSelection.edit { edits[.rating] = .number(edit) }
+        if let edit = favoriteSelection.edit { edits[.favorite] = .flag(edit) }
         if artworkEdited {
             edits[.artwork] = .artwork(artworkCleared ? nil : artworkData)
         }
@@ -936,8 +1019,8 @@ enum TrackInfoWindowPresenter {
         let window = NSWindow(contentViewController: hostingController)
         window.title = title
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.setContentSize(NSSize(width: 760, height: 340))
-        window.contentMinSize = NSSize(width: 700, height: 320)
+        window.setContentSize(NSSize(width: 760, height: 440))
+        window.contentMinSize = NSSize(width: 700, height: 400)
         window.isReleasedWhenClosed = false
         window.center()
 

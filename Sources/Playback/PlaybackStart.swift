@@ -37,4 +37,9 @@ public enum PlaybackStartError: Error, LocalizedError, Equatable {
             message
         }
     }
+
+    /// Always names the filesystem location when the failure is path-specific.
+    public var userFacingMessage: String {
+        errorDescription ?? String(describing: self)
+    }
 }

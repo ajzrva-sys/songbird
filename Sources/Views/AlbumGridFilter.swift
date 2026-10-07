@@ -1,5 +1,6 @@
 public enum AlbumGridScope: Hashable, Sendable {
     case all
+    case artist(name: String)
     case recentlyAdded(limit: Int = 100)
 }
 
@@ -15,6 +16,8 @@ public enum AlbumGridFilter {
         switch scope {
         case .all:
             scoped = groups
+        case .artist(let name):
+            scoped = groups.filter { $0.contributingArtistNames.contains(name) }
         case .recentlyAdded(let limit):
             scoped = Array(groups.sorted { lhs, rhs in
                 if lhs.dateAdded != rhs.dateAdded { return lhs.dateAdded > rhs.dateAdded }
@@ -34,15 +37,24 @@ public enum AlbumGridFilter {
         return filtered.sorted { lhs, rhs in
             switch sortOrder {
             case .title:
-                compare(lhs.title, rhs.title, fallback: (lhs.artist, rhs.artist))
+                return compare(lhs.title, rhs.title, fallback: (lhs.artist, rhs.artist))
             case .artist:
-                compare(lhs.artist, rhs.artist, fallback: (lhs.title, rhs.title))
+                return compare(lhs.artist, rhs.artist, fallback: (lhs.title, rhs.title))
             case .year:
-                lhs.year == rhs.year
+                return lhs.year == rhs.year
                     ? compare(lhs.title, rhs.title, fallback: (lhs.artist, rhs.artist))
                     : lhs.year > rhs.year
+            case .missingArtwork:
+                if (lhs.artworkReference == nil) != (rhs.artworkReference == nil) {
+                    return lhs.artworkReference == nil
+                }
+                let title = lhs.title.localizedStandardCompare(rhs.title)
+                if title != .orderedSame { return title == .orderedAscending }
+                let artist = lhs.artist.localizedStandardCompare(rhs.artist)
+                if artist != .orderedSame { return artist == .orderedAscending }
+                return lhs.id < rhs.id
             case .recentlyAdded:
-                lhs.dateAdded == rhs.dateAdded
+                return lhs.dateAdded == rhs.dateAdded
                     ? compare(lhs.title, rhs.title, fallback: (lhs.artist, rhs.artist))
                     : lhs.dateAdded > rhs.dateAdded
             }

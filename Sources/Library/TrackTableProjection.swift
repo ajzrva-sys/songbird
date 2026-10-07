@@ -131,6 +131,7 @@ public struct TrackTableDisplayValues: Equatable, Sendable {
             case .bitRate: values[column] = track.bitrate > 0 ? "\(track.bitrate) kbps" : "—"
             case .sampleRate: values[column] = track.sampleRate > 0 ? "\(track.sampleRate) Hz" : "—"
             case .kind: values[column] = track.fileKind.isEmpty ? "—" : track.fileKind
+            case .filePath: values[column] = track.path.isEmpty ? "—" : track.path
             case .releaseDate, .year: values[column] = track.year > 0 ? String(track.year) : "—"
             case .size:
                 values[column] = track.fileSize > 0
@@ -546,6 +547,7 @@ public actor TrackTableProjectionWorker {
         case .bitRate: result = order(lhs.bitrate, rhs.bitrate)
         case .sampleRate: result = order(lhs.sampleRate, rhs.sampleRate)
         case .kind: result = lhs.fileKind.localizedCaseInsensitiveCompare(rhs.fileKind)
+        case .filePath: result = lhs.path.localizedCaseInsensitiveCompare(rhs.path)
         case .releaseDate, .year: result = order(lhs.year, rhs.year)
         case .size: result = order(lhs.fileSize, rhs.fileSize)
         case .trackNumber: result = order(lhs.trackNumber, rhs.trackNumber)

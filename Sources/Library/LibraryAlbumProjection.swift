@@ -10,6 +10,8 @@ public struct LibraryAlbumGroupSnapshot: Identifiable, Equatable, Sendable {
     public let id: String
     public let title: String
     public let artist: String
+    /// Exact track-artist names, distinct from the displayed album artist.
+    public let contributingArtistNames: [String]
     public let year: Int
     public let dateAdded: Date
     public let albumIDs: [UUID]
@@ -34,11 +36,13 @@ public struct LibraryAlbumGroupSnapshot: Identifiable, Equatable, Sendable {
         partCount: Int? = nil,
         collectionKind: LibraryAlbumCollectionKind? = nil,
         editionLabel: String? = nil,
-        isFavorite: Bool
+        isFavorite: Bool,
+        contributingArtistNames: [String]? = nil
     ) {
         self.id = id
         self.title = title
         self.artist = artist
+        self.contributingArtistNames = contributingArtistNames ?? [artist]
         self.year = year
         self.dateAdded = dateAdded
         self.albumIDs = albumIDs
@@ -350,7 +354,8 @@ public actor LibraryAlbumProjectionWorker {
             partCount: partCount,
             collectionKind: partCount > 1 ? group.collectionKind : nil,
             editionLabel: group.editionLabel,
-            isFavorite: !albums.isEmpty && albums.allSatisfy(\.isFavorite)
+            isFavorite: !albums.isEmpty && albums.allSatisfy(\.isFavorite),
+            contributingArtistNames: Array(Set(tracks.map(\.artist))).sorted()
         )
     }
 

@@ -576,8 +576,10 @@ public final class LibraryFolderWatcher {
                 )
             } catch {
                 context.rollback()
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not save folder-watch changes: \(error.localizedDescription)"
+                LibraryStatus.shared.showNotice(
+                    "Could not save folder-watch changes: \(error.localizedDescription)",
+                    severity: .error,
+                    source: .library
                 )
             }
         }

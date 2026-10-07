@@ -381,7 +381,7 @@ public struct MissingYearView: View {
                 if searchResults.isEmpty { phase = .complete }
             case .failure(let error):
                 expireResults(at: dependencies.clock())
-                if !review.requiresSearch { LibraryStatus.shared.showPlaybackError(error.localizedDescription) }
+                if !review.requiresSearch { LibraryStatus.shared.showNotice(error.localizedDescription, severity: .error, source: .metadata) }
             }
         }
     }

@@ -22,7 +22,7 @@ if path.exists():
 screen = int(os.environ["RUN_SCREEN_VALUE"])
 data.update(
     {
-        "schema_version": 2,
+        "schema_version": 3,
         "run_id": os.environ["RUN_ID_VALUE"],
         "mode": os.environ["RUN_MODE_VALUE"],
         "fixture": os.environ["RUN_FIXTURE_VALUE"],
@@ -38,10 +38,11 @@ data.update(
         "session": os.environ["RUN_SESSION_VALUE"],
         "client": "./scripts/usability/ui",
         "artifacts": os.environ["RUN_ARTIFACTS_VALUE"],
-        "source": {
-            "head": os.environ["RUN_SOURCE_HEAD_VALUE"],
-            "status_sha256": os.environ["RUN_SOURCE_STATUS_SHA_VALUE"],
-            "tracked_diff_sha256": os.environ["RUN_SOURCE_DIFF_SHA_VALUE"],
+        "source": json.loads(os.environ["RUN_SOURCE_PROVENANCE_VALUE"])
+        if os.environ.get("RUN_SOURCE_PROVENANCE_VALUE") else {
+            "method": "legacy-git", "head": os.environ.get("RUN_SOURCE_HEAD_VALUE") or None,
+            "status_sha256": os.environ.get("RUN_SOURCE_STATUS_SHA_VALUE") or None,
+            "tracked_diff_sha256": os.environ.get("RUN_SOURCE_DIFF_SHA_VALUE") or None,
         },
         "package_executable_sha256": os.environ["RUN_APP_SHA_VALUE"] or None,
         "fixture_manifest_sha256": os.environ["RUN_FIXTURE_SHA_VALUE"] or None,

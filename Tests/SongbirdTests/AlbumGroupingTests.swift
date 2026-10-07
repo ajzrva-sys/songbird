@@ -173,6 +173,41 @@ final class AlbumGroupingTests: XCTestCase {
         XCTAssertEqual(Set(result.map(\.artist)), Set(["Artist One", "Artist Two"]))
     }
 
+    func testArtistAlbumsRetainCompilationDiscsAndSeparatePhysicalEditions() async throws {
+        let firstDisc = album(
+            title: "Compilation - CD1", artist: "Various Artists", year: 2000,
+            path: "/Music/Compilation/CD 1/01.flac"
+        )
+        let secondDisc = album(
+            title: "Compilation - CD2", artist: "Various Artists", year: 2000,
+            path: "/Music/Compilation/CD 2/01.flac"
+        )
+        let separateEdition = album(
+            title: "Compilation", artist: "Various Artists", year: 2000,
+            path: "/Music/Separate Edition/01.flac"
+        )
+        firstDisc.tracks[0].artist = "Performer"
+        secondDisc.tracks[0].artist = "Guest"
+        separateEdition.tracks[0].artist = "Performer"
+
+        let projected = try await groups(from: [firstDisc, secondDisc, separateEdition])
+        let artistAlbums = AlbumGridFilter.apply(
+            to: projected, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Performer")
+        )
+        XCTAssertEqual(artistAlbums.count, 2)
+        let collection = try XCTUnwrap(artistAlbums.first { $0.discCount == 2 })
+        XCTAssertEqual(collection.artist, "Various Artists")
+        XCTAssertEqual(collection.contributingArtistNames, ["Guest", "Performer"])
+        XCTAssertEqual(Set(collection.albumIDs), [firstDisc.id, secondDisc.id])
+        XCTAssertEqual(Set(collection.trackIDs), Set((firstDisc.tracks + secondDisc.tracks).map(\.id)))
+        XCTAssertEqual(artistAlbums.first { $0.discCount == 1 }?.albumIDs, [separateEdition.id])
+        XCTAssertEqual(AlbumGridFilter.apply(
+            to: projected, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Guest")
+        ), [collection])
+    }
+
     private func groups(from albums: [Album]) async throws -> [LibraryAlbumGroupSnapshot] {
         let tracks = albums.flatMap(\.tracks)
         let snapshot = LibrarySnapshot(

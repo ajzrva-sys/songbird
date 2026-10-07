@@ -422,6 +422,7 @@ public final class PlaybackEngine: ObservableObject {
     }
 
     public func seekTo(_ time: TimeInterval) {
+        queue.invalidateClearUpcomingUndo()
         guard let preparingBackend = backend as? any SourcePreparingPlayerBackend,
               let source = activeSource else {
             backend.seek(to: time)
@@ -753,6 +754,7 @@ public final class PlaybackEngine: ObservableObject {
         track.lastPlayed = Date()
         do {
             try track.modelContext?.save()
+            PlayHistoryStore.shared.record(track: track)
         } catch {
             track.playCount = previousCount
             track.lastPlayed = previousDate
@@ -760,6 +762,8 @@ public final class PlaybackEngine: ObservableObject {
                 "Playback continued, but play history could not be saved: \(error.localizedDescription)",
                 severity: .warning
             )
+            // Still record the listen in the session log so History stays useful.
+            PlayHistoryStore.shared.record(track: track)
         }
     }
 

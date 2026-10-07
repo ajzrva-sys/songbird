@@ -291,13 +291,20 @@ private actor LibraryHealthLocalEvidenceWorker {
     }
 }
 
-private actor LibraryArtworkEvidenceWorker {
+actor LibraryArtworkEvidenceWorker {
     private let names = ["cover", "folder", "front", "album", "artwork"]
     private let extensions = Set(["jpg", "jpeg", "png", "heic", "tiff", "webp"])
 
-    func candidatePaths(for groups: [LibraryAlbumGroupSnapshot], snapshot: LibrarySnapshot) throws -> [String: [String]] {
+    func candidatePaths(
+        for groups: [LibraryAlbumGroupSnapshot],
+        snapshot: LibrarySnapshot,
+        progress: @Sendable (Int, Int) async -> Void = { _, _ in }
+    ) async throws -> [String: [String]] {
         var result: [String: [String]] = [:]
-        for group in groups {
+        // One folder can contain several catalog albums. Reuse its evidence only
+        // within this explicit check so the next rescan sees filesystem changes.
+        var candidatesByDirectory: [URL: Set<String>] = [:]
+        for (index, group) in groups.enumerated() {
             try Task.checkCancellation()
             let directories = Set(group.trackIDs.compactMap { snapshot.tracksByID[$0] }.map {
                 URL(fileURLWithPath: $0.path).deletingLastPathComponent().standardizedFileURL
@@ -305,22 +312,34 @@ private actor LibraryArtworkEvidenceWorker {
             var candidates = Set<String>()
             for directory in directories {
                 try Task.checkCancellation()
+                if let cached = candidatesByDirectory[directory] {
+                    candidates.formUnion(cached)
+                    continue
+                }
+                var directoryCandidates = Set<String>()
                 guard let urls = try? FileManager.default.contentsOfDirectory(
                     at: directory,
                     includingPropertiesForKeys: [.isRegularFileKey],
                     options: [.skipsHiddenFiles]
-                ) else { continue }
+                ) else {
+                    candidatesByDirectory[directory] = []
+                    continue
+                }
                 for url in urls where extensions.contains(url.pathExtension.lowercased()) {
                     let stem = url.deletingPathExtension().lastPathComponent.lowercased()
                     if names.contains(stem),
                        (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
-                        candidates.insert(url.standardizedFileURL.path)
+                        directoryCandidates.insert(url.standardizedFileURL.path)
                     }
                 }
+                candidatesByDirectory[directory] = directoryCandidates
+                candidates.formUnion(directoryCandidates)
             }
             result[group.id] = candidates.sorted {
                 $0.localizedStandardCompare($1) == .orderedAscending
             }
+            try Task.checkCancellation()
+            await progress(index + 1, groups.count)
         }
         return result
     }
@@ -345,10 +364,13 @@ public final class LibraryHealthProjectionStore: ObservableObject {
     private var observation: AnyCancellable?
     private var observedCategories = Set<LibraryHealthCategory>()
     private var embeddedAlbums: [UUID: (path: String, value: String)] = [:]
+    private let activity: LibraryActivityStore
+    private var activityIDs: [LibraryHealthCategory: UUID] = [:]
 
     public init(
         snapshots: LibrarySnapshotStore,
         service: LibraryHealthProposalService = LibraryHealthProposalService(),
+        activity: LibraryActivityStore? = nil,
         configuredSearchRoots: @escaping @MainActor () -> [String] = {
             let environment = ProcessInfo.processInfo.environment
             if environment["SONGBIRD_UI_TESTING"] == "1",
@@ -362,6 +384,7 @@ public final class LibraryHealthProjectionStore: ObservableObject {
     ) {
         self.snapshots = snapshots
         self.service = service
+        self.activity = activity ?? LibraryStatus.shared.activity
         self.configuredSearchRoots = configuredSearchRoots
         observation = snapshots.$snapshot.dropFirst().sink { [weak self] _ in
             guard let self else { return }
@@ -423,6 +446,7 @@ public final class LibraryHealthProjectionStore: ObservableObject {
     }
 
     public func cancel(category: LibraryHealthCategory) {
+        finishActivity(activityIDs[category], status: .cancelled, severity: .information)
         if category.isFileAvailabilityCheck {
             fileAvailabilityTask?.cancel()
             fileAvailabilityTask = nil
@@ -447,6 +471,7 @@ public final class LibraryHealthProjectionStore: ObservableObject {
     }
 
     private func checkFileAvailability() {
+        finishActivity(activityIDs[.missingFiles], status: .cancelled, severity: .information)
         fileAvailabilityTask?.cancel()
         let categories: [LibraryHealthCategory] = [.missingFiles, .unavailableVolumes]
         for category in categories {
@@ -455,6 +480,9 @@ public final class LibraryHealthProjectionStore: ObservableObject {
         }
         let snapshot = snapshots.snapshot
         let requests = snapshot.tracks.map { FileAvailabilityRequest(id: $0.id, path: $0.path) }
+        let activityID = activity.begin(kind: .healthCheck, source: .library, total: requests.count)
+        for category in categories { activityIDs[category] = activityID }
+        activity.setCancellation(id: activityID) { [weak self] in self?.cancel(category: .missingFiles) }
         let searchRoots = configuredSearchRoots()
         let initialProgress = LibraryHealthCheckProgress(completed: 0, total: requests.count)
         for category in categories { progressValues[category] = initialProgress }
@@ -522,8 +550,15 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                     ))
                 ))
                 for category in categories { progressValues[category] = LibraryHealthCheckProgress() }
+                activity.update(id: activityID, completed: requests.count)
+                let failures = missing.map { LibraryActivityFailure(fileName: $0.expectedPath, category: .missingFile) }
+                    + unavailable.map { LibraryActivityFailure(fileName: $0.expectedPath, category: .unavailableFile) }
+                let hasFindings = !failures.isEmpty || !relocation.rootFailures.isEmpty
+                finishActivity(activityID, status: hasFindings ? .completedWithWarnings : .succeeded,
+                    severity: hasFindings ? .warning : .information, failures: failures)
                 fileAvailabilityTask = nil
             } catch is CancellationError {
+                finishActivity(activityID, status: .cancelled, severity: .information)
                 return
             } catch {
                 for category in categories {
@@ -534,11 +569,14 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                     progressValues[category] = LibraryHealthCheckProgress()
                 }
                 fileAvailabilityTask = nil
+                activity.update(id: activityID, completed: 0, liveMessage: error.localizedDescription)
+                finishActivity(activityID, status: .failed, severity: .error)
             }
         }
     }
 
     private func derivePlan(category: LibraryHealthCategory, readsFilesystem: Bool) {
+        finishActivity(activityIDs[category], status: .cancelled, severity: .information)
         tasks[category]?.cancel()
         let lastGood = states[category]?.lastGood
         states[category] = .checking(lastGood: lastGood)
@@ -546,18 +584,36 @@ public final class LibraryHealthProjectionStore: ObservableObject {
         let snapshotTracks = snapshot.tracks
         progressValues[category] = LibraryHealthCheckProgress(
             completed: 0,
-            total: readsFilesystem ? snapshotTracks.count : 0
+            total: readsFilesystem && category != .missingArtwork ? snapshotTracks.count : 0
         )
         let cachedEvidence = embeddedAlbums
+        let activityID: UUID? = readsFilesystem
+            ? activity.begin(kind: .healthCheck, source: .library, total: progressValues[category]?.total ?? 0)
+            : nil
+        if let activityID {
+            activityIDs[category] = activityID
+            activity.setCancellation(id: activityID) { [weak self] in self?.cancel(category: category) }
+        }
         tasks[category] = Task { @MainActor [weak self] in
             guard let self else { return }
             do {
                 if category == .missingArtwork {
                     let groups = try await albumProjectionWorker.project(snapshot)
                         .filter { $0.artworkReference == nil && $0.albumIDs.isEmpty == false }
-                    let candidates = readsFilesystem
-                        ? try await artworkEvidenceWorker.candidatePaths(for: groups, snapshot: snapshot)
-                        : [:]
+                    try Task.checkCancellation()
+                    var candidates: [String: [String]] = [:]
+                    if readsFilesystem {
+                        progressValues[category] = LibraryHealthCheckProgress(
+                            completed: 0, total: groups.count
+                        )
+                        if let activityID { activity.update(id: activityID, completed: 0, total: groups.count) }
+                        candidates = try await artworkEvidenceWorker.candidatePaths(
+                            for: groups, snapshot: snapshot
+                        ) { [weak self] completed, total in
+                            guard !Task.isCancelled else { return }
+                            await self?.updateArtworkProgress(completed: completed, total: total)
+                        }
+                    }
                     try Task.checkCancellation()
                     states[category] = .ready(LibraryHealthCategoryResult(
                         category: category,
@@ -570,6 +626,8 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                         }))
                     ))
                     progressValues[category] = LibraryHealthCheckProgress()
+                    if let activityID { activity.update(id: activityID, completed: groups.count) }
+                    finishActivity(activityID, status: .succeeded, severity: .information)
                     tasks[category] = nil
                     return
                 }
@@ -587,6 +645,7 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                             completed: index + 1,
                             total: snapshotTracks.count
                         )
+                        if let activityID { activity.update(id: activityID, completed: index + 1) }
                     }
                 }
                 try Task.checkCancellation()
@@ -618,8 +677,10 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                     plan: plan
                 ))
                 progressValues[category] = LibraryHealthCheckProgress()
+                finishActivity(activityID, status: .succeeded, severity: .information)
                 tasks[category] = nil
             } catch is CancellationError {
+                finishActivity(activityID, status: .cancelled, severity: .information)
                 return
             } catch {
                 states[category] = .failed(
@@ -628,8 +689,27 @@ public final class LibraryHealthProjectionStore: ObservableObject {
                 )
                 progressValues[category] = LibraryHealthCheckProgress()
                 tasks[category] = nil
+                let failureID = activityID ?? activity.begin(kind: .healthCheck, source: .library)
+                activity.update(id: failureID, completed: 0, liveMessage: error.localizedDescription)
+                if activityID == nil { activityIDs[category] = failureID }
+                finishActivity(failureID, status: .failed, severity: .error)
             }
         }
+    }
+
+    private func updateArtworkProgress(completed: Int, total: Int) {
+        guard !Task.isCancelled else { return }
+        progressValues[.missingArtwork] = LibraryHealthCheckProgress(completed: completed, total: total)
+        if let activityID = activityIDs[.missingArtwork] {
+            activity.update(id: activityID, completed: completed, total: total)
+        }
+    }
+
+    private func finishActivity(_ id: UUID?, status: LibraryActivityStatus, severity: LibraryNoticeSeverity,
+                                failures: [LibraryActivityFailure] = []) {
+        guard let id, activityIDs.values.contains(id) else { return }
+        activityIDs = activityIDs.filter { $0.value != id }
+        activity.finish(id: id, status: status, severity: severity, failures: failures)
     }
 
     private static func requiresExplicitFileCheck(_ category: LibraryHealthCategory) -> Bool {

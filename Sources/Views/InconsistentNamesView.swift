@@ -243,7 +243,7 @@ public struct InconsistentNamesView: View {
             Task { await loadGroups() }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not merge names: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not merge names: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -285,7 +285,7 @@ public struct InconsistentNamesView: View {
             Task { await loadGroups() }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not merge names: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not merge names: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 }

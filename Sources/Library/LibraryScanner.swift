@@ -49,9 +49,6 @@ public final class LibraryScanner: ObservableObject {
     private func runScan(_ urls: [URL]) async {
         LibrarySnapshotStore.active?.beginBulkUpdates()
         defer { LibrarySnapshotStore.active?.endBulkUpdates() }
-        status.setImportCancellation { [weak self] in
-            self?.cancel()
-        }
         let rootKey = urls
             .map { $0.standardizedFileURL.path }
             .sorted()
@@ -76,7 +73,7 @@ public final class LibraryScanner: ObservableObject {
                 total: resumedTotal
             )
         ))
-        status.beginScan(
+        let operationID = status.beginScan(
             total: resumedTotal,
             completed: resumedCompleted,
             message: Self.progressMessage(
@@ -85,9 +82,11 @@ public final class LibraryScanner: ObservableObject {
                 total: resumedTotal
             )
         )
+        status.setImportCancellation { [weak self] in self?.cancel() }
         let progressReporter = LibraryImportProgressReporter(
             scanner: self,
-            rootKey: rootKey
+            rootKey: rootKey,
+            operationID: operationID
         )
         let result = await Self.runImport(
             roots: urls,
@@ -102,13 +101,15 @@ public final class LibraryScanner: ObservableObject {
             total: result.discovered
         )
         updateProgress(ImportProgress())
+        status.updateScan(scanned: result.processed, total: result.discovered, operationID: operationID)
         if let failureMessage = result.failureMessage {
-            status.endOperation(message: failureMessage, severity: .error)
+            status.endOperation(message: failureMessage, severity: .error, operationID: operationID,
+                                activityStatus: .failed, counts: .init(catalogSaved: result.added))
         } else if result.cancelled {
-            status.endScan(added: result.added)
-            status.statusMessage = "Import canceled"
+            status.endOperation(message: "Import canceled", severity: .information, operationID: operationID,
+                                activityStatus: .cancelled, counts: .init(catalogSaved: result.added))
         } else {
-            status.endScan(added: result.added)
+            status.endScan(added: result.added, operationID: operationID)
         }
     }
 
@@ -121,7 +122,8 @@ public final class LibraryScanner: ObservableObject {
         processed: Int,
         total: Int,
         decision: ImportProgressCadenceDecision,
-        rootKey: String
+        rootKey: String,
+        operationID: UUID
     ) {
         if decision.publish {
             let value = ImportProgress(
@@ -138,7 +140,8 @@ public final class LibraryScanner: ObservableObject {
             status.updateScan(
                 scanned: processed,
                 total: total,
-                message: value.message
+                message: value.message,
+                operationID: operationID
             )
         }
         if decision.persist {
@@ -200,11 +203,13 @@ public final class LibraryScanner: ObservableObject {
 private actor LibraryImportProgressReporter {
     private weak var scanner: LibraryScanner?
     private let rootKey: String
+    private let operationID: UUID
     private let cadence = ImportProgressCadence()
 
-    init(scanner: LibraryScanner, rootKey: String) {
+    init(scanner: LibraryScanner, rootKey: String, operationID: UUID) {
         self.scanner = scanner
         self.rootKey = rootKey
+        self.operationID = operationID
     }
 
     func receive(processed: Int, total: Int) async {
@@ -214,7 +219,8 @@ private actor LibraryImportProgressReporter {
             processed: processed,
             total: total,
             decision: decision,
-            rootKey: rootKey
+            rootKey: rootKey,
+            operationID: operationID
         )
     }
 }

@@ -30,6 +30,7 @@ struct TrackInfoTarget: Identifiable, Hashable, Sendable {
     let bitrate: Int
     let sampleRate: Int
     let fileKind: String
+    let path: String
     let artworkData: Data?
     let albumID: UUID?
 
@@ -59,6 +60,7 @@ struct TrackInfoTarget: Identifiable, Hashable, Sendable {
         bitrate = track.bitrate
         sampleRate = track.sampleRate
         fileKind = track.fileKind
+        path = track.path
         artworkData = track.resolvedArtworkData
         albumID = track.albumRelation?.id
     }

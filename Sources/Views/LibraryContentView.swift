@@ -110,6 +110,8 @@ public struct LibraryContentView: View {
             DuplicateTracksView()
         case .queue:
             PlayQueueView()
+        case .playHistory:
+            PlayHistoryView()
         case .playlist(let id):
             PlaylistContentView(playlistID: id)
         case .audioCD(let id):
@@ -151,6 +153,7 @@ public struct BrowseListView: View {
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var librarySearch: LibrarySearchCoordinator
     @State private var selection = BrowseListSelectionState()
+    @FocusState private var searchFocused: Bool
 
     private var textColor: Color { SongbirdTheme.text(for: colorScheme) }
     private var secondaryColor: Color { SongbirdTheme.secondaryText(for: colorScheme) }
@@ -167,9 +170,35 @@ public struct BrowseListView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Text(title).font(.headline).foregroundStyle(textColor)
+                Spacer(minLength: 0)
+                LibrarySearchField(scopeTitle: title, focused: $searchFocused)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            Divider()
             List(filteredItems, selection: $selection.selected) { item in
-                browseRow(item)
-                .tag(item.name)
+                browseRow(item).tag(item.name)
+            }
+            .overlay {
+                if items.isEmpty {
+                    ContentUnavailableView {
+                        Label("No \(title)", systemImage: "music.note")
+                    } description: {
+                        Text("Import music to populate this list.")
+                    } actions: {
+                        Button("Import Music…") { ImportSetupWindowPresenter.show() }
+                    }
+                } else if filteredItems.isEmpty {
+                    ContentUnavailableView {
+                        Label("No Results", systemImage: "magnifyingglass")
+                    } description: {
+                        Text("No \(title.lowercased()) match “\(librarySearch.query)”.")
+                    } actions: {
+                        Button("Clear Search") { librarySearch.clear() }
+                    }
+                }
             }
         }
         .listStyle(.inset)
@@ -177,17 +206,6 @@ public struct BrowseListView: View {
         .onChange(of: selection.selected) { _, _ in
             guard let selected = selection.consume() else { return }
             onSelect(selected)
-        }
-        .overlay {
-            if items.isEmpty {
-                ContentUnavailableView(
-                    "No \(title)",
-                    systemImage: "music.note",
-                    description: Text("Import music to populate this list.")
-                )
-            } else if filteredItems.isEmpty {
-                ContentUnavailableView.search(text: librarySearch.query)
-            }
         }
         .focusedValue(
             \.librarySearchCommands,

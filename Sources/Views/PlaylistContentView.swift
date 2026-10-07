@@ -32,7 +32,11 @@ struct PlaylistContentView: View {
                         emptyMessage: "Empty Playlist",
                         emptyHint: playlist.isSmart
                             ? "No tracks match these smart rules"
-                            : "Drag tracks here, or choose Add Tracks…"
+                            : "Drag tracks here, or choose Add Tracks…",
+                        sourceEmptyAction: LibraryEmptyStateAction(playlist.isSmart ? .editRules : .addTracks) {
+                            if playlist.isSmart { showsSmartEditor = true }
+                            else { showsAddTracks = true }
+                        }
                     )
                 }
                 .overlay {

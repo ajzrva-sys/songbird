@@ -172,7 +172,7 @@ public final class UserNoticeState: ObservableObject {
     }
 }
 
-public enum LibraryNoticeSeverity: String, Equatable, Sendable {
+public enum LibraryNoticeSeverity: String, Codable, Equatable, Sendable {
     case information
     case success
     case warning
@@ -181,7 +181,7 @@ public enum LibraryNoticeSeverity: String, Equatable, Sendable {
     public var isSticky: Bool { self == .warning || self == .error }
 }
 
-public enum LibraryNoticeSource: String, Equatable, Sendable {
+public enum LibraryNoticeSource: String, Codable, Equatable, Sendable {
     case library
     case playback
     case importing
@@ -253,11 +253,15 @@ public final class LibraryStatus {
     public let selection = LibrarySelectionState()
     public let summary = LibrarySummaryState()
     public let notices = UserNoticeState()
+    public let activity: LibraryActivityStore
 
     private var importCancellation: (() -> Void)?
     private var noticeDismissalTask: Task<Void, Never>?
+    private var activeOperationID: UUID?
 
-    private init() {}
+    public init(activity: LibraryActivityStore? = nil) {
+        self.activity = activity ?? LibraryActivityStore()
+    }
 
     public var isScanning: Bool { importProgress.value.isRunning }
     public var scannedCount: Int { importProgress.value.completed }
@@ -269,8 +273,13 @@ public final class LibraryStatus {
                 var progress = importProgress.value
                 progress.message = newValue
                 importProgress.update(progress)
+                if let activeOperationID {
+                    activity.update(id: activeOperationID, completed: progress.completed,
+                                    total: progress.total, liveMessage: newValue)
+                }
             } else if notices.message != newValue {
-                notices.message = newValue
+                if newValue.isEmpty { notices.message = "" }
+                else { showNotice(newValue) }
             }
         }
     }
@@ -279,11 +288,17 @@ public final class LibraryStatus {
         set { selection.selectedTrack = newValue }
     }
 
+    @discardableResult
     public func beginScan(
         total: Int,
         completed: Int = 0,
-        message: String? = nil
-    ) {
+        message: String? = nil,
+        activityKind: LibraryActivityKind = .importFiles
+    ) -> UUID {
+        let id = activity.begin(kind: activityKind, source: .importing, total: total, liveMessage: message)
+        activeOperationID = id
+        activity.update(id: id, completed: completed, total: total)
+        if let importCancellation { registerCancellation(importCancellation, id: id) }
         importProgress.update(ImportProgress(
             isRunning: true,
             completed: completed,
@@ -291,24 +306,36 @@ public final class LibraryStatus {
             message: message
                 ?? (total > 0 ? "Importing \(completed) of \(total)…" : "Importing…")
         ))
+        return id
     }
 
     public func updateScan(
         scanned: Int,
         total: Int? = nil,
-        message: String? = nil
+        message: String? = nil,
+        operationID: UUID? = nil
     ) {
+        let id = operationID ?? activeOperationID
         let resolvedTotal = total ?? importProgress.value.total
+        if let id { activity.update(id: id, completed: scanned, total: resolvedTotal, liveMessage: message) }
+        guard operationID == nil || operationID == activeOperationID else { return }
+        let cancelling = importProgress.value.phase == .cancelling
         importProgress.update(ImportProgress(
-            isRunning: true,
+            phase: cancelling ? .cancelling : .running,
             completed: scanned,
             total: resolvedTotal,
-            message: message ?? "Importing \(scanned) of \(resolvedTotal)…"
+            message: cancelling ? "Cancelling…" : message ?? "Importing \(scanned) of \(resolvedTotal)…"
         ))
     }
 
-    public func endScan(added: Int) {
+    public func endScan(added: Int, operationID: UUID? = nil) {
         let message = added > 0 ? "Added \(added) track\(added == 1 ? "" : "s")" : "No new tracks"
+        let id = operationID ?? activeOperationID
+        if let id {
+            activity.finish(id: id, status: .succeeded, severity: added > 0 ? .success : .information,
+                            counts: .init(catalogSaved: added), liveMessage: message)
+        }
+        guard operationID == nil || operationID == activeOperationID else { return }
         importProgress.update(ImportProgress(
             phase: .succeeded,
             completed: importProgress.value.completed,
@@ -316,18 +343,26 @@ public final class LibraryStatus {
             message: message
         ))
         importCancellation = nil
-        showNotice(message, severity: added > 0 ? .success : .information, autoDismissAfter: 3)
+        activeOperationID = nil
+        showNotice(message, severity: added > 0 ? .success : .information, autoDismissAfter: 3,
+                   source: .importing, activityOperationID: id)
     }
 
     public func setImportCancellation(_ cancellation: @escaping () -> Void) {
         importCancellation = cancellation
+        if let activeOperationID { registerCancellation(cancellation, id: activeOperationID) }
     }
 
+    @discardableResult
     public func beginOperation(
         message: String,
         total: Int,
+        activityKind: LibraryActivityKind = .libraryMaintenance,
+        source: LibraryNoticeSource = .library,
         cancellation: @escaping () -> Void
-    ) {
+    ) -> UUID {
+        let id = activity.begin(kind: activityKind, source: source, total: total, liveMessage: message)
+        activeOperationID = id
         importProgress.update(ImportProgress(
             isRunning: true,
             completed: 0,
@@ -335,25 +370,41 @@ public final class LibraryStatus {
             message: message
         ))
         importCancellation = cancellation
+        registerCancellation(cancellation, id: id)
+        return id
     }
 
-    public func updateOperation(completed: Int, message: String) {
+    public func updateOperation(completed: Int, message: String, operationID: UUID? = nil) {
+        let id = operationID ?? activeOperationID
+        if let id { activity.update(id: id, completed: completed, liveMessage: message) }
+        guard operationID == nil || operationID == activeOperationID else { return }
+        let cancelling = importProgress.value.phase == .cancelling
         importProgress.update(ImportProgress(
-            isRunning: true,
+            phase: cancelling ? .cancelling : .running,
             completed: completed,
             total: importProgress.value.total,
-            message: message
+            message: cancelling ? "Cancelling…" : message
         ))
     }
 
     public func endOperation(
         message: String,
-        severity: LibraryNoticeSeverity = .success
+        severity: LibraryNoticeSeverity = .success,
+        operationID: UUID? = nil,
+        activityStatus: LibraryActivityStatus? = nil,
+        failures: [LibraryActivityFailure] = [],
+        counts: LibraryActivityCounts? = nil
     ) {
+        let id = operationID ?? activeOperationID
+        let status = activityStatus ?? (message.localizedCaseInsensitiveContains("cancel") ? .cancelled
+            : severity == .error ? .failed : severity == .warning ? .completedWithWarnings : .succeeded)
+        if let id { activity.finish(id: id, status: status, severity: severity, failures: failures,
+                                   counts: counts, liveMessage: message) }
+        guard operationID == nil || operationID == activeOperationID else { return }
         let phase: LibraryOperationPhase
-        if message.localizedCaseInsensitiveContains("cancel") {
+        if status == .cancelled {
             phase = .idle
-        } else if severity == .error {
+        } else if status == .failed {
             phase = .failed
         } else {
             phase = .succeeded
@@ -365,33 +416,43 @@ public final class LibraryStatus {
             message: message
         ))
         importCancellation = nil
+        activeOperationID = nil
         showNotice(
             message,
             severity: severity,
-            autoDismissAfter: severity == .error || severity == .warning ? nil : 3
+            autoDismissAfter: severity == .error || severity == .warning ? nil : 3,
+            activityOperationID: id
         )
     }
 
     public func cancelImport() {
-        guard importProgress.value.phase == .running,
-              let cancellation = importCancellation else { return }
-        var progress = importProgress.value
-        progress.phase = .cancelling
-        progress.message = "Cancelling…"
-        importProgress.update(progress)
-        importCancellation = nil
-        cancellation()
+        guard let activeOperationID else { return }
+        activity.cancel(id: activeOperationID)
+    }
+
+    private func registerCancellation(_ cancellation: @escaping () -> Void, id: UUID) {
+        activity.setCancellation(id: id) { [weak self] in
+            if let self, self.activeOperationID == id {
+                var progress = self.importProgress.value
+                progress.phase = .cancelling
+                progress.message = "Cancelling…"
+                self.importProgress.update(progress)
+                self.importCancellation = nil
+            }
+            cancellation()
+        }
     }
 
     public func showPlaybackError(_ message: String) {
-        showNotice(message, severity: .error, source: .library)
+        showNotice(message, severity: .error, source: .playback)
     }
 
     public func showNotice(
         _ message: String,
         severity: LibraryNoticeSeverity = .information,
         autoDismissAfter seconds: TimeInterval? = nil,
-        source: LibraryNoticeSource = .library
+        source: LibraryNoticeSource = .library,
+        activityOperationID: UUID? = nil
     ) {
         let notice = LibraryNotice(
             message: message,
@@ -399,6 +460,9 @@ public final class LibraryStatus {
             source: source,
             autoDismissAfter: seconds
         )
+        if activityOperationID == nil {
+            activity.recordNotice(id: notice.id, source: source, severity: severity, liveMessage: message)
+        }
         notices.enqueue(notice)
         scheduleAutoDismissIfNeeded()
     }

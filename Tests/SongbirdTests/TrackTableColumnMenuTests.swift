@@ -68,4 +68,34 @@ final class TrackTableColumnMenuTests: XCTestCase {
         reopened.performActionForItem(at: resetIndex)
         XCTAssertEqual(TrackTableColumnPrefs.decode(raw), TrackTableColumnPrefs.defaults)
     }
+
+    @MainActor
+    func testSharedToolbarColumnsUseTheHeaderChoicesAndPreserveLayout() throws {
+        guard #available(macOS 14.4, *) else {
+            throw XCTSkip("NSHostingMenu requires macOS 14.4")
+        }
+        _ = NSApplication.shared
+        var preferences = TrackTableColumnPrefs.defaults
+        TrackTableColumnPrefs.move(&preferences, id: TrackSortColumn.album.rawValue, direction: -1)
+        TrackTableColumnPrefs.setWidth(&preferences, id: TrackSortColumn.title.rawValue, width: 337)
+        var raw = TrackTableColumnPrefs.encode(preferences)
+        let binding = Binding(get: { raw }, set: { raw = $0 })
+        let shared = NSHostingMenu(rootView: TrackTableColumnMenuItems(preferencesRaw: binding))
+        shared.update()
+        let nativeHeader = NSHostingMenu(rootView: header(preferences: binding).contextMenuItems(for: .album))
+        nativeHeader.update()
+        let headerChoices = nativeHeader.items.map(\.title).filter {
+            $0 != "Move Left" && $0 != "Move Right" && !$0.isEmpty
+        }
+        XCTAssertEqual(shared.items.map(\.title).filter { !$0.isEmpty }, headerChoices)
+        let title = try XCTUnwrap(shared.items.first { $0.title == "Title" })
+        XCTAssertFalse(title.isEnabled)
+        let genreIndex = try XCTUnwrap(shared.items.firstIndex { $0.title == "Genre" })
+        shared.performActionForItem(at: genreIndex)
+        let changed = TrackTableColumnPrefs.decode(raw)
+        XCTAssertEqual(changed.map(\.id), preferences.map(\.id))
+        XCTAssertEqual(changed.map(\.width), preferences.map(\.width))
+        XCTAssertFalse(try XCTUnwrap(changed.first { $0.column == .genre }).visible)
+        XCTAssertTrue(try XCTUnwrap(changed.first { $0.column == .title }).visible)
+    }
 }

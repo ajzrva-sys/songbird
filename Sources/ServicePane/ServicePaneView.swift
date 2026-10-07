@@ -155,8 +155,10 @@ public struct ServicePaneView: View {
                 try DefaultSmartPlaylists.ensureInstalled(in: modelContext)
             } catch {
                 modelContext.rollback()
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not prepare smart playlists: \(error.localizedDescription)"
+                LibraryStatus.shared.showNotice(
+                    "Could not prepare smart playlists: \(error.localizedDescription)",
+                    severity: .error,
+                    source: .library
                 )
             }
         }
@@ -322,6 +324,12 @@ public struct ServicePaneView: View {
                     "Play Queue",
                     systemImage: "text.alignleft",
                     tag: .queue,
+                    supportsSearch: false
+                )
+                navRow(
+                    "History",
+                    systemImage: "clock.arrow.circlepath",
+                    tag: .playHistory,
                     supportsSearch: false
                 )
             }

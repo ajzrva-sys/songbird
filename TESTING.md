@@ -1,5 +1,653 @@
 # Candidate Testing and Validation
 
+## Release build and push validation — 2026-10-06
+
+- `swift package clean` removed generated caches carrying the pre-move path.
+- `SONGBIRD_OFFLINE_DEPS=1 ./build.sh --no-reveal`: optimized build and packaging
+  passed (155.23 seconds), with existing metadata deprecation and unused-result
+  warnings. `codesign --verify --deep --strict --verbose=1 Songbird.app` passed.
+- `./check.sh quick --disable-sandbox` used the existing disposable test scratch
+  directory and a fresh `/private/tmp/songbird-release-push-20261006` profile;
+  353 XCTest cases passed with two optional skips, plus 398 Swift Testing cases.
+  Log: `/private/tmp/songbird-release-push-quick.log`.
+- The temporary GitHub checkout at `/private/tmp/songbird-github-push-20261006`
+  preserves upstream history, ignore rules, CI and Package.resolved. Release gate
+  records and the resealed publication payload pass. App bundles/build caches
+  are excluded from the source push. No installation, launch or new manual
+  hardware/UI acceptance was performed.
+
+
+## Artist Albums view — 2026-10-06
+
+ArtistDetailView defaults to Albums and offers the previous track table as Tracks.
+The artist album scope uses exact contributing track artists, retains complete
+album groups, and has independent scroll anchors. The grid reuses its existing
+search, Favorites, sort, size/spacing and shared Play/Open actions.
+
+- Focused `AlbumGridInteractionTests|AlbumGroupingTests|LibraryNavigationCoordinatorTests|LibraryContentNavigationTests`:
+  16 XCTest and 18 Swift Testing cases pass. New cases cover exact artist
+  membership, compilation/multi-disc and edition preservation, projection cache
+  invalidation, metadata changes and independent artist anchors.
+- First full quick: 353 XCTest, two optional skips and one failure in the existing
+  AudioDiagnosticsPoller stop test; all 398 Swift Testing cases pass. A focused
+  poller rerun reproduced the queued callback after stop (6 polls rather than 5).
+  The unchanged poller invalidates its Timer without cancelling already queued
+  main-actor tasks. It has no artist-view dependency.
+- Full quick after release compilation: 353 XCTest, two optional skips, zero
+  failures; 398 Swift Testing cases in 53 suites pass. Earlier failure receipts
+  remain in `quick.log` and `poller-rerun.log`; passing receipt is
+  `quick-after-build.log`.
+
+Before-images, scoped diff/hashes, exact invocation, test and prepare logs are in
+`/private/tmp/songbird-artist-albums-20261006/`. Focused tests add the filter above
+to `full-command.txt`. Full checks use macOS services outside the outer sandbox
+with a disposable profile. Release preparation builds only the signed alternate
+app for run `20261006T235833Z-27734`, package parity true, current-source SHA-256
+`39f4b134bdeb52991be005a1f0db7a6e9b4d58c888b8bb6d215a89a749833262`.
+The installed app and normal library are untouched.
+
+Isolated run evidence is under
+`.build/usability/runs/20261006T235833Z-27734/artifacts/`:
+
+- Artists → The Skylarks opens Albums, showing only Northern Lights and its
+  appearance on Signals: A Compilation. The grid exposes scoped Search,
+  Favorites, Sort and View controls (`states/artist-albums-default.png`).
+- Tracks shows the prior four-track table, including the compilation track;
+  Albums restores the same two cards (`states/artist-tracks.png`,
+  `states/artist-albums-roundtrip.png`).
+- Open Northern Lights shows its three tracks; Back restores the same artist
+  and Albums mode (`states/artist-album-open.png`, `states/artist-album-back.png`).
+- Leaving the first artist in Tracks then opening 東京アンサンブル starts Albums
+  with only its one album, without the prior artist's cards
+  (`states/artist-second-default.png`).
+- AXSetValue/AXConfirm changed the visible search-field value without reaching
+  its shared binding; injected keyboard text also failed to arrive. This is a
+  harness limitation, not evidence of a product search failure. Search empty/reset
+  remains a manual UI gate; focused projection/filter checks pass.
+- The bounded `artist-view-report.json` remains incomplete for the whole app.
+  Keyboard/modifier/context routes, hover/Reduce Motion, themes/minimum windows,
+  mini artwork activation and the broader application remain unvisited here.
+
+Scoped whitespace checks pass. The document checker retains the same six missing
+plan-standard/optional-skill file, directory and link issues. The isolated app and
+broker are closed after the replay; evidence is preserved. No installation.
+
+## Mini-player artwork return action — 2026-10-06
+
+MiniPlayerView's shared 28-point track artwork is now a plain native Button
+calling its existing `returnToFullPlayer()`. Modern and Glass share this artwork;
+Classic and Strip have no artwork and retain their existing return controls.
+The action already restores/opens the explicit main-player scene, closes Mini
+Player and posts the shared window notification. It does not mutate playback.
+The control is labeled Show Full Player and identified by
+`player.switchToFullPlayer`.
+
+- Focused `PlayerWindowConfigurationTests|LibraryNavigationCoordinatorTests`:
+  eight XCTest and four Swift Testing cases passed. These cover adjacent window
+  configuration/navigation boundaries, not activation of this new artwork button.
+- Full quick: 351 XCTest cases, two optional skips, zero failures; 394 Swift
+  Testing cases in 53 suites passed, outside the outer test sandbox.
+- Scoped whitespace checks pass. The document checker retains its six existing
+  missing plan-standard/optional-skill path issues.
+
+Before-images, scoped diff/hashes, exact full invocation (`full-command.txt`),
+`focused.log`, `quick.log` and `docs-check.log` are in
+`/private/tmp/songbird-mini-artwork-20261006/`. The focused invocation adds the
+filter above. The tested current tree includes the preceding album-grid changes.
+No app was packaged, installed or launched. Actual artwork activation, full-window
+restoration and playback continuity through that UI transition remain unverified
+until the next disposable UI pass; source/adjacent tests do not establish them.
+
+## Pointer-following album Play feedback — 2026-10-06
+
+AlbumCardButtons.swift now tracks local pointer positions with continuous hover.
+A clamped gradient center drives the surface light and accent rim, plus at most
+four degrees of tilt on each axis. Tracking is attached after the fixed 44-point
+frame/content shape; native Button action and accessibility labels remain.
+Hover exit restores center. Keyboard focus uses centered feedback. Reduce Motion
+locks the light at center and disables tilt, scaling and animation.
+
+- Focused button/grid checks: four XCTest and 12 Swift Testing cases passed.
+- Full quick: 351 XCTest cases, two optional skips, zero failures; 394 Swift
+  Testing cases in 53 suites passed using macOS services outside the outer sandbox.
+- Scoped whitespace checks pass. The control-document checker retains its six
+  existing missing plan-standard/optional-skill path issues.
+
+Before-images, scoped diff/hashes, exact full invocation (`full-command.txt`),
+`focused.log`, `quick.log` and `docs-check.log` are in
+`/private/tmp/songbird-pointer-hover-20261006/`. The focused invocation adds
+`--filter 'AlbumCardButtonTests|AlbumGridInteractionTests'`.
+No app was packaged, installed or launched. These source/action checks do not
+verify the rendered pointer path, tilt or Reduce Motion; the next disposable
+UI pass remains their visual acceptance gate.
+
+## Source-only album Play hover feedback — 2026-10-06
+
+AlbumCardButtons.swift adds a local native ButtonStyle: direct hover and keyboard
+focus highlight the theme-accent rim/background; hover scales to 1.08 and pressed
+scales to 0.94. The outer circular target stays 44 points. Reduce Motion fixes
+scale at 1 and suppresses animations, with color feedback retained.
+
+The current no-Git tree also includes the preceding outline/alignment fix.
+Before-images, scoped diff/hashes and logs are in
+`/private/tmp/songbird-play-hover-20261006/`.
+
+- Focused `AlbumCardButtonTests|AlbumGridInteractionTests`: four XCTest and
+  12 Swift Testing cases passed (`focused.log`), including native action routing
+  and the hosted 44-point target.
+- Full quick: 351 XCTest cases, two optional skips, zero failures; 394 Swift
+  Testing cases in 53 suites passed (`quick.log`). The full run used macOS
+  services outside the outer test sandbox.
+- Scoped whitespace checks pass. The control-document checker retains the
+  existing six missing plan-standard/optional-skill path issues.
+
+Exact full invocation:
+
+```sh
+env SONGBIRD_OFFLINE_DEPS=1 \
+  CFFIXED_USER_HOME=/private/tmp/songbird-play-hover-20261006/home \
+  CLANG_MODULE_CACHE_PATH=/private/tmp/songbird-grid-visual-20261006/module-cache \
+  SWIFT_MODULECACHE_PATH=/private/tmp/songbird-grid-visual-20261006/module-cache \
+  SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-play-hover-20261006/profile \
+  SONGBIRD_UI_TESTING=1 \
+  ./check.sh quick --disable-sandbox \
+  --scratch-path /private/tmp/songbird-ui-20261006/scratch \
+  --cache-path /private/tmp/songbird-ui-20261006/cache \
+  --config-path /private/tmp/songbird-ui-20261006/config -j 4
+```
+
+The focused run adds `--filter 'AlbumCardButtonTests|AlbumGridInteractionTests'`.
+No app was packaged, installed or launched. Pointer hover/press animations and
+rendered Reduce Motion behavior remain unverified pending the next disposable
+UI pass; deterministic checks do not establish those visual outcomes.
+
+## Source-only album grid visual fix — 2026-10-06
+
+Tree: `/Volumes/projects/songbird-public/songbird-public`, without Git metadata.
+The change is limited to AlbumGridItem's focus outline and AlbumGridLayout's
+top alignment. Before-images and logs are in
+`/private/tmp/songbird-grid-visual-20261006/`.
+
+- Focused `AlbumCardButtonTests|AlbumGridInteractionTests`: four XCTest and
+  12 Swift Testing cases passed. Log: `focused-cache.log`.
+- Final full quick: 351 XCTest cases, two optional skips, zero failures;
+  394 Swift Testing cases in 53 suites passed. Log: `quick-unrestricted.log`.
+  The preceding restricted run (`quick.log`) aborted at macOS audio services
+  and also recorded authentication/CD failures; it is not a passing gate.
+- An initial manifest compile could not write the default module cache.
+  Both module caches were redirected to the disposable directory for the
+  successful runs; the original diagnostic remains in `focused.log`.
+- Scoped whitespace checks pass. The control-document checker retains its six
+  existing missing plan-standard/optional-skill path issues (`docs-check.log`).
+
+Final full command, run outside the outer test sandbox:
+
+```sh
+env SONGBIRD_OFFLINE_DEPS=1 \
+  CFFIXED_USER_HOME=/private/tmp/songbird-grid-visual-20261006/home \
+  CLANG_MODULE_CACHE_PATH=/private/tmp/songbird-grid-visual-20261006/module-cache \
+  SWIFT_MODULECACHE_PATH=/private/tmp/songbird-grid-visual-20261006/module-cache \
+  SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-grid-visual-20261006/profile \
+  SONGBIRD_UI_TESTING=1 \
+  ./check.sh quick --disable-sandbox \
+  --scratch-path /private/tmp/songbird-ui-20261006/scratch \
+  --cache-path /private/tmp/songbird-ui-20261006/cache \
+  --config-path /private/tmp/songbird-ui-20261006/config -j 4
+```
+
+Compilation and existing interaction checks do not establish rendered focus or
+alignment acceptance. No disposable app or installed app was launched, and no
+packaging or installation was performed, as requested by the owner. Visual
+replay is pending for the next disposable UI pass.
+
+## Installed follow-on: artwork mini-player button — 2026-10-06
+
+The owner authorized installation after the source-only UI pass below, then
+requested that small Now Playing artwork open Mini Player. The shared artwork
+button posts the existing window action and is disabled during layout editing.
+No playback or mini-player sizing behavior changed.
+
+- Full quick: 351 XCTest cases (two optional skips, zero failures) and 394 Swift
+  Testing cases passed. Release packaging completed in 86.49 seconds.
+- Disposable standard run `20261006T212930Z-59452` verifies native button
+  activation: the main window hides, Mini Player appears, and paused First Light
+  remains at 0:05. Window-only snapshots are under its `artifacts/states/`.
+  Physical pointer activation remains unverified: injected clicking produced
+  no visible change. Keyboard, bottom placement and editing-state gates were
+  not exercised in this bounded run. The isolated processes were stopped.
+- The installed signed `/Applications/Songbird.app` matches all 44 release
+  entries, modes and symlink targets. Executable SHA-256:
+  `3353df7411f0ab70673d35b8f1f683e8a845bb0e627d335b378c5d0405f56bc2`.
+  Source fingerprint:
+  `8cbfd3bccf1cb2ee06457e3d72b7f84b0bd29259659bf3f2a87f659ce26252b0`.
+- Rollbacks: `/Applications/Songbird-before-UI-20261006T212505Z.app` and
+  `/Applications/Songbird-before-artwork-mini-20261006T213506Z.app`.
+  Finder reveal succeeded; the installed app was not launched by the agent.
+- Build-script syntax/help checks pass. Default successful builds now reveal
+  the ordinary project-root `Songbird.app` in Finder; `--no-reveal` is available
+  for unattended builds. Finder failure reports the ready app without failing
+  packaging. `--open` retains its existing explicit launch behavior.
+
+Receipts: `/private/tmp/songbird-ui-20261006/mini-click-install-receipt.json`,
+`mini-click-package-manifest.json`, `mini-click-source-provenance.json`,
+`mini-click-quick.log`, and `mini-click-build.log`. Earlier validation limitations
+below are unchanged; installation does not close those visual gates.
+
+## Ten UI improvements — 2026-10-06
+
+Current tree: `/Volumes/projects/songbird-public/songbird-public`, without Git
+metadata. The owner-approved [UI plan](docs/exec-plans/active/ui-improvements.md)
+is implemented in source. This pass uses synthetic fixtures and disposable
+profiles; it does not replace, restart or inspect the installed app or normal
+library. Before-images, scoped changes and test receipts are retained under
+`/private/tmp/songbird-ui-20261006/`.
+
+Implemented behavior:
+
+- Persistent search names the visible collection. Active facet chips remain
+  visible when the browser is hidden; Clear All resets facets and Clear Search
+  resets only the query. Empty library, filtered results, album favorites and
+  playlist states expose their existing import, navigation or editing actions.
+- Library View controls bind to the existing density, columns, artwork-size and
+  spacing preferences. Album cards expose separate Play/Open actions and retain
+  modifier selection and double-click playback.
+- The main player has larger labels and a larger seek interaction area, with a
+  separate main-player height preference and a 72-point minimum. Mini-player
+  dimensions remain independent. Upcoming queue controls target occurrence IDs;
+  Clear Remaining Tracks preserves the current entry and Undo restores exact
+  occurrences/order only while its queue/playback revision still matches.
+- Health displays current/checking/outdated/failed status separately from retained
+  counts and timestamps. The editor preserves untouched mixed Favorite/Rating
+  values, names Save Changes, and captures the catalog/file-tag write policy at
+  submission. Favorite and Rating remain catalog-only; partial file writes retain
+  distinct catalog and file counts.
+- Activity stores controlled operation/source/status vocabulary, counts and
+  filename-only categorized failures. Full messages remain in session memory.
+  Atomic actor storage retains at most 500 terminal records for 30 days, bounded
+  to 2 MiB and 100 failure details per operation. Progress persistence coalesces
+  over two seconds; operation IDs isolate cancellation and suppress duplicate
+  completion notices. Startup marks unfinished records Interrupted. Unreadable
+  history is preserved until explicit Clear History. Quit prepares playback once
+  and allows history flushing for at most two seconds. Warnings remain reachable
+  during imports through the footer Activity panel.
+- Disposable run manifests now use schema 3 and record a current, scoped
+  source-tree fingerprint when Git is absent. No Git objects, excluded references
+  or old reports were imported. Package parity and the privacy wrapper remain
+  mandatory; the prepare-only route does not dispatch the missing optional skill.
+
+Current verification:
+
+- Focused Swift run: 42 XCTest and 78 Swift Testing cases passed, 120 total.
+  `focused-final.log` covers the new presentation/action boundaries, metadata/file
+  outcomes, Activity privacy/retention/recovery/cancellation/quit handling and
+  queue occurrence/order/Undo behavior.
+- Latest full quick passed: 351 XCTest cases with two optional-store skips and
+  zero failures, plus 394 Swift Testing cases in 53 suites, 745 cases total.
+  The historical Finder-notice assertions passed in this run. Earlier sandbox
+  failures remain recorded separately; their audio/LocalAuthentication failures
+  were rerun outside the outer sandbox using the disposable profile.
+  Exact accepted invocation, from this candidate directory:
+
+  ```sh
+  SONGBIRD_OFFLINE_DEPS=1 \
+  SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-ui-20261006/accepted-quick-profile \
+  SONGBIRD_UI_TESTING=1 \
+  ./check.sh quick --disable-sandbox \
+    --scratch-path /private/tmp/songbird-ui-20261006/scratch \
+    --cache-path /private/tmp/songbird-ui-20261006/cache \
+    --config-path /private/tmp/songbird-ui-20261006/config -j 4
+  ```
+
+  Receipts: `quick-accepted.log` and the repeated current-source
+  `quick-health-fix.log`, with the same totals. The preceding `quick-final.log`
+  and earlier restricted/unrestricted attempts remain separate evidence.
+- Thread Sanitizer: 41 XCTest and 27 Swift Testing cases passed, 68 total;
+  `tsan.log`. Optimized compilation and disposable package parity passed through
+  `SONGBIRD_OFFLINE_DEPS=1 CLANG_MODULE_CACHE_PATH=/private/tmp/songbird-ui-20261006/release-module-cache ./scripts/ai-usability --prepare-only --keep --fixture standard`.
+  The runner uses `swift build -c release` with the supplied Clang cache override.
+  The fresh cache avoids inherited compiler-module paths from the copied tree.
+- Python suite: 116 cases, two optional vendor-rebuild skips, one legal-input
+  error because `Package.resolved` is absent. This suite is not green. The two
+  new provenance tests and option/run-manifest shell checks passed. The document
+  harness retains six existing missing plan-standard/optional-skill file,
+  directory and local-link issues; no excluded inputs were restored.
+  Receipts: `python-unrestricted.log` and `harness.log`.
+
+Bounded black-box evidence uses only the prepared alternate bundle/profile and
+`scripts/usability/ui`, with window-only AX/screenshot capture. Standard run
+`20261006T202901Z-28463` verified separate album Play/Open actions, album opening
+without restarting playback, Back navigation, and a facet chip remaining visible
+after hiding its browser. Queue Clear/Undo kept the current entry and restored
+the exact upcoming order; four tracks totaled 16:58. Empty run
+`20261006T203812Z-29884` verified Import Music and Top Played's Browse All Tracks
+affordances. Its 800×600 empty-library window captured complete main content;
+this check does not establish the wider minimum required with both side panes.
+Evidence is in each run's `.build/usability/runs/<run>/artifacts`; the empty
+session was stopped after verification.
+
+Health run `20261006T204239Z-30895` observed Missing Files changing from Not
+checked through Check Now to Current, with two findings and Results updated time.
+Activity displayed one warning completed 12 of 12. The actual disposable sidecar
+contains three categorized filename-only details, with no raw messages, paths,
+URLs or provider responses; its verified copy is
+`artifacts/activity-history.evidence.json`. Relaunching the same isolated bundle
+and profile as PID 31853 retained that history and started with the Activity
+panel collapsed. The app and broker were stopped afterward. These checks cover
+completed history retention, not every interrupted/failed quit-recovery path.
+
+Large repair run `20261006T204651Z-32035` passed optimized compilation in 79.53
+seconds and package parity. Its schema-3 manifest records source-tree hash
+`c58426656f3da15f4332133f861ea7665b7c45664cc38e587380a2b9b60d8f25`.
+Window evidence shows 10,000 tracks totaling 910:50:00 and 1,000 albums, with
+Search and View available. Native View, Player Bar and Feathers commands enabled
+the compact Now Playing pane and changed Blue Monday/top to Purple Rain/bottom.
+Explicit Play on Fixture Album 001 produced the compact queue, where upcoming
+rows expose Play Next and Remove. Those two actions were inspected but their
+actual routing was not exercised.
+
+While paused, Clear Remaining Tracks preserved Fixture Track 02001 and reduced
+the queue from eight tracks/41:20 to one track/2:50. Undo restored the seven
+upcoming entries, Fixture Track 03001 through 09001, in exact order; the paused
+and restored AX captures are byte-identical. With both side panes present, the
+supported 956×520 minimum remained visually usable. An AX resize bypass to
+800×600 clipped the compact pane below its documented 956-point minimum; that
+capture is excluded from acceptance. Activity's Settings action opened
+Appearance settings. A subsequent coordinate-based Library selection did not
+change the selected settings pane, leaving import Activity unvisited. The app
+and broker, PIDs 32553 and 32574, were stopped afterward.
+
+The earlier Health Overview P2 timestamp overlap is fixed in the rebuilt replay:
+`20261006T204651Z-32035/artifacts/states/health-dashboard-fixed.png` shows the
+wrapped Results updated text clear of Consistency. The original screenshot and
+failure remain in the Health report, with the finding marked fixed by this
+replay. Dashboard AX serialization still failed at deep and shallow capture
+depths, including the repair run; the resulting empty files are excluded from
+evidence. Each of the five completed run artifact directories has a
+schema-conforming `report.json` with verdict incomplete, explicit evidence and
+unvisited journeys. The initial album accessibility-label finding is also fixed
+by replay.
+
+Keyboard injection was unavailable throughout these runs. Temporary broker busy
+responses (exit 75) and missing-exact-window captures left observation gaps;
+lightweight status confirmed the app was still running, so those failures are
+not reported as an app hang or as measured latency. Keyboard/modifier and
+double-click flows, seek pointer interaction, compact Play Next/Remove routing,
+mixed-selection editing, import Activity with active warnings, long titles,
+the complete theme/mini-player matrix, and dashboard AX acceptance remain open.
+System pickers and external-service flows remain intentionally unvisited under
+the privacy contract. The plan remains active pending its UI gates; these bounded
+observations do not establish full UI, hardware or accessibility acceptance.
+
+## Saved library artwork in audio files — 2026-10-05 follow-on
+
+Tree: `/Volumes/projects/songbird-public`, still without Git metadata. Missing
+Artwork Health now has **Save Library Artwork to Files…**, covering all current
+tracks with a saved album cover, independently from missing catalog findings.
+A fresh context reads each cover once per album and shares its Data across track
+requests. The service deduplicates exact paths, rejects divergent per-path covers,
+preserves existing pictures (including undecodable AV picture tags and empty
+FLAC PICTURE blocks), and writes a neighboring copy through TagWriterService.
+Recognized tags, sample rate, duration and exact saved JPEG/PNG bytes must pass
+readback before commit. Current catalog path/album/cover and uncached original
+file size/mtime/type are rechecked. Cancellation is checked again after the final
+catalog await. Both artwork and the earlier metadata repair clear URL resource
+caches before the final file guard; generated external-edit regressions cover
+that cache hazard. Durable AV reads and the metadata-copy writer now throw/stop
+on metadata-bag load failures rather than interpreting an error as missing tags;
+normal reader defaults retain their prior recovery behavior.
+Compact numeric/text iTunes YYYYMMDD dates expose the four-digit year; a generated
+M4A regression checks that a missing-genre repair retains its full physical date.
+
+The existing AV passthrough writer cannot export MP3. A generated MP3 explicitly
+returns the unsupported-format failure and remains byte-identical. No new ID3
+writer was added. JPEG/PNG FLAC/M4A are exercised; other writer formats and other
+saved image formats have no new acceptance claim. Verification remains limited
+to recognized metadata/image bytes and stream properties, not an encoded-audio
+payload checksum or every opaque tag.
+
+Evidence: `/private/tmp/songbird-file-artwork-20261005/`. Before-images and scoped
+diff/source hashes are external; TagWriterService and the existing tag-test
+before-images were reconstructed by reversing only this follow-on's localized
+additions. All tests use generated media and disposable in-memory catalogs.
+
+Focused environment: `SONGBIRD_OFFLINE_DEPS=1`,
+`HOME=/private/tmp/songbird-file-artwork-20261005/home`, the same `CFFIXED_USER_HOME`,
+`SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-file-artwork-20261005/profile`,
+`SONGBIRD_UI_TESTING=1`.
+
+- `./check.sh quick --disable-sandbox --scratch-path /private/tmp/songbird-file-tags-20261005/scratch -j 4 --filter 'LibraryFileArtworkRepairTests|LibraryFileTagRepairTests|MetadataReaderArtworkKeyTests|TagWriterServiceTests'`:
+  final current-source run passed two XCTest and 25 Swift Testing tests in three
+  suites. JPEG/PNG across actual FLAC/M4A copies, repeated fill-only writes,
+  fresh whole-catalog scope without a published snapshot, changed catalog
+  cover/path/album, failed readback/unreadable originals, concurrent file edits,
+  post-catalog cancellation, path dedup/conflicting covers, undecodable AV picture
+  presence, empty FLAC pictures, unsupported MP3 retention and physical compact-date
+  retention all passed. Log: `focused-compact-date.log`.
+- `./check.sh quick --disable-sandbox --scratch-path /private/tmp/songbird-file-tags-20261005/scratch -j 4`:
+  final run used `HOME`/`CFFIXED_USER_HOME` at the new disposable
+  `/private/tmp/songbird-file-artwork-20261005/final-home` and
+  `SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-file-artwork-20261005/final-profile`,
+  with the same offline/UI-test flags, outside the outer sandbox. It executed 342
+  XCTest cases with two optional-store skips and only the same two failed
+  assertions in unchanged `testShowInFinderReportsAnUnavailableSelectionWithoutRevealingIt`;
+  all 365 Swift Testing tests passed in 47 suites. Full quick remains not green.
+  Log: `quick-compact-date.log`. Earlier `quick.log` records the known outer-sandbox
+  CoreAudio/LAContext failures and exception; `quick-final.log` records the
+  preceding unsandboxed pass before compact-date normalization (364 Swift Testing
+  tests, same Finder assertions). The test run was not repeated in the failing
+  outer sandbox after its known restriction was identified.
+- `./scripts/validate-agent-harness.sh docs/exec-plans/completed/file-tag-recovery.md`:
+  retains the six missing plan-standard/usability-skill file, directory and local
+  link issues in this candidate. Log: `harness.log`. No excluded inputs were
+  imported to satisfy them.
+
+No backend edit: audio TSan/hardware gates were not repeated. Source tests do not
+access the normal library, install/launch the app, or establish black-box UI
+usability. Root owns follow-on packaging and installation.
+
+Final delivery verification: `SONGBIRD_OFFLINE_DEPS=1 ./build.sh
+/private/tmp/songbird-tag-repair-20261005/release-final/Songbird.app` completed.
+The built and installed bundles passed `codesign --verify --deep --strict`
+outside the managed sandbox; all 44 installed file/symlink entries match the
+package. `/Applications/Songbird.app` executable SHA-256 is
+`5db11556ead0cb58f68ca8bba4f3dedd565f844739a75cf2482c42e3c6c03119`.
+The original rollback is unchanged. No quit, relaunch, normal-profile UI or
+hardware exercise was performed. Build/install receipts are private in the
+dated album-art-repair workspace; this does not make the full suite green.
+
+## Bulk file tag recovery and permanent Health repairs — 2026-10-05
+
+Tree: `/Volumes/projects/songbird-public`, without Git metadata. Source adds
+Health **Read File Tags** for missing metadata/artwork, reading at most four
+unique paths concurrently and filling missing catalog values in a fresh context
+after I/O. It does not run BPM analysis or alter the audio files. Existing catalog
+choices and statistics remain. The AV reader now loads raw format-specific bags,
+decodes NSNumber FourCC genre/year keys and binary track/disc pairs, recognizes
+ID3 identifiers, and preserves tagged titles over a filename fallback.
+
+Health **Save Checked Tags to Files** restricts durable edits to checked safe
+missing-field proposals. A neighboring temporary copy is written through
+TagWriterService, checked for the proposed value, unchanged other recognized
+tags/artwork/sample rate/duration, then replaces the original only after passing.
+Existing conflicting file values and changed catalog findings are skipped.
+The unchanged half of a number/total pair is carried into writing. Filling an
+artist can change the reader's derived album artist without creating an aart or
+ALBUMARTIST tag; both physical formats have regressions for this case. Safe file
+repair excludes titles, filename inference and consistency rewrites. Catalog
+Undo is not offered as file Undo. This validation is not an encoded-audio payload
+checksum or independent verification of every opaque tag; the existing writer
+uses FLAC metadata updates or AVFoundation passthrough.
+
+Plan: [file tag recovery](docs/exec-plans/completed/file-tag-recovery.md).
+Before-images, scoped diff, exact source SHA-256 receipt and logs:
+`/private/tmp/songbird-file-tags-20261005/`. The LibraryHealth.swift before-image
+was reconstructed by reversing only the two added properties; other existing
+changed source before-images were copied before editing.
+
+Environment for both commands: `SONGBIRD_OFFLINE_DEPS=1`,
+`HOME=/private/tmp/songbird-file-tags-20261005/home`, `CFFIXED_USER_HOME` set to
+the same disposable home, `SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-file-tags-20261005/profile`,
+and `SONGBIRD_UI_TESTING=1`.
+
+- `./check.sh quick --disable-sandbox --scratch-path /private/tmp/songbird-file-tags-20261005/scratch -j 4 --filter 'LibraryFileTagRepairTests|MetadataReaderArtworkKeyTests|TagWriterServiceTests|TrackImporterSignatureTests|LibraryHealthProposalTests|LibraryHealthMutationTests'`:
+  nine XCTest and 36 Swift Testing cases passed. Generated FLAC/M4A file writes,
+  real raw iTunes keys, number-total retention, absent album-artist retention,
+  stale catalog rejection, conflict/failed-copy preservation, unchanged file
+  bytes during bulk artwork/metadata recovery and skipped BPM analysis executed.
+  Log: `focused.log`.
+- `./check.sh quick --disable-sandbox --scratch-path /private/tmp/songbird-file-tags-20261005/scratch -j 4`:
+  final run executed 342 XCTest cases with two optional-store skips and two
+  failed assertions in the unchanged
+  `testShowInFinderReportsAnUnavailableSelectionWithoutRevealingIt`; all 356
+  Swift Testing cases passed. Log: `quick-final.log`. Full suite is not green.
+  Automatic review allowed this isolated run outside the outer sandbox after
+  the sandboxed run could not initialize existing CoreAudio test components and
+  failed existing audio/LAContext tests before crashing. The SwiftPM inner sandbox
+  is disabled to avoid nested sandbox failure. Initial attempts also encountered
+  the existing `.build` write restriction; the final run uses only the separate
+  scratch directory. Earlier failures remain in `quick-sandboxed.log`.
+- `./scripts/validate-agent-harness.sh docs/exec-plans/active/file-tag-recovery.md`:
+  failed with six existing missing `.agent/PLANS.md` and usability-skill
+  file/directory/local-link issues before the completed plan was moved. These
+  unrelated harness inputs were not created or imported.
+
+No backend edit: audio TSan/hardware tests were not repeated. No packaging,
+installation, app launch, credentials, real library or media used by this source
+pass. Black-box UI evidence remains unavailable because the privacy wrapper
+requires absent Git metadata. Publication manifest remains the prior snapshot.
+
+Follow-on app delivery on 2026-10-05: `SONGBIRD_OFFLINE_DEPS=1 ./build.sh
+/private/tmp/songbird-tag-repair-20261005/Songbird.app` passed release compilation,
+packaging and strict deep signature verification. The package was copied to
+`/Applications/Songbird.app`, with installed executable SHA-256
+`00d90ba436dbb6473e6ce587eef9703fef1f973707395a6acb64c5dfcaf0ec80`.
+The previous app is retained at
+`/Users/aji/Documents/Codex/2026-10-05/album-art-repair/rollback/Songbird-before-file-tags-20261005.app`.
+Signature verification was repeated outside the managed sandbox because its
+certificate trust check reports `CSSMERR_TP_NOT_TRUSTED` for both old and new
+apps; the unrestricted verification passed. Build log and installation receipt
+are in `/private/tmp/songbird-tag-repair-20261005/`. No app relaunch, normal-store
+mutation, new black-box UI evidence or hardware acceptance is claimed.
+
+## Missing artwork sorting and rescan progress — 2026-10-05
+
+Current copy: `/Volumes/projects/songbird-public`, without Git metadata. Added
+**Missing Album Art** to the album sort menu: missing covers first, then title,
+artist and stable group ID. Search/Favorites continue to apply; cover updates
+reorder the projected results. The missing-artwork rescan already selected only
+uncovered canonical album groups; its initial counter incorrectly showed all
+tracks. It now counts those album groups, reports per-album progress and enumerates
+each shared directory once per run. Next rescan obtains fresh folder evidence.
+
+Plan: [missing artwork sort](docs/exec-plans/active/missing-artwork-sort.md).
+Source before-images, exact changed-source hashes, test/build logs, package receipt
+and previous app: `/Volumes/projects/songbird-public-verification/artwork-20261005/`.
+
+Test environment: `SONGBIRD_OFFLINE_DEPS=1`,
+`SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-artwork-20261005/profile`,
+`SONGBIRD_UI_TESTING=1`.
+
+- `./check.sh quick -j 4 --filter 'AlbumGridInteractionTests|LibraryHealthProjectionStoreTests'`:
+  final run passed 16 Swift Testing cases. Initial compilation required explicit
+  returns after adding a multi-statement sort case; final build has no new diagnostics.
+  Synthetic tests cover order, ties, search/favorites, cover refresh, excluded
+  covered albums, relevant-album totals, directory reuse and next-run freshness.
+- `./check.sh quick -j 4`: 342 XCTest cases, two optional-store skips, two failed
+  assertions in the unchanged Finder-notice test from the prior divider pass;
+  all 345 Swift Testing cases passed. Full suite remains not green.
+- `SONGBIRD_OFFLINE_DEPS=1 ./build.sh /private/tmp/songbird-artwork-20261005/Songbird.app`:
+  passed; release compilation 84.36 seconds, package strict signatures verified.
+- Reinstalled `/Applications/Songbird.app`: all 44 file/link entries match the
+  built package; signing identity matches the previous installation. Normal app
+  restart is user-controlled.
+
+No real-library, media or account checks. Black-box sort-menu and rescan visual
+validation remain unavailable because the isolated runner requires missing Git
+metadata (failure recorded in the prior divider pass). No backend changes;
+audio TSan/hardware tests were not repeated. Publication manifest is a prior snapshot.
+
+
+## Pane divider spacing — 2026-10-05
+
+Tree: `/Volumes/projects/songbird-public` (no Git metadata). MainView and
+PlayerWindowMetrics now reserve one point per pane divider instead of eight;
+the invisible eight-point pointer target and keyboard slider remain. Existing
+native rendering/layout tests check the narrow frame and updated pane budgets.
+Before-images and logs: `/private/tmp/songbird-divider-20261005/`.
+
+Commands used the environment `SONGBIRD_OFFLINE_DEPS=1`,
+`SONGBIRD_UI_TEST_ROOT=/private/tmp/songbird-divider-20261005/profile`, and
+`SONGBIRD_UI_TESTING=1`:
+
+- `./check.sh quick -j 4 --filter 'ResizableDividerTests|UsabilityRemediationTests|PlayerWindowConfigurationTests'`:
+  passed, three XCTest and 54 Swift Testing cases. An initial build was rejected
+  because a test indentation edit overlapped compilation; the final retry passed.
+- `./check.sh quick -j 4`: 342 XCTest cases, two optional-store skips and two
+  failed assertions in `testShowInFinderReportsAnUnavailableSelectionWithoutRevealingIt`;
+  all 343 Swift Testing cases passed. The Finder notice test also failed alone
+  with `--filter LibraryItemActionHandlerTests.testShowInFinderReportsAnUnavailableSelectionWithoutRevealingIt`.
+  That action handler was not edited. The full suite is not green.
+- `./scripts/ai-usability --fixture standard --prepare-only`: exited 128 before
+  launching; the runner requires Git metadata absent from this copy. Actual app
+  appearance and pointer/keyboard resizing remain unverified.
+
+Changed Swift SHA-256 values:
+
+```text
+b961b76ac4fc6d7bb3eb93e8890ec04b9de67a3c04e78c5bfbbfead692c10abc  Sources/Views/MainView.swift
+18f93426d2ae859352e4fc33120f085cb4079ccaa14e2c46d999c2e8c8bcbf94  Sources/Utils/PlayerWindowMetrics.swift
+3ba4642cf24ce0d61f4f9774bbacdfc111ff008d41d7352deb1ef3535aadf2ad  Tests/SongbirdTests/ResizableDividerTests.swift
+8f26a6c3b02c8cd2bffb4fa157c9440c43ba0ed0e70356f4ddb1cd3b518dfed7  Tests/SongbirdTests/UsabilityRemediationTests.swift
+```
+
+Owner-requested build/reinstall followed: `SONGBIRD_OFFLINE_DEPS=1 ./build.sh
+/private/tmp/songbird-divider-install-20261005/Songbird.app` passed (release
+compilation 103.17 seconds), including strict signature verification. Reinstalled
+`/Applications/Songbird.app`; all 44 file/link entries match the built package and
+its designated requirement matches the previous installation. Backup, build log
+and install receipt are retained under
+`/Volumes/projects/songbird-public-verification/divider-20261005/`. The normal app
+was not restarted. No backend changes; audio TSan and hardware gates were not run.
+The referenced `.agent/PLANS.md` is also absent; this bounded styling correction
+has no complex behavior ExecPlan. Publication manifest remains the prior snapshot.
+
+
+## File location in table, metadata editor, and errors — 2026-09-18
+
+Added a supported track-table column **Location** (hidden by default; enable via
+column menu). Edit Metadata shows a read-only Location field (selectable path).
+File-not-found playback errors always include the absolute path; Play Now surfaces
+those errors instead of failing silently. Volume/permission resolver messages already
+carried paths.
+
+- Focused: `FileLocationPresentationTests`, `TrackTableColumnPrefsTests` label set.
+
+## Embedded album art detection — 2026-09-18
+
+m4a/MP3 covers often appear as `covr`/`cover`/APIC without the word “artwork”, and
+already-imported albums only scanned for folder art when opened. MetadataReader now
+recognizes those keys, loads artwork via multiple AVFoundation value paths, and only
+accepts decodable image bytes. Opening an album without art re-reads folder files
+first, then embedded tags.
+
+- Focused: `MetadataReaderArtworkKeyTests`; folder-art suite still exercises discovery.
+- UI re-open of a placeholder album with an embedded m4a cover was not run here.
+
+## Play history in Queue section — 2026-09-18
+
+Added a durable **History** destination under the sidebar Queue section. Qualified
+plays append to `PlayHistoryStore` (UserDefaults log, newest first, capped at 500)
+and the view also shows this session’s `PlaybackQueue` history. First open seeds
+from library `lastPlayed` when the log is empty. Play Queue’s existing “Previously
+Played” section is unchanged.
+
+- Focused: `PlayHistoryStoreTests` + navigation destination round-trip including
+  `.playHistory` — 14 tests, 0 failures.
+- Full `./check.sh quick` / `swift test`: XCTest 336 (two expected optional-store
+  skips), 0 failures; Swift Testing 343 in 45 suites, 0 failures.
+- Command tree: `songbird-public/songbird-public`. UI open/play/close not run in
+  this pass.
+
 ## Album list and playback position restore — 2026-09-18
 
 Closing the main window (or relaunching) used to drop the user back to the top of

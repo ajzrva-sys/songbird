@@ -1,6 +1,7 @@
 import CoreGraphics
 
 public enum PlayerWindowMetrics {
+    public static let paneDividerWidth: CGFloat = 1
     public static let mainMinimumWidth: CGFloat = 760
     public static let mainMinimumHeight: CGFloat = 520
     public static let libraryColumnMinimumWidth: CGFloat = 560
@@ -33,7 +34,7 @@ public enum PlayerWindowLayoutPolicy {
             min(
                 PlayerWindowMetrics.sidebarMaximumWidth,
                 max(PlayerWindowMetrics.sidebarMinimumWidth,
-                    availableWidth - PlayerWindowMetrics.libraryColumnMinimumWidth - 8)
+                    availableWidth - PlayerWindowMetrics.libraryColumnMinimumWidth - PlayerWindowMetrics.paneDividerWidth)
             )
         )
     }
@@ -44,7 +45,7 @@ public enum PlayerWindowLayoutPolicy {
             min(
                 PlayerWindowMetrics.nowPlayingPaneMaximumWidth,
                 max(PlayerWindowMetrics.nowPlayingPaneMinimumWidth,
-                    availableWidth - PlayerWindowMetrics.libraryColumnMinimumWidth - 8)
+                    availableWidth - PlayerWindowMetrics.libraryColumnMinimumWidth - PlayerWindowMetrics.paneDividerWidth)
             )
         )
     }
@@ -56,7 +57,8 @@ public enum PlayerWindowLayoutPolicy {
         desiredSidebar: CGFloat,
         desiredRightPane: CGFloat
     ) -> PaneWidths {
-        let dividerTotal: CGFloat = (sidebarShown ? 8 : 0) + (rightPaneShown ? 8 : 0)
+        let dividerTotal: CGFloat = (sidebarShown ? PlayerWindowMetrics.paneDividerWidth : 0)
+            + (rightPaneShown ? PlayerWindowMetrics.paneDividerWidth : 0)
         var budget = max(0, totalWidth - PlayerWindowMetrics.libraryColumnMinimumWidth - dividerTotal)
         var sidebar: CGFloat = 0
         var right: CGFloat = 0

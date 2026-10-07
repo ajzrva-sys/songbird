@@ -26,13 +26,14 @@ final class ResizableDividerTests: XCTestCase {
         let host = NSHostingView(rootView: ResizableDivider(
             width: binding, minimum: 180, maximum: 420, direction: .expandsRight
         ))
-        host.frame = NSRect(x: 0, y: 0, width: 8, height: 400)
+        host.frame = NSRect(x: 0, y: 0, width: PlayerWindowMetrics.paneDividerWidth, height: 400)
         for maximum in [420.0, 185.0, 180.0, 192.0, 420.0] {
             host.rootView = ResizableDivider(
                 width: binding, minimum: 180, maximum: maximum, direction: .expandsRight
             )
             host.layoutSubtreeIfNeeded()
             XCTAssertTrue(host.fittingSize.height.isFinite)
+            XCTAssertEqual(host.fittingSize.width, 1, "Only the grey line reserves layout space")
             XCTAssertEqual(preferredWidth, 260, "Layout must not overwrite the saved preference")
         }
     }
@@ -47,8 +48,9 @@ final class ResizableDividerTests: XCTestCase {
         // native Slider is constructed, before pointer or keyboard interaction.
         _ = divider.body
         let host = NSHostingView(rootView: divider)
-        host.frame = NSRect(x: 0, y: 0, width: 8, height: 400)
+        host.frame = NSRect(x: 0, y: 0, width: PlayerWindowMetrics.paneDividerWidth, height: 400)
         host.layoutSubtreeIfNeeded()
         XCTAssertTrue(host.fittingSize.height.isFinite)
+        XCTAssertEqual(host.fittingSize.width, 1, "Only the grey line reserves layout space")
     }
 }

@@ -121,6 +121,10 @@ public enum TagWriterService {
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
             throw TagWriterError.exportSessionUnavailable(path: path)
         }
+        let outputType = fileType(for: path)
+        guard exportSession.supportedFileTypes.contains(outputType) else {
+            throw TagWriterError.unsupportedFormat(path: path)
+        }
 
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -131,7 +135,7 @@ public enum TagWriterService {
         )
 
         exportSession.outputURL = tempURL
-        exportSession.outputFileType = fileType(for: path)
+        exportSession.outputFileType = outputType
         exportSession.metadata = metadata
 
         await exportSession.export()
@@ -157,7 +161,7 @@ public enum TagWriterService {
         artworkData: Data?,
         artworkCleared: Bool
     ) async throws -> [AVMetadataItem] {
-        let existing = (try? await asset.load(.metadata)) ?? []
+        let existing = try await MetadataReader.completeAVMetadata(in: asset)
 
         // Build the set of (key, keySpace) pairs we are replacing
         let replacedPairs: Set<MetadataKeyPair> = Set(fields.keys.compactMap { field in
@@ -170,7 +174,8 @@ public enum TagWriterService {
             if item.commonKey == .commonKeyArtwork, artworkData != nil || artworkCleared {
                 return false
             }
-            if let key = item.key as? String, let ks = item.keySpace {
+            let key = MetadataReader.keyDescription(item.key)
+            if !key.isEmpty, let ks = item.keySpace {
                 if replacedPairs.contains(MetadataKeyPair(key: key, keySpace: ks)) {
                     return false
                 }

@@ -190,7 +190,7 @@ public struct EmptyTitlesView: View {
             if reviewItems.isEmpty { showReview = false }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save title: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save title: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -219,7 +219,7 @@ public struct EmptyTitlesView: View {
             showReview = false
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save titles: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save titles: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 

@@ -119,6 +119,7 @@ public struct TrackTableView: View {
     public var emptyMessage: String
     public var emptyHint: String
     public var publishesSummary: Bool
+    public var sourceEmptyAction: LibraryEmptyStateAction?
 
     @EnvironmentObject private var librarySnapshots: LibrarySnapshotStore
     @EnvironmentObject private var albumProjectionStore: LibraryAlbumProjectionStore
@@ -126,14 +127,13 @@ public struct TrackTableView: View {
     @EnvironmentObject private var playbackPresentation: PlaybackPresentationState
     @EnvironmentObject private var actions: LibraryItemActionHandler
     @EnvironmentObject private var librarySearch: LibrarySearchCoordinator
+    @EnvironmentObject private var navigation: LibraryNavigationCoordinator
     @Environment(\.colorScheme) private var colorScheme
 
     @FocusState private var searchFocused: Bool
     @State private var typeSelectBuffer = ""
     @State private var typeSelectGeneration = 0
-    @State private var selectedArtist: String?
-    @State private var selectedAlbumIDs: Set<String> = []
-    @State private var selectedGenre: String?
+    @State private var filters = TrackTableFilterState()
     @State private var selectedTrackIDs: Set<UUID> = []
     @State private var selectionAnchorID: UUID?
     @State private var trackIDsPendingDelete: [UUID] = []
@@ -157,7 +157,6 @@ public struct TrackTableView: View {
     @AppStorage(TrackTableColumnPrefs.primaryColumnOrderMigrationKey)
     private var migratedPrimaryColumnOrder = false
     @AppStorage("cascadeFilter.visible") private var cascadeVisible = true
-    @AppStorage(PlayerBarPlacement.storageKey) private var playerBarPlacementRaw = PlayerBarPlacement.top.rawValue
     @State private var resizePreviewWidths: [TrackSortColumn: CGFloat] = [:]
 
     private var tablePresentation: TrackTablePresentation {
@@ -172,7 +171,8 @@ public struct TrackTableView: View {
         supportsSearch: Bool = true,
         emptyMessage: String = "No Music Loaded",
         emptyHint: String = "Drop files here or use File ▸ Scan Folder…",
-        publishesSummary: Bool = true
+        publishesSummary: Bool = true,
+        sourceEmptyAction: LibraryEmptyStateAction? = nil
     ) {
         self.title = title
         self.collection = collection
@@ -182,6 +182,7 @@ public struct TrackTableView: View {
         self.emptyMessage = emptyMessage
         self.emptyHint = emptyHint
         self.publishesSummary = publishesSummary
+        self.sourceEmptyAction = sourceEmptyAction
 
         switch TrackTableSortPreference.resolve(for: collection) {
         case .shared:
@@ -237,22 +238,18 @@ public struct TrackTableView: View {
         guard playlistSnapshot?.isSmart == false else { return false }
         return usePlaylistOrder
             && searchText.isEmpty
-            && selectedArtist == nil
-            && selectedAlbumIDs.isEmpty
-            && selectedGenre == nil
-    }
-
-    private var usesBottomTitleband: Bool {
-        (PlayerBarPlacement(rawValue: playerBarPlacementRaw) ?? .top) == .bottom
+            && filters.selectedArtist == nil
+            && filters.selectedAlbumIDs.isEmpty
+            && filters.selectedGenre == nil
     }
 
     private var request: TrackTableRequest {
         TrackTableRequest(
             collection: collection,
             searchText: searchText,
-            selectedArtist: selectedArtist,
-            selectedAlbumIDs: selectedAlbumIDs,
-            selectedGenre: selectedGenre,
+            selectedArtist: filters.selectedArtist,
+            selectedAlbumIDs: filters.selectedAlbumIDs,
+            selectedGenre: filters.selectedGenre,
             sortColumn: activeSortColumn,
             sortAscending: activeSortAscending,
             usePlaylistOrder: usePlaylistOrder,
@@ -284,8 +281,15 @@ public struct TrackTableView: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                if showsHeader {
-                    header.frame(width: geometry.size.width)
+                header.frame(width: geometry.size.width)
+                if filters.isActive {
+                    TrackTableFilterChips(
+                        chips: filters.chips(facets: projection.facets),
+                        resultCount: projection.rows.count,
+                        isUpdating: projectedInput != projectionInput,
+                        remove: { filters.remove($0) },
+                        clear: { filters.clear() }
+                    )
                 }
                 if projection.sourceWasEmpty, projection.sourceRevision > 0 {
                     emptyState(sourceIsEmpty: true)
@@ -296,9 +300,9 @@ public struct TrackTableView: View {
                             maximumHeight: filterBrowserMaximumHeight(
                                 availableHeight: geometry.size.height
                             ),
-                            selectedArtist: $selectedArtist,
-                            selectedAlbumIDs: $selectedAlbumIDs,
-                            selectedGenre: $selectedGenre
+                            selectedArtist: $filters.selectedArtist,
+                            selectedAlbumIDs: $filters.selectedAlbumIDs,
+                            selectedGenre: $filters.selectedGenre
                         )
                         .frame(width: geometry.size.width)
                         .clipped()
@@ -390,17 +394,14 @@ public struct TrackTableView: View {
                 ? nil
                 : FocusedLibrarySearchCommands(focusSearch: librarySearch.requestFocus)
         )
-        .task(id: librarySearch.focusRequestID) {
-            guard showsHeader, supportsSearch else { return }
-            await Task.yield()
-            searchFocused = true
-        }
         .onKeyPress(
             characters: .alphanumerics.union(CharacterSet(charactersIn: " .'\"-")),
             phases: .down
         ) { press in
-            guard searchFocused == false,
-                  press.modifiers.isDisjoint(with: [.command, .control, .option]) else {
+            guard TrackTableKeyboardRouting.acceptsTypeSelect(
+                searchFocused: searchFocused,
+                modifiers: press.modifiers
+            ) else {
                 return .ignored
             }
             handleTypeSelect(press.characters)
@@ -426,30 +427,41 @@ public struct TrackTableView: View {
     }
 
     private func filterBrowserMaximumHeight(availableHeight: CGFloat) -> CGFloat {
-        let destinationHeader = showsHeader
-            ? (usesBottomTitleband ? MainView.titlebarCapHeight : 40)
-            : 0
+        let destinationHeader: CGFloat = 46
         let minimumTrackRow: CGFloat = tablePresentation.showsArtwork ? 36 : 22
         let reserved = destinationHeader
             + tablePresentation.headerHeight
             + minimumTrackRow * 3
-            + 8
+            + 8 + (filters.isActive ? 40 : 0)
         return max(CascadeFilterBar.minHeight, availableHeight - reserved)
     }
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text(title)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(textColor)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            searchField
+            if showsHeader {
+                Text(title)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(textColor)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            if supportsSearch {
+                LibrarySearchField(
+                    scopeTitle: title,
+                    focused: $searchFocused,
+                    identifier: "library.trackSearch"
+                )
+            }
+            Spacer(minLength: 0)
+            TrackTableViewMenu(
+                preferencesRaw: $columnPrefsRaw,
+                presentationRaw: $tablePresentationRaw,
+                browserVisible: $cascadeVisible,
+                showsBrowserOption: showsFilters
+            )
         }
-        .padding(.leading, 16)
-        .padding(.trailing, 36)
-        .frame(height: usesBottomTitleband ? MainView.titlebarCapHeight : 40)
+        .padding(.horizontal, 16)
+        .frame(height: 46)
         .frame(maxWidth: .infinity)
         .background(SongbirdTheme.background(for: colorScheme))
         .overlay(alignment: .bottom) {
@@ -458,39 +470,6 @@ public struct TrackTableView: View {
                 .frame(height: 1)
                 .accessibilityHidden(true)
         }
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(secondaryColor)
-                .accessibilityHidden(true)
-            TextField("Search \(title)", text: $librarySearch.query)
-                .textFieldStyle(.plain)
-                .font(.caption)
-                .focused($searchFocused)
-                .accessibilityIdentifier("library.trackSearch")
-            if searchText.isEmpty == false {
-                Button("Clear Search", systemImage: "xmark.circle.fill") {
-                    librarySearch.clear()
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.plain)
-                .font(.caption)
-                .foregroundStyle(secondaryColor.opacity(0.7))
-                .accessibilityInputLabels(["Clear Search", "Clear"])
-            }
-        }
-        .padding(.leading, 8)
-        .padding(.trailing, 7)
-        .padding(.vertical, 4)
-        .frame(width: 160, height: 24)
-        .background(
-            Capsule(style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.12) : Color(white: 0.78))
-        )
-        .clipShape(Capsule(style: .continuous))
     }
 
     private var columnHeader: some View {
@@ -529,30 +508,6 @@ public struct TrackTableView: View {
                 }
             }
         )
-    }
-
-    @ViewBuilder
-    private var columnVisibilityMenu: some View {
-        let preferences = TrackTableColumnPrefs.decode(columnPrefsRaw)
-        ForEach(preferences.sorted {
-            ($0.column?.label ?? $0.id).localizedCaseInsensitiveCompare($1.column?.label ?? $1.id)
-                == .orderedAscending
-        }) { preference in
-            if let column = preference.column, column.isSupported {
-                Toggle(
-                    column.label,
-                    isOn: Binding(
-                        get: { column == .title || preference.visible },
-                        set: { _ in toggleColumnVisibility(column) }
-                    )
-                )
-                .disabled(column == .title)
-            }
-        }
-        Divider()
-        Button("Reset Columns") {
-            columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
-        }
     }
 
     @ViewBuilder
@@ -695,15 +650,44 @@ public struct TrackTableView: View {
                 .foregroundStyle(secondaryColor)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 360)
-            if sourceIsEmpty {
-                Text("File ▸ Scan Folder…  ·  ⌘⇧O")
-                    .font(.caption)
-                    .foregroundStyle(secondaryColor.opacity(0.8))
-                    .padding(.top, 4)
+            if projectedInput == projectionInput {
+                HStack(spacing: 10) {
+                    if sourceIsEmpty {
+                        if let sourceAction = resolvedSourceEmptyAction {
+                            Button(sourceAction.kind.title) { sourceAction.perform() }
+                        }
+                    } else {
+                        ForEach(LibraryEmptyStatePolicy.filteredActions(
+                            hasSearch: !searchText.isEmpty,
+                            hasFilters: filters.isActive
+                        ), id: \.title) { kind in
+                            Button(kind.title) {
+                                switch kind {
+                                case .clearSearch: librarySearch.clear()
+                                case .clearFilters: filters.clear()
+                                default: break
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(24)
+    }
+
+    private var resolvedSourceEmptyAction: LibraryEmptyStateAction? {
+        if let sourceEmptyAction { return sourceEmptyAction }
+        guard let kind = LibraryEmptyStatePolicy.sourceAction(for: collection) else { return nil }
+        return LibraryEmptyStateAction(kind) {
+            switch kind {
+            case .importMusic: ImportSetupWindowPresenter.show()
+            case .browseAllTracks: navigation.selectRoot(.allTracks)
+            case .back: navigation.pop()
+            default: break
+            }
+        }
     }
 
     /// Whether the projection input differs only in sort order (not in
@@ -775,7 +759,7 @@ public struct TrackTableView: View {
             UsabilityPerformanceSignposts.usefulProjectionPublished(revision: result.sourceRevision)
             projectedSearchText = input.request.searchText
             projectedInput = input
-            selectedAlbumIDs.formIntersection(Set(result.facets.albums.map(\.id)))
+            filters.selectedAlbumIDs.formIntersection(Set(result.facets.albums.map(\.id)))
             selectedTrackIDs.formIntersection(result.indexByID.keys)
             if publishesSummary {
                 LibraryStatus.shared.summary.update(
@@ -1170,6 +1154,9 @@ private struct ProjectedTrackCell: View {
         case .bitRate: number(displayValues.text(for: .bitRate) ?? "—")
         case .sampleRate: number(displayValues.text(for: .sampleRate) ?? "—")
         case .kind: label(displayValues.text(for: .kind) ?? "—")
+        case .filePath:
+            label(displayValues.text(for: .filePath) ?? track.path)
+                .help(track.path)
         case .starRating:
             TrackStarRatingControl(
                 rating: Binding(

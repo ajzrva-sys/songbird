@@ -28,7 +28,14 @@ public struct NowPlayingBar: View {
     @AppStorage(NowPlayingLayoutSettings.faceplateWidthKey)
     private var faceplateWidth = NowPlayingLayoutSettings.defaultFaceplateWidth
     @AppStorage(NowPlayingLayoutSettings.faceplateHeightKey)
-    private var faceplateHeight = NowPlayingLayoutSettings.defaultFaceplateHeight
+    private var legacyFaceplateHeight = NowPlayingLayoutSettings.defaultFaceplateHeight
+    @AppStorage(MainPlayerReadability.heightKey)
+    private var mainFaceplateHeight = 0.0
+
+    private var faceplateHeight: Double {
+        get { MainPlayerReadability.savedHeight(main: mainFaceplateHeight, legacy: legacyFaceplateHeight) }
+        nonmutating set { mainFaceplateHeight = newValue }
+    }
     @AppStorage(NowPlayingLayoutSettings.leadingGapKey)
     private var leadingGap = NowPlayingLayoutSettings.defaultLeadingGap
     @AppStorage(NowPlayingLayoutSettings.trailingGapKey)
@@ -115,7 +122,9 @@ public struct NowPlayingBar: View {
     private let minimumRightEdgeClearance: CGFloat = 8
 
     private var renderedFaceplateWidth: Double { previewFaceplateWidth ?? faceplateWidth }
-    private var renderedFaceplateHeight: Double { previewFaceplateHeight ?? faceplateHeight }
+    private var renderedFaceplateHeight: Double {
+        MainPlayerReadability.resolvedHeight(previewFaceplateHeight ?? faceplateHeight)
+    }
     private var renderedLeadingGap: Double { previewLeadingGap ?? leadingGap }
     private var renderedTrailingGap: Double { previewTrailingGap ?? trailingGap }
     private var renderedButtonSpacing: Double { previewButtonSpacing ?? buttonSpacing }
@@ -228,7 +237,7 @@ public struct NowPlayingBar: View {
             itemOrder: toolbarItemsBinding,
             selectedZone: $selectedZone,
             faceplateWidth: $faceplateWidth,
-            faceplateHeight: $faceplateHeight,
+            faceplateHeight: Binding(get: { faceplateHeight }, set: { faceplateHeight = $0 }),
             leadingGap: $leadingGap,
             trailingGap: $trailingGap,
             leadingGapRange: leadingGapRange,
@@ -374,7 +383,7 @@ public struct NowPlayingBar: View {
             }
             faceplate
                 .frame(minWidth: 180, maxWidth: .infinity)
-                .frame(height: min(renderedFaceplateHeight, 44))
+                .frame(height: renderedFaceplateHeight)
             Menu {
                 Button("Volume Up") {
                     playbackEngine.setVolume(playbackEngine.volume + 0.05)
@@ -614,11 +623,11 @@ public struct NowPlayingBar: View {
                             if !heightDragArmed {
                                 heightDragArmed = true
                                 selectedZone = .faceplate
-                                dragStartHeight = faceplateHeight
+                                dragStartHeight = renderedFaceplateHeight
                             }
                             previewFaceplateHeight = NowPlayingLayoutSettings.clamp(
                                 dragStartHeight + Double(value.translation.height) * 2,
-                                to: NowPlayingLayoutSettings.faceplateHeightRange
+                                to: MainPlayerReadability.heightRange
                             )
                         }
                         .onEnded { _ in
@@ -627,7 +636,7 @@ public struct NowPlayingBar: View {
                             }
                             self.previewFaceplateHeight = nil
                             heightDragArmed = false
-                            dragStartHeight = faceplateHeight
+                            dragStartHeight = renderedFaceplateHeight
                         }
                 )
             }
@@ -730,7 +739,7 @@ public struct NowPlayingBar: View {
 
     private func enterLayoutEditing() {
         dragStartWidth = faceplateWidth
-        dragStartHeight = faceplateHeight
+        dragStartHeight = renderedFaceplateHeight
         dragStartLeadingGap = leadingGap
         dragStartTrailingGap = trailingGap
         dragStartButtonSpacing = buttonSpacing
@@ -753,7 +762,7 @@ public struct NowPlayingBar: View {
         controlsSpacing = NowPlayingLayoutSettings.defaultControlsSpacing
         toolbarItemsRaw = PlayerToolbarLayout.encode(PlayerToolbarLayout.defaults)
         dragStartWidth = faceplateWidth
-        dragStartHeight = faceplateHeight
+        dragStartHeight = renderedFaceplateHeight
         dragStartLeadingGap = leadingGap
         dragStartTrailingGap = trailingGap
         dragStartButtonSpacing = buttonSpacing
@@ -1219,14 +1228,14 @@ public struct NowPlayingBar: View {
                 VStack(spacing: 1) {
                     DiscogsTrackAttributionView(track: track, now: discogsClock.now)
                     Text(displayTitle(for: track))
-                        .font(faceplateFont(size: 11, weight: .semibold))
+                        .font(faceplateFont(size: MainPlayerReadability.titleSize, weight: .semibold))
                         .foregroundColor(SongbirdTheme.lcdTextColor(for: colorScheme))
                         .shadow(color: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.15), radius: 2)
                         .lineLimit(1)
                         .truncationMode(.tail)
 
                     Text(displaySubtitle(for: track))
-                        .font(faceplateFont(size: 9, weight: .regular))
+                        .font(faceplateFont(size: MainPlayerReadability.subtitleSize, weight: .regular))
                         .foregroundColor(SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.85))
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -1239,7 +1248,7 @@ public struct NowPlayingBar: View {
 
             HStack(spacing: 6) {
                 Text(formatTime(position))
-                    .font(faceplateFont(size: 9, weight: .regular))
+                    .font(faceplateFont(size: MainPlayerReadability.timeSize, weight: .regular))
                     .foregroundColor(SongbirdTheme.lcdTextColor(for: colorScheme))
                     .shadow(color: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.10), radius: 1)
                     .monospacedDigit()
@@ -1254,12 +1263,12 @@ public struct NowPlayingBar: View {
                 ) { fraction in
                     playbackEngine.seekTo(fraction * duration)
                 }
-                .frame(height: 8)
+                .frame(height: MainPlayerReadability.seekHeight)
                 .layoutPriority(1)
 
                 Button(action: cycleTimeMode) {
                     Text(timeTrailingLabel(position: position, duration: duration))
-                        .font(faceplateFont(size: 9, weight: .regular))
+                        .font(faceplateFont(size: MainPlayerReadability.timeSize, weight: .regular))
                         .foregroundColor(SongbirdTheme.lcdTextColor(for: colorScheme))
                         .shadow(color: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.10), radius: 1)
                         .monospacedDigit()
@@ -1282,12 +1291,22 @@ public struct NowPlayingBar: View {
 
     @ViewBuilder
     private func faceplateArtwork(for track: Track) -> some View {
-        ArtworkThumbnailView(
-            reference: ArtworkReference.resolved(for: track),
-            pointSize: CGSize(width: 28, height: 28),
-            accessibilityLabel: "Album artwork for \(track.audioCDMetadata(at: discogsClock.now).album)",
-            placeholderColor: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.12)
-        )
+        Button {
+            NotificationCenter.default.post(name: .openMiniPlayer, object: nil)
+        } label: {
+            ArtworkThumbnailView(
+                reference: ArtworkReference.resolved(for: track),
+                pointSize: CGSize(width: 28, height: 28),
+                accessibilityLabel: "Album artwork for \(track.audioCDMetadata(at: discogsClock.now).album)",
+                placeholderColor: SongbirdTheme.lcdTextColor(for: colorScheme).opacity(0.12)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isEditingLayout)
+        .accessibilityLabel("Switch to Mini Player")
+        .accessibilityIdentifier("player.switchToMiniPlayer")
+        .help("Switch to Mini Player")
     }
 
     private func timeTrailingLabel(position: TimeInterval, duration: TimeInterval) -> String {

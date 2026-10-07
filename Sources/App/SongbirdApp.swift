@@ -102,10 +102,12 @@ struct SongbirdApp: App {
                 .environmentObject(session.presentation)
                 .environmentObject(session.queue)
                 .environmentObject(session.audioOutput)
+                .environmentObject(PlayHistoryStore.shared)
                 .environmentObject(LibraryStatus.shared.importProgress)
                 .environmentObject(LibraryStatus.shared.selection)
                 .environmentObject(LibraryStatus.shared.summary)
                 .environmentObject(LibraryStatus.shared.notices)
+                .environmentObject(LibraryStatus.shared.activity)
                 .environmentObject(librarySnapshots)
                 .environmentObject(libraryHealth)
                 .environmentObject(albumProjectionStore)
@@ -125,6 +127,7 @@ struct SongbirdApp: App {
                 ))
                 .background(OpenWindowBridge())
                 .id(themeID)
+                .task { await LibraryStatus.shared.activity.load() }
                 .onAppear {
                     appDelegate.session = session
                     SongbirdDockIconManager.apply(for: selectedTheme)
@@ -132,7 +135,7 @@ struct SongbirdApp: App {
                         LibraryFolderWatcher.shared.applySettingsFromDefaults()
                     }
                     if let startupError = MediaLibrary.shared.startupError {
-                        LibraryStatus.shared.showPlaybackError(startupError)
+                        LibraryStatus.shared.showNotice(startupError, severity: .error, source: .library)
                     }
                     if startsPastImportSetup == false,
                        !UserDefaults.standard.bool(forKey: ImportSetupView.completedKey) {
@@ -320,16 +323,7 @@ struct SongbirdApp: App {
                 }
 
                 Menu("Columns") {
-                    ForEach(columnPrefs) { pref in
-                        if let column = TrackSortColumn(rawValue: pref.id), column.isSupported {
-                            Toggle(column.label, isOn: columnVisibilityBinding(column))
-                            .disabled(column == .title)
-                        }
-                    }
-                    Divider()
-                    Button("Reset Columns") {
-                        NotificationCenter.default.post(name: .resetTrackColumns, object: nil)
-                    }
+                    TrackTableColumnMenuItems(preferencesRaw: $columnPrefsRaw)
                 }
 
                 Divider()

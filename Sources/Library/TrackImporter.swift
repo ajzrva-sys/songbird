@@ -151,6 +151,45 @@ public enum TrackImporter {
         return .refreshed
     }
 
+    /// Recovers only missing catalog values from already-read file tags.
+    /// Bulk Health recovery uses this without analyzing audio for a missing BPM.
+    @discardableResult
+    static func recoverMissingFields(_ metadata: AudioMetadata, for track: Track) -> Bool {
+        var changed = false
+        func recoverText(_ current: inout String, _ tagged: String, placeholder: String? = nil) {
+            let value = tagged.trimmingCharacters(in: .whitespacesAndNewlines)
+            let old = current.trimmingCharacters(in: .whitespacesAndNewlines)
+            let missing = old.isEmpty || placeholder.map {
+                old.caseInsensitiveCompare($0) == .orderedSame
+            } == true
+            guard missing, !value.isEmpty,
+                  placeholder.map({ value.caseInsensitiveCompare($0) != .orderedSame }) ?? true else { return }
+            current = tagged
+            changed = true
+        }
+        func recoverNumber(_ current: inout Int, _ tagged: Int) {
+            guard current <= 0, tagged > 0 else { return }
+            current = tagged
+            changed = true
+        }
+        // A reader fallback derived from the filename is not embedded title evidence.
+        let filenameTitle = URL(fileURLWithPath: track.path).deletingPathExtension().lastPathComponent
+        if metadata.title != filenameTitle { recoverText(&track.title, metadata.title) }
+        recoverText(&track.artist, metadata.artist, placeholder: "Unknown Artist")
+        recoverText(&track.album, metadata.album, placeholder: "Unknown Album")
+        recoverText(&track.albumArtist, metadata.albumArtist, placeholder: "Unknown Artist")
+        recoverText(&track.genre, metadata.genre)
+        recoverText(&track.composer, metadata.composer)
+        recoverText(&track.comment, metadata.comment)
+        recoverNumber(&track.year, metadata.year)
+        recoverNumber(&track.trackNumber, metadata.trackNumber)
+        recoverNumber(&track.trackTotal, metadata.trackTotal)
+        recoverNumber(&track.discNumber, metadata.discNumber)
+        recoverNumber(&track.discTotal, metadata.discTotal)
+        recoverNumber(&track.beatsPerMinute, metadata.beatsPerMinute)
+        return changed
+    }
+
     private static func apply(_ meta: AudioMetadata, to track: Track, path: String) {
         track.title = meta.title
         track.artist = meta.artist

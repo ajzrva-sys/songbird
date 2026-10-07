@@ -74,10 +74,9 @@ From the repository root:
 
 ```sh
 ./build.sh
-open ./Songbird.app
 ```
 
-`build.sh` compiles release products, packages the runtime libraries and resources, and verifies the resulting app's signature. It **replaces the output `Songbird.app` bundle**; do not point it at an installation you need to preserve. Building does not itself launch the app.
+`build.sh` compiles release products, packages the runtime libraries and resources, verifies the resulting app's signature, and reveals the finished `Songbird.app` in Finder. Use `--open` to launch it, or `--no-reveal` for a quiet build. It **replaces the output `Songbird.app` bundle**; do not point it at an installation you need to preserve.
 
 #### Keeping Keychain access across local updates
 

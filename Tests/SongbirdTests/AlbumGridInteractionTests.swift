@@ -1,4 +1,5 @@
 import AppKit
+import SwiftData
 import Testing
 @testable import SongbirdLib
 
@@ -47,6 +48,173 @@ struct AlbumGridInteractionTests {
         #expect(await worker.projectionCount() == 1)
         #expect(first.orderedIDs == ["a", "b"])
         #expect(first.contextAlbums(clickedID: "b", selectedIDs: ["a", "b"]).map(\.id) == ["a", "b"])
+    }
+
+    @Test("Artist Albums uses exact track artists and retains complete album groups")
+    func artistScopeMembershipAndFilters() {
+        let compilation = LibraryAlbumGroupSnapshot(
+            id: "compilation", title: "Compilation", artist: "Various Artists",
+            year: 2000, dateAdded: .distantPast, albumIDs: [UUID(), UUID()],
+            trackIDs: [UUID(), UUID()], artworkReference: nil, discCount: 2,
+            isFavorite: true, contributingArtistNames: ["CAPSULE", "Guest"]
+        )
+        let albumArtistOnly = LibraryAlbumGroupSnapshot(
+            id: "album-artist-only", title: "Credited Album", artist: "CAPSULE",
+            year: 2001, dateAdded: .distantPast, albumIDs: [UUID()],
+            trackIDs: [UUID()], artworkReference: nil, discCount: 1,
+            isFavorite: true, contributingArtistNames: ["Different Performer"]
+        )
+        let unfavorited = LibraryAlbumGroupSnapshot(
+            id: "unfavorited", title: "Another Album", artist: "CAPSULE",
+            year: 2002, dateAdded: .distantPast, albumIDs: [UUID()],
+            trackIDs: [UUID()], artworkReference: nil, discCount: 1,
+            isFavorite: false, contributingArtistNames: ["CAPSULE"]
+        )
+        let groups = [compilation, albumArtistOnly, unfavorited]
+
+        let result = AlbumGridFilter.apply(
+            to: groups, searchText: "", favoritesOnly: false, sortOrder: .year,
+            scope: .artist(name: "CAPSULE")
+        )
+        #expect(result.map(\.id) == ["unfavorited", "compilation"])
+        #expect(result.last == compilation)
+        #expect(AlbumGridFilter.apply(
+            to: groups, searchText: "Compilation", favoritesOnly: true, sortOrder: .title,
+            scope: .artist(name: "CAPSULE")
+        ) == [compilation])
+        #expect(AlbumGridFilter.apply(
+            to: groups, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "capsule")
+        ).isEmpty)
+        #expect(AlbumGridFilter.apply(
+            to: groups, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Guest")
+        ) == [compilation])
+    }
+
+    @Test("Changing artist scope invalidates the album grid cache")
+    func artistScopeCache() async throws {
+        let groups = [
+            LibraryAlbumGroupSnapshot(
+                id: "first", title: "First", artist: "Album Artist", year: 2000,
+                dateAdded: .distantPast, albumIDs: [UUID()], trackIDs: [UUID()],
+                artworkReference: nil, discCount: 1, isFavorite: false,
+                contributingArtistNames: ["First Performer"]
+            ),
+            LibraryAlbumGroupSnapshot(
+                id: "second", title: "Second", artist: "Album Artist", year: 2000,
+                dateAdded: .distantPast, albumIDs: [UUID()], trackIDs: [UUID()],
+                artworkReference: nil, discCount: 1, isFavorite: false,
+                contributingArtistNames: ["Second Performer"]
+            ),
+        ]
+        let worker = AlbumGridProjectionWorker()
+        let firstRequest = AlbumGridProjectionRequest(
+            sourceRevision: 1, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "First Performer")
+        )
+        let secondRequest = AlbumGridProjectionRequest(
+            sourceRevision: 1, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Second Performer")
+        )
+
+        #expect(try await worker.project(groups: groups, request: firstRequest).orderedIDs == ["first"])
+        #expect(try await worker.project(groups: groups, request: firstRequest).orderedIDs == ["first"])
+        #expect(await worker.projectionCount() == 1)
+        #expect(try await worker.project(groups: groups, request: secondRequest).orderedIDs == ["second"])
+        #expect(await worker.projectionCount() == 2)
+    }
+
+    @Test("Artist membership survives presentation refresh and changes with track metadata")
+    @MainActor
+    func artistMembershipRefreshAndFallback() async throws {
+        let identifier = Track(path: "/Fixture/Album/01.flac", title: "Fixture").persistentModelID
+        let albumID = UUID()
+        let trackID = UUID()
+        func track(artist: String) -> LibraryTrackSnapshot {
+            LibraryTrackSnapshot(
+                id: trackID, persistentIdentifier: identifier, title: "Fixture",
+                artist: artist, album: "Album", albumArtist: "Album Artist",
+                path: "/Fixture/Album/01.flac", albumID: albumID
+            )
+        }
+        let album = LibraryAlbumSnapshot(
+            id: albumID, persistentIdentifier: identifier, title: "Album",
+            artist: "Album Artist", trackIDs: [trackID]
+        )
+        let firstSnapshot = LibrarySnapshot(
+            revision: 1, albumStructureRevision: 1,
+            tracks: [track(artist: "Performer")], albums: [album], playlists: []
+        )
+        let worker = LibraryAlbumProjectionWorker()
+        let store = LibraryAlbumProjectionStore(worker: worker)
+        let fallback = try #require(store.group(containing: albumID, fallback: firstSnapshot))
+        #expect(fallback.artist == "Album Artist")
+        #expect(fallback.contributingArtistNames == ["Performer"])
+        await store.update(from: firstSnapshot)
+        let first = try #require(store.group(containing: albumID))
+        #expect(first.contributingArtistNames == ["Performer"])
+
+        await store.update(from: LibrarySnapshot(
+            revision: 2, albumStructureRevision: 1,
+            tracks: [track(artist: "Performer")], albums: [album.withFavorite(true)], playlists: []
+        ))
+        let decorated = try #require(store.group(containing: albumID))
+        #expect(decorated.isFavorite)
+        #expect(decorated.contributingArtistNames == ["Performer"])
+        #expect(await worker.projectionCount() == 1)
+
+        await store.update(from: LibrarySnapshot(
+            revision: 3, albumStructureRevision: 3,
+            tracks: [track(artist: "Renamed Performer")], albums: [album.withFavorite(true)], playlists: []
+        ))
+        let renamed = try #require(store.group(containing: albumID))
+        #expect(renamed.id == first.id)
+        #expect(renamed.contributingArtistNames == ["Renamed Performer"])
+        #expect(AlbumGridFilter.apply(
+            to: store.groups, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Performer")
+        ).isEmpty)
+        #expect(AlbumGridFilter.apply(
+            to: store.groups, searchText: "", favoritesOnly: false, sortOrder: .title,
+            scope: .artist(name: "Renamed Performer")
+        ) == [renamed])
+        #expect(await worker.projectionCount() == 2)
+    }
+
+    @Test("Saving a track artist refreshes the artist album membership")
+    @MainActor
+    func savedArtistMetadataRefreshesMembership() async throws {
+        let schema = Schema(versionedSchema: SongbirdSchemaV4.self)
+        let container = try ModelContainer(for: schema, configurations: [
+            ModelConfiguration(schema: schema, isStoredInMemoryOnly: true),
+        ])
+        let context = container.mainContext
+        context.autosaveEnabled = false
+        let album = Album(title: "Fixture Album", artist: "Album Artist")
+        let track = Track(
+            path: "/Fixture/Artist Album/01.flac", title: "Fixture Track",
+            artist: "Original Performer", album: album.title
+        )
+        track.albumArtist = album.artist
+        track.albumRelation = album
+        context.insert(album)
+        context.insert(track)
+        try context.save()
+        let snapshots = LibrarySnapshotStore(modelContainer: container, startsImmediately: false)
+        await snapshots.refresh()
+        let albums = LibraryAlbumProjectionStore()
+        await albums.update(from: snapshots.snapshot)
+        let originalStructureRevision = snapshots.snapshot.albumStructureRevision
+        #expect(albums.groups.first?.contributingArtistNames == ["Original Performer"])
+
+        track.artist = "New Performer"
+        try context.save()
+        await snapshots.refreshAfterMutation()
+        #expect(snapshots.snapshot.albumStructureRevision != originalStructureRevision)
+        await albums.update(from: snapshots.snapshot)
+        #expect(albums.groups.first?.contributingArtistNames == ["New Performer"])
+        #expect(albums.groups.first?.artist == "Album Artist")
     }
 
     @Test("Recently Added fixes the newest 100 before applying search and Favorites")
@@ -110,6 +278,42 @@ struct AlbumGridInteractionTests {
         )
 
         #expect(result.map(\.id) == ["a", "b", "c"])
+    }
+
+    @Test("Missing Album Art sorts uncovered albums first and preserves filters")
+    func missingArtworkSort() async throws {
+        func group(_ id: String, _ title: String, covered: Bool, favorite: Bool = true) -> LibraryAlbumGroupSnapshot {
+            LibraryAlbumGroupSnapshot(
+                id: id, title: title, artist: "Artist", year: 2000, dateAdded: .distantPast,
+                albumIDs: [UUID()], trackIDs: [UUID()],
+                artworkReference: covered ? .embedded(id: UUID(), data: Data([1])) : nil,
+                discCount: 1, isFavorite: favorite
+            )
+        }
+        let groups = [
+            group("covered", "Alpha", covered: true),
+            group("z", "Zed", covered: false, favorite: false),
+            group("b", "Same", covered: false),
+            group("a", "Same", covered: false),
+        ]
+        let result = AlbumGridFilter.apply(to: groups, searchText: "", favoritesOnly: false, sortOrder: .missingArtwork)
+        #expect(result.map(\.id) == ["a", "b", "z", "covered"])
+        let filtered = AlbumGridFilter.apply(to: groups, searchText: "Same", favoritesOnly: true, sortOrder: .missingArtwork)
+        #expect(filtered.map(\.id) == ["a", "b"])
+        let favorites = AlbumGridFilter.apply(to: groups, searchText: "", favoritesOnly: true, sortOrder: .missingArtwork)
+        #expect(favorites.map(\.id) == ["a", "b", "covered"])
+
+        let worker = AlbumGridProjectionWorker()
+        let first = try await worker.project(groups: groups, request: AlbumGridProjectionRequest(
+            sourceRevision: 1, searchText: "", favoritesOnly: false, sortOrder: .missingArtwork
+        ))
+        var updated = groups
+        updated[3] = group("a", "Same", covered: true)
+        let second = try await worker.project(groups: updated, request: AlbumGridProjectionRequest(
+            sourceRevision: 2, searchText: "", favoritesOnly: false, sortOrder: .missingArtwork
+        ))
+        #expect(first.orderedIDs == ["a", "b", "z", "covered"])
+        #expect(second.orderedIDs == ["b", "z", "covered", "a"])
     }
 
     private func album(id: String, title: String, dateAdded: Date) -> LibraryAlbumGroupSnapshot {

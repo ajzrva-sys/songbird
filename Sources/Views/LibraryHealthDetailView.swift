@@ -16,6 +16,8 @@ public struct LibraryHealthDetailView: View {
     @State private var selectedCandidates: [UUID: String] = [:]
     @State private var initializedPlanID: UUID?
     @State private var confirmsApply = false
+    @State private var confirmsFileSave = false
+    @State private var confirmsArtworkFileSave = false
     @State private var confirmsRelocation = false
     @State private var confirmsRemoval = false
     @State private var selectedRelocationTrackIDs: Set<UUID> = []
@@ -59,6 +61,18 @@ public struct LibraryHealthDetailView: View {
         } message: {
             Text("Songbird will update the checked findings in one catalog transaction. Audio files and their tags are not changed.")
         }
+        .alert("Save Checked Tags to Audio Files?", isPresented: $confirmsFileSave) {
+            Button("Cancel", role: .cancel) {}
+            Button("Save \(safeFileChangeCount) File Tags") { saveCheckedFileTags() }
+        } message: {
+            Text("Songbird will fill verified missing file tags from the checked safe suggestions. Existing file tags are preserved, and each saved copy is checked before replacement. Catalog Undo does not undo file tags.")
+        }
+        .alert("Save Library Artwork to Audio Files?", isPresented: $confirmsArtworkFileSave) {
+            Button("Cancel", role: .cancel) {}
+            Button("Save Missing File Artwork") { saveLibraryArtwork() }
+        } message: {
+            Text("Songbird will check every library track whose album has saved artwork and embed that cover only in files missing artwork. Existing embedded pictures are preserved. Each saved copy is verified before replacement; file changes cannot be undone from the catalog.")
+        }
         .alert("Relocate Missing Library Records?", isPresented: $confirmsRelocation) {
             Button("Cancel", role: .cancel) {}
             Button("Relocate \(selectedRelocationTrackIDs.count)") { applyRelocations() }
@@ -76,12 +90,13 @@ public struct LibraryHealthDetailView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let status = LibraryHealthStatusPresentation(state: state)
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(category.displayName).font(.title2.weight(.semibold))
                     if let result = state.lastGood {
-                        Text("\(result.findingCount) finding\(result.findingCount == 1 ? "" : "s") · \(result.affectedTrackCount) affected track\(result.affectedTrackCount == 1 ? "" : "s")")
+                        Text("\(status.findingText(count: result.findingCount)) · \(result.affectedTrackCount) affected track\(result.affectedTrackCount == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -89,11 +104,38 @@ public struct LibraryHealthDetailView: View {
                 Spacer()
                 if case .checking = state { ProgressView().controlSize(.small) }
             }
+            HStack(spacing: 10) {
+                Label(status.title, systemImage: status.symbol)
+                if let checkedAt = status.checkedAt {
+                    Text("Results updated \(checkedAt.formatted(date: .abbreviated, time: .shortened))")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            if let message = status.failureMessage {
+                Label(message, systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
             HStack {
                 if hasApplicableProposals {
                     Button("Apply \(checkedProposalIDs.count) Checked…") { confirmsApply = true }
                         .buttonStyle(.borderedProminent)
                         .disabled(selectedChanges.isEmpty || isApplying)
+                }
+                if category.canRecoverFileTags {
+                    Button("Read File Tags") { recoverFileTags() }
+                        .disabled(affectedTrackIDs.isEmpty || isApplying || isChecking)
+                        .help("Recover missing catalog metadata and artwork already embedded in the affected audio files")
+                }
+                if safeFileChangeCount > 0 {
+                    Button("Save \(safeFileChangeCount) Checked Tags to Files…") { confirmsFileSave = true }
+                        .disabled(isApplying || isChecking)
+                }
+                if category == .missingArtwork {
+                    Button("Save Library Artwork to Files…") { confirmsArtworkFileSave = true }
+                        .disabled(isApplying || isChecking)
+                        .help("Embed saved album covers in every library file missing artwork")
                 }
                 if showsHeaderCheckButton {
                     Button(checkButtonLabel) {
@@ -112,7 +154,9 @@ public struct LibraryHealthDetailView: View {
             }
             if isChecking, progress.total > 0 {
                 ProgressView(value: Double(progress.completed), total: Double(progress.total)) {
-                    Text("Checking local evidence… \(progress.completed) of \(progress.total)")
+                    Text(category == .missingArtwork
+                        ? "Checking artwork folders… \(progress.completed) of \(progress.total) albums"
+                        : "Checking local evidence… \(progress.completed) of \(progress.total)")
                         .font(.caption)
                 }
             }
@@ -142,7 +186,7 @@ public struct LibraryHealthDetailView: View {
             ContentUnavailableView {
                 Label("Not Checked", systemImage: "clock")
             } description: {
-                Text("Run this check to inspect the current disposable catalog snapshot.")
+                Text("Run this check to inspect the current library.")
             } actions: {
                 Button("Check Now") { health.check(category: category) }
             }
@@ -179,12 +223,12 @@ public struct LibraryHealthDetailView: View {
                 ContentUnavailableView(
                     "No \(category.displayName)",
                     systemImage: "checkmark.circle",
-                    description: Text("This check found no problems in the current library view.")
+                    description: Text(LibraryHealthStatusPresentation(state: state).emptyResultDescription)
                 )
             } else if let plan = result.remediationPlan {
                 VStack(spacing: 0) {
                     if isStale {
-                        Label("Showing the last successful results while this check refreshes.", systemImage: "clock.arrow.circlepath")
+                        Label("Showing previous results. Run this check again for current findings.", systemImage: "clock.arrow.circlepath")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -228,7 +272,7 @@ public struct LibraryHealthDetailView: View {
     ) -> some View {
         VStack(spacing: 0) {
             if isStale {
-                Label("Showing the last successful results while the catalog refreshes.", systemImage: "clock.arrow.circlepath")
+                Label("Showing previous results. Run this check again for current findings.", systemImage: "clock.arrow.circlepath")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -640,6 +684,10 @@ public struct LibraryHealthDetailView: View {
     private var isChecking: Bool { if case .checking = state { true } else { false } }
     private var hasApplicableProposals: Bool { currentPlan?.proposals.contains(where: \.isApplicable) == true }
     private var selectedChanges: [LibraryRemediationChange] { selectedPlan?.changes ?? [] }
+    private var safeFileChangeCount: Int { selectedPlan?.safeMissingFileTagChanges.count ?? 0 }
+    private var affectedTrackIDs: [UUID] {
+        state.lastGood?.affectedTrackIDs ?? []
+    }
     private var selectedPlan: LibraryRemediationPlan? {
         guard let plan = currentPlan else { return nil }
         let proposals = plan.proposals.compactMap { proposal -> LibraryRemediationProposal? in
@@ -656,6 +704,49 @@ public struct LibraryHealthDetailView: View {
         selectedCandidates = Dictionary(uniqueKeysWithValues: plan.proposals.compactMap { proposal in
             proposal.proposedValue.map { (proposal.id, $0) }
         })
+    }
+
+    private func recoverFileTags() {
+        let ids = affectedTrackIDs
+        isApplying = true
+        errorMessage = nil
+        Task { @MainActor in
+            let result = await actions.recoverMissingFileTags(trackIDs: ids)
+            isApplying = false
+            notice = "Recovered missing tags or artwork for \(result.recovered) tracks; checked \(result.checked), missing \(result.missing), unavailable \(result.unavailable), failed \(result.failed)\(result.canceled ? " · canceled" : "")."
+            errorMessage = result.saveError
+            health.check(category: category)
+        }
+    }
+
+    private func saveCheckedFileTags() {
+        guard let selectedPlan else { return }
+        isApplying = true
+        errorMessage = nil
+        Task { @MainActor in
+            let result = await actions.saveHealthTagsToFiles(selectedPlan)
+            isApplying = false
+            notice = "Saved \(result.written) files; already tagged \(result.alreadyPresent), conflicts \(result.conflicts), failed \(result.failed)\(result.canceled ? " · canceled" : "")."
+            errorMessage = result.catalogError ?? result.results.compactMap { row in
+                if case .failed(let reason) = row.status { return "\(row.request.path): \(reason)" }
+                return nil
+            }.first
+            health.check(category: category)
+        }
+    }
+
+    private func saveLibraryArtwork() {
+        isApplying = true
+        errorMessage = nil
+        Task { @MainActor in
+            let result = await actions.saveLibraryArtworkToFiles()
+            isApplying = false
+            notice = "Saved artwork to \(result.written) files; preserved existing artwork in \(result.preserved), conflicts \(result.conflicts), failed \(result.failed)\(result.canceled ? " · canceled" : "")."
+            errorMessage = result.scopeError ?? result.results.compactMap { row in
+                if case .failed(let reason) = row.status { return "\(row.request.path): \(reason)" }
+                return nil
+            }.first
+        }
     }
 
     private func checkedBinding(_ proposal: LibraryRemediationProposal) -> Binding<Bool> {

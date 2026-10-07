@@ -42,13 +42,21 @@ public struct PlaybackQueueIdentitySnapshot: Equatable, Sendable {
 
 @MainActor
 public final class PlaybackQueue: ObservableObject {
-    @Published public private(set) var currentEntry: PlaybackQueueEntry?
-    @Published public private(set) var upcomingEntries: [PlaybackQueueEntry] = [] {
-        didSet { rebuildShuffleBagIfNeeded() }
+    @Published public private(set) var currentEntry: PlaybackQueueEntry? {
+        didSet { recordMutation() }
     }
-    @Published public private(set) var historyEntries: [PlaybackQueueEntry] = []
+    @Published public private(set) var upcomingEntries: [PlaybackQueueEntry] = [] {
+        didSet {
+            rebuildShuffleBagIfNeeded()
+            recordMutation()
+        }
+    }
+    @Published public private(set) var historyEntries: [PlaybackQueueEntry] = [] {
+        didSet { recordMutation() }
+    }
     @Published public var shuffleEnabled: Bool = false {
         didSet {
+            recordMutation()
             if shuffleEnabled {
                 rebuildShuffleBag()
             } else {
@@ -56,8 +64,19 @@ public final class PlaybackQueue: ObservableObject {
             }
         }
     }
-    @Published public var repeatMode: RepeatMode = .off
+    @Published public var repeatMode: RepeatMode = .off {
+        didSet { if oldValue != repeatMode { recordMutation() } }
+    }
     @Published public private(set) var effectiveOrderRevision: UInt = 0
+    @Published public private(set) var canUndoClearUpcoming = false
+    public private(set) var mutationRevision: UInt = 0
+
+    private struct ClearUndo {
+        let entries: [PlaybackQueueEntry]
+        let shuffleOrder: [UUID]
+        let revision: UInt
+    }
+    private var clearUndo: ClearUndo?
 
     /// Stable permutation of upcoming queue-entry IDs while shuffle is on.
     private var shuffleOrder: [PlaybackQueueEntry.ID] = []
@@ -338,6 +357,38 @@ public final class PlaybackQueue: ObservableObject {
         return snapshot
     }
 
+    /// Clears only upcoming occurrences. The token is shared by both queue views.
+    public func clearUpcomingWithUndo() {
+        guard upcomingEntries.isEmpty == false else { return }
+        let entries = upcomingEntries
+        let order = shuffleOrder
+        clearUpcoming()
+        clearUndo = ClearUndo(entries: entries, shuffleOrder: order, revision: mutationRevision)
+        canUndoClearUpcoming = true
+    }
+
+    @discardableResult
+    public func undoClearUpcoming() -> Bool {
+        guard let token = clearUndo, token.revision == mutationRevision else { return false }
+        // Property observers invalidate the token; the captured value remains valid
+        // for this single synchronous restoration on the main actor.
+        upcomingEntries = token.entries
+        shuffleOrder = token.shuffleOrder
+        markEffectiveOrderChanged()
+        return true
+    }
+
+    public func invalidateClearUpcomingUndo() {
+        guard clearUndo != nil || canUndoClearUpcoming else { return }
+        clearUndo = nil
+        canUndoClearUpcoming = false
+    }
+
+    private func recordMutation() {
+        mutationRevision &+= 1
+        invalidateClearUpcomingUndo()
+    }
+
     public func restoreUpcoming(_ snapshot: PlaybackQueueValueSnapshot) {
         upcomingEntries = snapshot.entries
         if shuffleEnabled { rebuildShuffleBag() }
@@ -497,6 +548,7 @@ public final class PlaybackQueue: ObservableObject {
     }
 
     private func markEffectiveOrderChanged() {
+        recordMutation()
         effectiveOrderRevision &+= 1
     }
 }

@@ -200,7 +200,7 @@ public struct MissingTrackNumberView: View {
             if reviewItems.isEmpty { showReview = false }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save track number: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save track number: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -231,7 +231,7 @@ public struct MissingTrackNumberView: View {
             showReview = false
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not save track numbers: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not save track numbers: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 

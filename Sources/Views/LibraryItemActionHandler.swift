@@ -2,6 +2,16 @@ import AppKit
 import Combine
 import SwiftData
 
+public typealias TrackMetadataTagWriting = @Sendable (
+    String, [TrackMetadataField: TrackMetadataValue], Data?, Bool
+) async throws -> Void
+
+private struct MetadataFileWriteSummary {
+    var attempted = 0
+    var written = 0
+    var failures: [LibraryActivityFailure] = []
+}
+
 public struct PlaylistCreationRequest: Identifiable, Equatable {
     public let id = UUID()
     public let trackIDs: [UUID]
@@ -40,12 +50,20 @@ public final class LibraryItemActionHandler: ObservableObject {
     private let importExclusions: LibraryImportExclusionStore
     private let healthMutations: LibraryHealthMutationService
     private let trackMetadataMutations: TrackMetadataMutationService
+    private let fileTagRepairs: LibraryFileTagRepairService
+    private let fileTagRecovery = LibraryFileTagRecoveryWorker()
+    private var cancelFileTagRecovery = false
+    private var cancelFileTagRepair = false
+    private var cancelFileArtworkRepair = false
+    private var fileArtworkRepairRunning = false
     private let artworkScopeWorker = LibraryAlbumProjectionWorker()
     private var latestHealthReceipt: LibraryHealthMutationReceipt?
     private var finderTask: Task<Void, Never>?
     private var playbackTask: Task<Void, Never>?
     private var artworkSearchTask: Task<Void, Never>?
     private let folderArtworkLoader: @Sendable (URL) -> Data?
+    private let metadataTagWriter: TrackMetadataTagWriting
+    private let activity: LibraryActivityStore
 
     public init(
         modelContainer: ModelContainer,
@@ -55,6 +73,9 @@ public final class LibraryItemActionHandler: ObservableObject {
         fileAvailabilityWorker: FileAvailabilityWorker = FileAvailabilityWorker(),
         importExclusions: LibraryImportExclusionStore = .shared,
         folderArtworkLoader: (@Sendable (URL) -> Data?)? = nil,
+        fileTagRepairs: LibraryFileTagRepairService = LibraryFileTagRepairService(),
+        metadataTagWriter: TrackMetadataTagWriting? = nil,
+        activity: LibraryActivityStore? = nil,
         revealFiles: @escaping @MainActor ([URL]) -> Void = {
             NSWorkspace.shared.activateFileViewerSelecting($0)
         }
@@ -67,11 +88,25 @@ public final class LibraryItemActionHandler: ObservableObject {
         self.importExclusions = importExclusions
         self.folderArtworkLoader = folderArtworkLoader ?? { TrackImporter.folderArtworkData(for: $0) }
         self.revealFiles = revealFiles
+        self.fileTagRepairs = fileTagRepairs
+        self.metadataTagWriter = metadataTagWriter ?? { path, fields, artwork, cleared in
+            try await TagWriterService.writeTags(path: path, fields: fields,
+                artworkData: artwork, artworkCleared: cleared)
+        }
+        self.activity = activity ?? LibraryStatus.shared.activity
         healthMutations = LibraryHealthMutationService(modelContainer: modelContainer)
         trackMetadataMutations = TrackMetadataMutationService(modelContainer: modelContainer)
     }
 
     public func applyHealthPlan(
+        _ plan: LibraryRemediationPlan
+    ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        await recordHealthMutation(total: Set(plan.changes.map(\.target.trackID)).count) {
+            await performHealthPlan(plan)
+        }
+    }
+
+    private func performHealthPlan(
         _ plan: LibraryRemediationPlan
     ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
         do {
@@ -89,7 +124,260 @@ public final class LibraryItemActionHandler: ObservableObject {
         }
     }
 
+    /// Saves only checked safe missing-field proposals. Catalog values are
+    /// updated only for files whose existing or newly saved tag was verified.
+    public func saveHealthTagsToFiles(_ plan: LibraryRemediationPlan) async -> LibraryFileTagRepairSummary {
+        cancelFileTagRepair = false
+        let tracks = librarySnapshots.resolveTracks(ids: plan.safeMissingFileTagChanges.map(\.target.trackID))
+        let byID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        var rejected: [LibraryFileTagRepairResult] = []
+        let requests = plan.safeMissingFileTagChanges.compactMap { change -> LibraryFileTagRepairRequest? in
+            let track = byID[change.target.trackID]
+            let request = LibraryFileTagRepairRequest(trackID: change.target.trackID, path: track?.path ?? "", change: change)
+            guard let track, Self.catalogHealthValue(track, field: change.target.field) == change.expectedValue else {
+                rejected.append(LibraryFileTagRepairResult(request: request,
+                    status: .failed("The catalog finding changed or disappeared. Check it again before saving file tags.")))
+                return nil
+            }
+            return request
+        }
+        let operationID = LibraryStatus.shared.beginOperation(message: "Saving verified file tags…", total: requests.count,
+            activityKind: .fileTagWrite, source: .metadata,
+            cancellation: { [weak self] in self?.cancelFileTagRepair = true })
+        let fileSummary = await fileTagRepairs.apply(requests, isCanceled: {
+            await MainActor.run { self.cancelFileTagRepair }
+        }) { completed, total in
+            await MainActor.run {
+                LibraryStatus.shared.updateOperation(completed: completed, message: "Saving file tags \(completed) of \(total)…", operationID: operationID)
+            }
+        }
+        var summary = LibraryFileTagRepairSummary(results: rejected + fileSummary.results, canceled: fileSummary.canceled)
+        let verified = Set(summary.results.filter {
+            $0.status == .written || $0.status == .alreadyPresent
+        }.map { $0.request.change })
+        let verifiedPlan = LibraryRemediationPlan(category: plan.category, proposals: plan.proposals.compactMap { proposal in
+            let changes = proposal.changes.filter { verified.contains($0) }
+            guard !changes.isEmpty else { return nil }
+            return LibraryRemediationProposal(issue: proposal.issue, proposedValue: proposal.proposedValue,
+                candidateValues: proposal.candidateValues, confidence: proposal.confidence,
+                evidence: proposal.evidence, changes: changes)
+        })
+        if !verified.isEmpty {
+            switch await applyHealthPlan(verifiedPlan) {
+            case .success:
+                // Health Undo applies to the catalog only. Do not offer it as file Undo.
+                latestHealthReceipt = nil
+                healthUndoAvailable = false
+            case .failure(let error): summary.catalogError = error.localizedDescription
+            }
+        }
+        let warning = summary.conflicts > 0 || summary.failed > 0 || summary.catalogError != nil || summary.canceled
+        LibraryStatus.shared.endOperation(
+            message: "Saved \(summary.written) files, already tagged \(summary.alreadyPresent), conflicts \(summary.conflicts), failed \(summary.failed)\(summary.canceled ? " · canceled" : "")",
+            severity: warning ? .warning : .success,
+            operationID: operationID,
+            activityStatus: summary.canceled ? .cancelled : (warning ? .completedWithWarnings : .succeeded),
+            failures: summary.results.compactMap { result in
+                switch result.status {
+                case .conflict: return LibraryActivityFailure(fileName: result.request.path, category: .verificationFailed)
+                case .failed: return LibraryActivityFailure(fileName: result.request.path, category: .ioFailure)
+                default: return nil
+                }
+            },
+            counts: LibraryActivityCounts(filesAttempted: requests.count, filesSaved: summary.written, filesFailed: summary.failed)
+        )
+        return summary
+    }
+
+    private static func catalogHealthValue(_ track: Track, field: LibraryHealthField) -> String? {
+        switch field {
+        case .artist: track.artist
+        case .album: track.album
+        case .albumArtist: track.albumArtist
+        case .genre: track.genre
+        case .year: String(track.year)
+        case .trackNumber: String(track.trackNumber)
+        default: nil
+        }
+    }
+
+    /// Covers saved on albums are distinct from pictures embedded in audio files.
+    /// Resolve the whole current catalog, including albums absent from missing-cover findings.
+    public func saveLibraryArtworkToFiles() async -> LibraryFileArtworkSummary {
+        guard !fileArtworkRepairRunning else {
+            return LibraryFileArtworkSummary(results: [], scopeError: "Library artwork is already being saved to files.")
+        }
+        fileArtworkRepairRunning = true
+        cancelFileArtworkRepair = false
+        defer { fileArtworkRepairRunning = false }
+        let requests: [LibraryFileArtworkRequest]
+        do { requests = try libraryArtworkRequests() }
+        catch {
+            let activityID = activity.begin(kind: .artworkWrite, source: .metadata, liveMessage: error.localizedDescription)
+            activity.finish(id: activityID, status: .failed, severity: .error)
+            return LibraryFileArtworkSummary(results: [], scopeError: error.localizedDescription)
+        }
+        let total = Set(requests.map(\.path)).count
+        let operationID = LibraryStatus.shared.beginOperation(message: "Checking files for missing artwork…", total: total,
+            activityKind: .artworkWrite, source: .metadata,
+            cancellation: { [weak self] in self?.cancelFileArtworkRepair = true })
+        let summary = await fileTagRepairs.applyArtwork(requests, isCanceled: {
+            await MainActor.run { self.cancelFileArtworkRepair }
+        }, catalogIsCurrent: { request in
+            await MainActor.run { self.libraryArtworkIsCurrent(request) }
+        }) { completed, total in
+            await MainActor.run {
+                LibraryStatus.shared.updateOperation(completed: completed,
+                    message: "Saving library artwork \(completed) of \(total) files…", operationID: operationID)
+            }
+        }
+        LibraryStatus.shared.endOperation(
+            message: "Saved artwork to \(summary.written) files, preserved \(summary.preserved), conflicts \(summary.conflicts), failed \(summary.failed)\(summary.canceled ? " · canceled" : "")",
+            severity: summary.conflicts > 0 || summary.failed > 0 || summary.canceled ? .warning : .success,
+            operationID: operationID,
+            activityStatus: summary.canceled ? .cancelled : (summary.conflicts > 0 || summary.failed > 0 ? .completedWithWarnings : .succeeded),
+            failures: summary.results.compactMap { result in
+                switch result.status {
+                case .conflict: return LibraryActivityFailure(fileName: result.request.path, category: .verificationFailed)
+                case .failed: return LibraryActivityFailure(fileName: result.request.path, category: .ioFailure)
+                default: return nil
+                }
+            },
+            counts: LibraryActivityCounts(filesAttempted: total, filesSaved: summary.written, filesFailed: summary.failed)
+        )
+        return summary
+    }
+
+    private func libraryArtworkRequests() throws -> [LibraryFileArtworkRequest] {
+        let context = ModelContext(modelContainer)
+        context.autosaveEnabled = false
+        return try context.fetch(FetchDescriptor<Album>()).flatMap { album -> [LibraryFileArtworkRequest] in
+            // One read per album; Data shares its storage across all track requests.
+            guard let artwork = album.artworkData else { return [] }
+            return album.tracks.map { track in
+                LibraryFileArtworkRequest(trackID: track.id, albumID: album.id,
+                    path: track.path, artworkData: artwork)
+            }
+        }
+    }
+
+    private func libraryArtworkIsCurrent(_ request: LibraryFileArtworkRequest) -> Bool {
+        let context = ModelContext(modelContainer)
+        context.autosaveEnabled = false
+        let id = request.trackID
+        var descriptor = FetchDescriptor<Track>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        guard let track = try? context.fetch(descriptor).first,
+              track.path == request.path, let album = track.albumRelation,
+              album.id == request.albumID else { return false }
+        return album.artworkData == request.artworkData
+    }
+
+    /// Bulk recovery is intentionally fill-only and reads tags without BPM analysis.
+    /// A dedicated context keeps cancellation/save failure away from unrelated edits.
+    public func recoverMissingFileTags(trackIDs: [UUID]) async -> LibraryFileTagRecoverySummary {
+        cancelFileTagRecovery = false
+        let wanted = Set(trackIDs)
+        let targets = librarySnapshots.snapshot.tracks.filter { wanted.contains($0.id) }
+        let pathsByID = Dictionary(uniqueKeysWithValues: targets.map { ($0.id, $0.path) })
+        let targetsByPath = Dictionary(grouping: targets, by: \.path)
+        let paths = targetsByPath.keys.sorted()
+        let context = ModelContext(modelContainer)
+        context.autosaveEnabled = false
+        var recovered = 0, checked = 0, missing = 0, unavailable = 0, failed = 0
+        var failureDetails: [LibraryActivityFailure] = []
+        var saveError: String?
+        let operationID = LibraryStatus.shared.beginOperation(message: "Reading file tags…", total: paths.count,
+            activityKind: .readFileTags, source: .metadata,
+            cancellation: { [weak self] in self?.cancelFileTagRecovery = true })
+        librarySnapshots.beginBulkUpdates()
+        defer { librarySnapshots.endBulkUpdates() }
+        do {
+            var metadataByPath: [String: AudioMetadata] = [:]
+            var changedIDs = Set<UUID>()
+            var recoveredArtwork: [UUID: Data] = [:]
+            for start in stride(from: 0, to: paths.count, by: 4) {
+                if Task.isCancelled || cancelFileTagRecovery { break }
+                let batch = Array(paths[start..<min(start + 4, paths.count)])
+                let results = await fileTagRecovery.readBatch(paths: batch)
+                for (path, outcome, metadata) in results {
+                    switch outcome {
+                    case .refreshed:
+                        if var metadata {
+                            // Retain image bytes only for genuinely missing catalog covers.
+                            if targetsByPath[path, default: []].allSatisfy({ $0.artworkReference != nil }) {
+                                metadata.artworkData = nil
+                            }
+                            metadataByPath[path] = metadata
+                        }
+                    case .fileMissing:
+                        missing += 1
+                        failureDetails.append(LibraryActivityFailure(fileName: path, category: .missingFile))
+                    case .fileUnavailable:
+                        unavailable += 1
+                        failureDetails.append(LibraryActivityFailure(fileName: path, category: .unavailableFile))
+                    case .unreadable:
+                        failed += 1
+                        failureDetails.append(LibraryActivityFailure(fileName: path, category: .ioFailure))
+                    }
+                    checked += 1
+                    LibraryStatus.shared.updateOperation(completed: checked, message: "Reading file tags \(checked) of \(paths.count)…", operationID: operationID)
+                }
+            }
+            // Resolve fresh catalog values after the I/O pass, preserving edits
+            // saved while files were being read and ignoring relocated records.
+            let tracks = try context.fetch(FetchDescriptor<Track>()).filter { wanted.contains($0.id) }
+            for track in tracks {
+                guard track.path == pathsByID[track.id], let metadata = metadataByPath[track.path] else { continue }
+                let changed = TrackImporter.recoverMissingFields(metadata, for: track)
+                let artwork = track.resolvedArtworkData == nil ? metadata.artworkData : nil
+                if let artwork { recoveredArtwork[track.id] = ArtworkStorage.normalized(artwork) }
+                if changed || artwork != nil { changedIDs.insert(track.id); recovered += 1 }
+            }
+            if !changedIDs.isEmpty {
+                _ = try AlbumRelationshipReconciler.reconcile(in: context, affectedTrackIDs: changedIDs)
+                var artists = Dictionary(try context.fetch(FetchDescriptor<Artist>()).map { ($0.name, $0) },
+                    uniquingKeysWith: { first, _ in first })
+                for track in tracks where changedIDs.contains(track.id) {
+                    if let artwork = recoveredArtwork[track.id], track.albumRelation?.artworkData == nil {
+                        track.albumRelation?.artworkData = artwork
+                    }
+                    if let artist = artists[track.artist] { track.artistRelation = artist }
+                    else {
+                        let artist = Artist(name: track.artist)
+                        context.insert(artist); artists[track.artist] = artist; track.artistRelation = artist
+                    }
+                }
+                try context.save()
+                await librarySnapshots.refreshAfterMutation()
+            }
+        } catch {
+            context.rollback()
+            recovered = 0
+            saveError = error.localizedDescription
+        }
+        let canceled = Task.isCancelled || cancelFileTagRecovery
+        LibraryStatus.shared.endOperation(
+            message: "Recovered \(recovered), checked \(checked), missing \(missing), unavailable \(unavailable), failed \(failed)\(canceled ? " · canceled" : "")",
+            severity: missing > 0 || unavailable > 0 || failed > 0 || saveError != nil ? .warning : .success,
+            operationID: operationID,
+            activityStatus: canceled ? .cancelled : (saveError != nil ? .failed : (missing + unavailable + failed > 0 ? .completedWithWarnings : .succeeded)),
+            failures: failureDetails,
+            counts: LibraryActivityCounts(catalogSaved: recovered, filesFailed: failed + missing + unavailable)
+        )
+        return LibraryFileTagRecoverySummary(recovered: recovered, checked: checked, missing: missing,
+            unavailable: unavailable, failed: failed, canceled: canceled, saveError: saveError)
+    }
+
     public func applyMissingFileRelocations(
+        _ changes: [LibraryPathChange]
+    ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        await recordHealthMutation(total: changes.count) {
+            await performMissingFileRelocations(changes)
+        }
+    }
+
+    private func performMissingFileRelocations(
         _ changes: [LibraryPathChange]
     ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
         guard let expectedRevision = changes.first?.sourceRevision else {
@@ -154,6 +442,15 @@ public final class LibraryItemActionHandler: ObservableObject {
         _ changes: [LibraryArtworkChange],
         clock: @Sendable () -> DiscogsFetchStamp? = { DiscogsClock.sample() }
     ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        await recordHealthMutation(total: changes.count) {
+            await performArtwork(changes, clock: clock)
+        }
+    }
+
+    private func performArtwork(
+        _ changes: [LibraryArtworkChange],
+        clock: @Sendable () -> DiscogsFetchStamp?
+    ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
         do {
             let (outcome, receipt) = try await healthMutations.applyArtwork(changes, clock: clock)
             await librarySnapshots.refreshAfterMutation()
@@ -169,22 +466,35 @@ public final class LibraryItemActionHandler: ObservableObject {
         }
     }
 
-    /// Opening an existing album can discover art added beside its audio after import.
+    /// Opening an existing album can discover art added beside its audio after import,
+    /// and can pick up embedded covers the first import missed.
     /// Disk reads/normalization stay off-main; a fresh write context protects newer edits.
     public func discoverFolderArtwork(albumIDs: [UUID]) async {
         for id in Set(albumIDs).sorted(by: { $0.uuidString < $1.uuidString }) {
             guard !Task.isCancelled else { return }
             guard let album = librarySnapshots.snapshot.albumsByID[id],
                   album.artworkReference == nil else { continue }
-            let paths = Set(album.trackIDs.compactMap { librarySnapshots.snapshot.tracksByID[$0]?.path })
-            guard !paths.isEmpty else { continue }
+            let paths = album.trackIDs.compactMap { librarySnapshots.snapshot.tracksByID[$0]?.path }
+            guard paths.isEmpty == false else { continue }
+            let uniquePaths = Array(Set(paths)).sorted()
             let load = Task.detached(priority: .utility) { [folderArtworkLoader] () -> Data? in
                 var folders = Set<String>()
-                for path in paths.sorted() {
+                for path in uniquePaths {
                     guard !Task.isCancelled else { return nil }
                     let url = URL(fileURLWithPath: path)
-                    guard folders.insert(url.deletingLastPathComponent().path).inserted else { continue }
-                    if let data = folderArtworkLoader(url), ArtworkStorage.pixelSize(of: data) != nil {
+                    if folders.insert(url.deletingLastPathComponent().path).inserted {
+                        if let data = folderArtworkLoader(url), ArtworkStorage.pixelSize(of: data) != nil {
+                            return ArtworkStorage.normalized(data)
+                        }
+                    }
+                }
+                // Folder art missing: re-read embedded tags (m4a/MP3 covr, FLAC picture).
+                for path in uniquePaths {
+                    guard !Task.isCancelled else { return nil }
+                    let url = URL(fileURLWithPath: path)
+                    if let meta = await MetadataReader.read(from: url, detectMissingBPM: false),
+                       let data = meta.artworkData,
+                       ArtworkStorage.pixelSize(of: data) != nil {
                         return ArtworkStorage.normalized(data)
                     }
                 }
@@ -205,20 +515,28 @@ public final class LibraryItemActionHandler: ObservableObject {
                 guard let current = try context.fetch(query).first,
                       current.artworkData == nil,
                       current.tracks.allSatisfy({ $0.artworkData == nil }),
-                      Set(current.tracks.map(\.path)) == paths else { continue }
+                      Set(current.tracks.map(\.path)) == Set(uniquePaths) else { continue }
                 current.artworkData = data
                 try context.save()
                 // Automatic discovery must not replace the user's existing Undo receipt.
                 await librarySnapshots.refreshAfterMutation()
             } catch {
                 LibraryStatus.shared.showNotice(
-                    "Could not save folder artwork: \(error.localizedDescription)", severity: .warning
+                    "Could not save album artwork: \(error.localizedDescription)", severity: .warning
                 )
             }
         }
     }
 
     public func removeMissingCatalogRecords(
+        _ removals: [LibraryMissingRecordRemoval]
+    ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        await recordHealthMutation(total: removals.count) {
+            await performMissingCatalogRemoval(removals)
+        }
+    }
+
+    private func performMissingCatalogRemoval(
         _ removals: [LibraryMissingRecordRemoval]
     ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
         guard let expectedRevision = removals.first?.sourceRevision else {
@@ -262,6 +580,11 @@ public final class LibraryItemActionHandler: ObservableObject {
     }
 
     public func undoLatestHealthMutation()
+        async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        await recordHealthMutation(total: 0) { await performHealthUndo() }
+    }
+
+    private func performHealthUndo()
         async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
         guard let receipt = latestHealthReceipt else { return .failure(.noUndoAvailable) }
         if let cross = receipt.crossDomain {
@@ -320,8 +643,12 @@ public final class LibraryItemActionHandler: ObservableObject {
 
     public func applyTrackMetadata(
         _ changeSet: TrackMetadataChangeSet,
-        decisions: [TrackMetadataConflictDecision] = []
+        decisions: [TrackMetadataConflictDecision] = [],
+        writePolicy: TrackMetadataWritePolicy? = nil
     ) async throws -> TrackMetadataApplyOutcome {
+        let destination = writePolicy ?? (LibrarySettings.writeTagsToFiles ? .catalogAndFileTags : .catalogOnly)
+        let activityID = activity.begin(kind: .metadataEdit, source: .metadata, total: changeSet.baselines.count)
+        do {
         var scopedChanges = changeSet
         if changeSet.edits[.artwork] != nil {
             let scope: TrackArtworkScope
@@ -338,17 +665,49 @@ public final class LibraryItemActionHandler: ObservableObject {
             )
         }
         let result = try await trackMetadataMutations.applyWithReceipt(scopedChanges, decisions: decisions)
+        var fileSummary = MetadataFileWriteSummary()
         if case .saved(let count) = result.outcome, count > 0 {
             await librarySnapshots.refreshAfterMutation()
-            if LibrarySettings.writeTagsToFiles {
-                await writeTagsToFiles(result.fileWrites)
+            if destination == .catalogAndFileTags {
+                fileSummary = await writeTagsToFiles(result.fileWrites)
             }
         }
+        switch result.outcome {
+        case .saved(let count):
+            activity.update(id: activityID, completed: changeSet.baselines.count)
+            activity.finish(id: activityID,
+                status: fileSummary.failures.isEmpty ? .succeeded : .completedWithWarnings,
+                severity: fileSummary.failures.isEmpty ? .success : .warning,
+                failures: fileSummary.failures,
+                counts: LibraryActivityCounts(catalogSaved: count, filesAttempted: fileSummary.attempted,
+                    filesSaved: fileSummary.written, filesFailed: fileSummary.failures.count))
+        case .conflicts:
+            activity.update(id: activityID, completed: 0,
+                liveMessage: "Metadata changed elsewhere. Review the values before saving.")
+            activity.finish(id: activityID, status: .completedWithWarnings, severity: .warning,
+                counts: LibraryActivityCounts())
+        }
         return result.outcome
+        } catch is CancellationError {
+            activity.finish(id: activityID, status: .cancelled, severity: .information)
+            throw CancellationError()
+        } catch {
+            activity.update(id: activityID, completed: 0, liveMessage: error.localizedDescription)
+            activity.finish(id: activityID, status: .failed, severity: .error)
+            throw error
+        }
     }
 
-    private func writeTagsToFiles(_ writes: [TrackMetadataFileWrite]) async {
-        for write in writes {
+    private func writeTagsToFiles(_ writes: [TrackMetadataFileWrite]) async -> MetadataFileWriteSummary {
+        let supportedWrites = writes.compactMap { write -> TrackMetadataFileWrite? in
+            let fields = write.fields.filter { $0.key.supportsAudioTagWriting }
+            guard !fields.isEmpty else { return nil }
+            return TrackMetadataFileWrite(trackID: write.trackID, path: write.path, fields: fields)
+        }
+        var summary = MetadataFileWriteSummary(attempted: supportedWrites.count)
+        guard !supportedWrites.isEmpty else { return summary }
+        let activityID = activity.begin(kind: .fileTagWrite, source: .metadata, total: supportedWrites.count)
+        for (index, write) in supportedWrites.enumerated() {
             let path = write.path
             let isArtwork = write.fields.keys.contains(.artwork)
             let artworkData: Data? = isArtwork ? {
@@ -357,20 +716,60 @@ public final class LibraryItemActionHandler: ObservableObject {
             }() : nil
             let artworkCleared = isArtwork && artworkData == nil
             do {
-                try await TagWriterService.writeTags(
-                    path: path,
-                    fields: write.fields,
-                    artworkData: artworkData,
-                    artworkCleared: artworkCleared
-                )
+                try await metadataTagWriter(path, write.fields, artworkData, artworkCleared)
+                summary.written += 1
             } catch {
+                summary.failures.append(LibraryActivityFailure(fileName: path,
+                    category: Self.fileWriteFailureCategory(error)))
                 LibraryStatus.shared.showNotice(
                     "Could not write tags to \(path): \(error.localizedDescription)",
                     severity: .warning,
-                    autoDismissAfter: 6
+                    autoDismissAfter: 6,
+                    source: .metadata,
+                    activityOperationID: activityID
                 )
             }
+            activity.update(id: activityID, completed: index + 1)
         }
+        activity.finish(id: activityID,
+            status: summary.failures.isEmpty ? .succeeded : .completedWithWarnings,
+            severity: summary.failures.isEmpty ? .success : .warning,
+            failures: summary.failures,
+            counts: LibraryActivityCounts(filesAttempted: summary.attempted,
+                filesSaved: summary.written, filesFailed: summary.failures.count))
+        return summary
+    }
+
+    private static func fileWriteFailureCategory(_ error: Error) -> LibraryActivityFailureCategory {
+        if let tagError = error as? TagWriterError, case .unsupportedFormat = tagError { return .unsupportedFormat }
+        let cocoa = error as NSError
+        if cocoa.domain == NSCocoaErrorDomain {
+            switch cocoa.code {
+            case NSFileNoSuchFileError, NSFileReadNoSuchFileError: return .missingFile
+            case NSFileReadNoPermissionError, NSFileWriteNoPermissionError: return .permissionDenied
+            default: break
+            }
+        }
+        return .ioFailure
+    }
+
+    private func recordHealthMutation(
+        total: Int,
+        operation: () async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError>
+    ) async -> Result<LibraryHealthMutationOutcome, LibraryHealthMutationError> {
+        let activityID = activity.begin(kind: .healthRepair, source: .library, total: total)
+        let result = await operation()
+        switch result {
+        case .success(let outcome):
+            activity.update(id: activityID, completed: total)
+            activity.finish(id: activityID, status: .succeeded,
+                counts: LibraryActivityCounts(catalogSaved: outcome.affectedTrackCount))
+        case .failure(let error):
+            activity.update(id: activityID, completed: 0, liveMessage: error.localizedDescription)
+            activity.finish(id: activityID, status: Task.isCancelled ? .cancelled : .failed,
+                severity: Task.isCancelled ? .information : .error)
+        }
+        return result
     }
 
     public var manualPlaylists: [LibraryPlaylistSnapshot] {
@@ -412,11 +811,19 @@ public final class LibraryItemActionHandler: ObservableObject {
                 return result
             case .failure(.fileNotFound(let path)):
                 guard let unavailableIndex = tracks.firstIndex(where: { $0.path == path }) else {
+                    LibraryStatus.shared.showPlaybackError(
+                        PlaybackStartError.fileNotFound(path).localizedDescription
+                    )
                     return result
                 }
                 tracks.remove(at: unavailableIndex)
                 skippedUnavailableTracks += 1
-                if tracks.isEmpty { return result }
+                if tracks.isEmpty {
+                    LibraryStatus.shared.showPlaybackError(
+                        PlaybackStartError.fileNotFound(path).localizedDescription
+                    )
+                    return result
+                }
             case .failure:
                 return result
             }
@@ -455,10 +862,19 @@ public final class LibraryItemActionHandler: ObservableObject {
                     return
                 case .failure(.fileNotFound(let path)):
                     guard let index = candidates.firstIndex(where: { $0.path == path }) else {
+                        LibraryStatus.shared.showPlaybackError(
+                            PlaybackStartError.fileNotFound(path).localizedDescription
+                        )
                         return
                     }
                     candidates.remove(at: index)
                     skippedMissing += 1
+                    if candidates.isEmpty {
+                        LibraryStatus.shared.showPlaybackError(
+                            PlaybackStartError.fileNotFound(path).localizedDescription
+                        )
+                        return
+                    }
                 case .failure(.cancelled):
                     return
                 case .failure:
@@ -485,7 +901,11 @@ public final class LibraryItemActionHandler: ObservableObject {
         playbackTask?.cancel()
         guard let track = librarySnapshots.resolveTrack(id: trackID) else { return }
         playbackTask = Task { @MainActor [weak self] in
-            _ = await self?.playbackSession.playTrackNowResolving(track)
+            guard let self else { return }
+            let result = await self.playbackSession.playTrackNowResolving(track)
+            if case .failure(let error) = result, error != .cancelled {
+                LibraryStatus.shared.showPlaybackError(error.userFacingMessage)
+            }
         }
     }
 
@@ -903,8 +1323,10 @@ public final class LibraryItemActionHandler: ObservableObject {
         do {
             records = try context.fetch(FetchDescriptor<TrackFavorite>())
         } catch {
-            LibraryStatus.shared.showPlaybackError(
-                "Could not read track favorites: \(error.localizedDescription)"
+            LibraryStatus.shared.showNotice(
+                "Could not read track favorites: \(error.localizedDescription)",
+                severity: .error,
+                source: .metadata
             )
             return .failure(.persistence("Could not read track favorites: \(error.localizedDescription)"))
         }
@@ -951,8 +1373,10 @@ public final class LibraryItemActionHandler: ObservableObject {
         do {
             records = try context.fetch(FetchDescriptor<AlbumFavorite>())
         } catch {
-            LibraryStatus.shared.showPlaybackError(
-                "Could not read album favorites: \(error.localizedDescription)"
+            LibraryStatus.shared.showNotice(
+                "Could not read album favorites: \(error.localizedDescription)",
+                severity: .error,
+                source: .metadata
             )
             return .failure(.persistence("Could not read album favorites: \(error.localizedDescription)"))
         }
@@ -971,9 +1395,11 @@ public final class LibraryItemActionHandler: ObservableObject {
         metadataTask?.cancel()
         let tracks = librarySnapshots.resolveTracks(ids: trackIDs)
         guard tracks.isEmpty == false else { return }
-        LibraryStatus.shared.beginOperation(
+        let operationID = LibraryStatus.shared.beginOperation(
             message: "Re-reading metadata…",
             total: tracks.count,
+            activityKind: .readFileTags,
+            source: .metadata,
             cancellation: { [weak self] in self?.metadataTask?.cancel() }
         )
         metadataTask = Task { @MainActor [weak self] in
@@ -983,10 +1409,11 @@ public final class LibraryItemActionHandler: ObservableObject {
             var missing = 0
             var unavailable = 0
             var failed = 0
+            var failureDetails: [LibraryActivityFailure] = []
             do {
                 for track in tracks {
                     guard Task.isCancelled == false else {
-                        LibraryStatus.shared.endOperation(message: "Metadata update canceled")
+                        LibraryStatus.shared.endOperation(message: "Metadata update canceled", operationID: operationID, activityStatus: .cancelled)
                         return
                     }
                     do {
@@ -998,20 +1425,25 @@ public final class LibraryItemActionHandler: ObservableObject {
                             refreshed += 1
                         case .fileMissing:
                             missing += 1
+                            failureDetails.append(LibraryActivityFailure(fileName: track.path, category: .missingFile))
                         case .fileUnavailable:
                             unavailable += 1
+                            failureDetails.append(LibraryActivityFailure(fileName: track.path, category: .unavailableFile))
                         case .unreadable:
                             failed += 1
+                            failureDetails.append(LibraryActivityFailure(fileName: track.path, category: .ioFailure))
                         }
                     } catch is CancellationError {
                         throw CancellationError()
                     } catch {
                         failed += 1
+                        failureDetails.append(LibraryActivityFailure(fileName: track.path, category: .ioFailure))
                     }
                     completed += 1
                     LibraryStatus.shared.updateOperation(
                         completed: completed,
-                        message: "Re-reading metadata \(completed) of \(tracks.count)…"
+                        message: "Re-reading metadata \(completed) of \(tracks.count)…",
+                        operationID: operationID
                     )
                 }
                 if refreshed > 0 {
@@ -1025,21 +1457,24 @@ public final class LibraryItemActionHandler: ObservableObject {
                     let severity: LibraryNoticeSeverity = unavailable > 0 || missing > 0 || failed > 0
                         ? .warning
                         : .success
-                    LibraryStatus.shared.endOperation(message: summary, severity: severity)
+                    LibraryStatus.shared.endOperation(message: summary, severity: severity,
+                        operationID: operationID, activityStatus: severity == .warning ? .completedWithWarnings : .succeeded,
+                        failures: failureDetails,
+                        counts: LibraryActivityCounts(catalogSaved: refreshed, filesFailed: failed + missing + unavailable))
                 } else {
                     LibraryStatus.shared.endOperation(
                         message: "Metadata update was not saved",
-                        severity: .error
+                        severity: .error, operationID: operationID, activityStatus: .failed, failures: failureDetails
                     )
                 }
             } catch is CancellationError {
                 self.modelContainer.mainContext.rollback()
-                LibraryStatus.shared.endOperation(message: "Metadata update canceled")
+                LibraryStatus.shared.endOperation(message: "Metadata update canceled", operationID: operationID, activityStatus: .cancelled, failures: failureDetails)
             } catch {
                 self.modelContainer.mainContext.rollback()
                 LibraryStatus.shared.endOperation(
                     message: "Could not re-read metadata: \(error.localizedDescription)",
-                    severity: .error
+                    severity: .error, operationID: operationID, activityStatus: .failed, failures: failureDetails
                 )
             }
         }
@@ -1129,8 +1564,10 @@ public final class LibraryItemActionHandler: ObservableObject {
             favorites = try context.fetch(FetchDescriptor<AlbumFavorite>())
         } catch {
             context.rollback()
-            LibraryStatus.shared.showPlaybackError(
-                "Could not read album favorites: \(error.localizedDescription)"
+            LibraryStatus.shared.showNotice(
+                "Could not read album favorites: \(error.localizedDescription)",
+                severity: .error,
+                source: .metadata
             )
             return .failure(.persistence("Could not read album favorites: \(error.localizedDescription)"))
         }
@@ -1172,7 +1609,7 @@ public final class LibraryItemActionHandler: ObservableObject {
         } catch {
             modelContainer.mainContext.rollback()
             let message = "\(failureMessage): \(error.localizedDescription)"
-            LibraryStatus.shared.showPlaybackError(message)
+            LibraryStatus.shared.showNotice(message, severity: .error, source: .library)
             return .failure(.persistence(message))
         }
     }
@@ -1199,8 +1636,9 @@ public final class LibraryItemActionHandler: ObservableObject {
             }
 
             let status = LibraryStatus.shared
-            status.beginOperation(message: "Analyzing BPM…", total: tracks.count) {
-                // cancellation handled via Task.isCancelled
+            let operationID = status.beginOperation(message: "Analyzing BPM…", total: tracks.count,
+                activityKind: .bpmAnalysis, source: .metadata) { [weak self] in
+                self?.metadataTask?.cancel()
             }
 
             NSLog("Songbird: BPM analysis starting for %d tracks", tracks.count)
@@ -1213,7 +1651,7 @@ public final class LibraryItemActionHandler: ObservableObject {
                     processed += 1
                     status.updateOperation(
                         completed: processed,
-                        message: "BPM: \(track.title) → unavailable"
+                        message: "BPM: \(track.title) → unavailable", operationID: operationID
                     )
                     continue
                 }
@@ -1227,18 +1665,23 @@ public final class LibraryItemActionHandler: ObservableObject {
                 }
                 status.updateOperation(
                     completed: processed,
-                    message: "BPM: \(track.title) → \(bpm > 0 ? "\(bpm)" : "—")"
+                    message: "BPM: \(track.title) → \(bpm > 0 ? "\(bpm)" : "—")", operationID: operationID
                 )
             }
 
+            var saved = false
             if !Task.isCancelled {
                 if self.save("Could not save BPM results").isSuccess {
+                    saved = true
                     await self.librarySnapshots.refresh()
                 }
             }
             status.endOperation(
-                message: "BPM analysis complete: \(analyzed)/\(tracks.count) tracks updated.",
-                severity: .success
+                message: Task.isCancelled ? "BPM analysis canceled" : (saved ? "BPM analysis complete: \(analyzed)/\(tracks.count) tracks updated." : "BPM results could not be saved"),
+                severity: Task.isCancelled ? .information : (saved ? .success : .error),
+                operationID: operationID,
+                activityStatus: Task.isCancelled ? .cancelled : (saved ? .succeeded : .failed),
+                counts: LibraryActivityCounts(catalogSaved: saved ? analyzed : 0)
             )
             NSLog("Songbird: BPM analysis finished: %d/%d updated", analyzed, tracks.count)
             self.metadataTask = nil

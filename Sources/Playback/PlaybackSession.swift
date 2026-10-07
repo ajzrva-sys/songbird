@@ -7,6 +7,7 @@ public final class PlaybackSession: ObservableObject {
     public let queue: PlaybackQueue
     public let engine: PlaybackEngine
     public let audioOutput: AudioOutputController
+    private var presentationObserver: AnyCancellable?
 
     public var clock: PlaybackClock { engine.clock }
     public var volumeState: PlaybackVolumeState { engine.volumeState }
@@ -34,6 +35,10 @@ public final class PlaybackSession: ObservableObject {
             )
             self.audioOutput = backend.audioOutput ?? AudioOutputController()
         }
+        presentationObserver = engine.presentation.$status
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak queue] _ in queue?.invalidateClearUpcomingUndo() }
     }
 
     @discardableResult

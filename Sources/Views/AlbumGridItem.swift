@@ -15,10 +15,11 @@ struct AlbumGridItem: View {
     let deleteAction: () -> Void
 
     @EnvironmentObject private var actions: LibraryItemActionHandler
+    @State private var isHovered = false
+    @FocusState private var cardFocused: Bool
 
     var body: some View {
-        ZStack(alignment: .top) {
-            AlbumCard(
+        AlbumCard(
                 title: album.title,
                 artist: album.artist,
                 artworkSize: artworkSize,
@@ -28,24 +29,25 @@ struct AlbumGridItem: View {
                 artworkReference: album.artworkReference,
                 textColor: textColor,
                 secondaryTextColor: secondaryTextColor,
-                colorScheme: colorScheme
+                colorScheme: colorScheme,
+                selectionAction: selectionAction,
+                openAction: openAction,
+                playAction: { actions.requestPlay(trackIDs: album.trackIDs) },
+                showsPlayAction: isHovered || isSelected || cardFocused
             )
-            MacClickActivationView(
-                singleClick: selectionAction,
-                doubleClick: {
-                    actions.requestPlay(trackIDs: album.trackIDs)
-                }
-            )
-        }
         .contentShape(.rect)
         .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 3)
+                .stroke(outlineColor, lineWidth: 3)
                 .padding(-4)
                 .accessibilityHidden(true)
         }
         .focusable()
+        .focusEffectDisabled(cardFocused)
+        .focused($cardFocused)
+        .onHover { isHovered = $0 }
         .onKeyPress(.return) {
+            guard cardFocused else { return .ignored }
             openAction()
             return .handled
         }
@@ -56,6 +58,7 @@ struct AlbumGridItem: View {
                 deleteAction: deleteAction
             )
         }
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(albumAccessibilityLabel)
         .accessibilityValue(accessibilityValue)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -73,6 +76,11 @@ struct AlbumGridItem: View {
             actions.requestNewPlaylist(trackIDs: album.trackIDs)
         }
         .accessibilityAction(named: "Delete Album", deleteAction)
+    }
+
+    private var outlineColor: Color {
+        if isSelected { return .accentColor }
+        return cardFocused ? Color.accentColor.opacity(0.5) : .clear
     }
 
     private var albumAccessibilityLabel: String {

@@ -4,6 +4,7 @@ import SwiftUI
 public struct MainView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openSettings) private var openSettings
     @EnvironmentObject private var libraryNavigation: LibraryNavigationCoordinator
     @EnvironmentObject private var libraryActions: LibraryItemActionHandler
     @EnvironmentObject private var librarySearch: LibrarySearchCoordinator
@@ -40,7 +41,7 @@ public struct MainView: View {
     /// Enough room for transport controls, the faceplate, and trailing chrome.
     public var body: some View {
         GeometryReader { outer in
-            let dividerWidth: CGFloat = sidebarShown ? 8 : 0
+            let dividerWidth: CGFloat = sidebarShown ? PlayerWindowMetrics.paneDividerWidth : 0
             let paneWidths = PlayerWindowLayoutPolicy.paneWidths(
                 totalWidth: outer.size.width,
                 sidebarShown: sidebarShown,
@@ -55,7 +56,8 @@ public struct MainView: View {
                 min(
                     PlayerWindowMetrics.sidebarMaximumWidth,
                     outer.size.width - PlayerWindowMetrics.libraryColumnMinimumWidth
-                        - (nowPlayingPaneShown ? paneWidths.rightPane + 16 : 8)
+                        - (nowPlayingPaneShown ? paneWidths.rightPane + 2 * PlayerWindowMetrics.paneDividerWidth
+                            : PlayerWindowMetrics.paneDividerWidth)
                 )
             )
             let rightPaneLiveMaximum = max(
@@ -63,7 +65,8 @@ public struct MainView: View {
                 min(
                     PlayerWindowMetrics.nowPlayingPaneMaximumWidth,
                     outer.size.width - PlayerWindowMetrics.libraryColumnMinimumWidth
-                        - (sidebarShown ? sideWidth + 16 : 8)
+                        - (sidebarShown ? sideWidth + 2 * PlayerWindowMetrics.paneDividerWidth
+                            : PlayerWindowMetrics.paneDividerWidth)
                 )
             )
 
@@ -118,14 +121,6 @@ public struct MainView: View {
             } else if !newPath.isEmpty, oldPath.isEmpty, sidebarShown {
                 sidebarWasOpenBeforePush = true
                 sidebarShown = false
-            }
-        }
-        .onChange(of: librarySearch.focusRequestID) { _, _ in
-            guard libraryNavigation.path.isEmpty, sidebarShown == false else { return }
-            if reduceMotion {
-                sidebarShown = true
-            } else {
-                withAnimation { sidebarShown = true }
             }
         }
         .onChange(of: libraryActions.sidebarPlaylistTargetRequest) { _, request in
@@ -226,7 +221,7 @@ public struct MainView: View {
                 .clipped()
 
                 if nowPlayingPaneShown {
-                    let dividerWidth: CGFloat = 8
+                    let dividerWidth = PlayerWindowMetrics.paneDividerWidth
                     let paneClamped = resolvedRightPaneWidth
                     ResizableDivider(
                         width: $nowPlayingPaneWidth,
@@ -242,7 +237,10 @@ public struct MainView: View {
                 }
             }
 
-            LibraryStatusBar()
+            LibraryStatusBar(
+                openHealth: { libraryNavigation.selectRoot(.healthDashboard) },
+                openSettings: { openSettings() }
+            )
 
             if playerBarPlacement == .bottom {
                 NowPlayingBar(
@@ -270,7 +268,8 @@ public struct MainView: View {
         case .album(let albumID):
             AlbumDetailView(albumID: albumID)
         case .artist(let name):
-            TrackTableView(title: name, collection: .artist(name), showsFilters: false)
+            ArtistDetailView(name: name)
+                .id(name)
         case .genre(let name):
             TrackTableView(title: name, collection: .genre(name), showsFilters: false)
         case .health(let category):
@@ -358,7 +357,7 @@ struct ResizableDivider: View {
                         ? Color.accentColor.opacity(0.7)
                         : SongbirdTheme.divider(for: colorScheme)
                 )
-                .frame(width: 1)
+                .frame(width: PlayerWindowMetrics.paneDividerWidth)
                 .allowsHitTesting(false)
 
             // Restoring a pane can leave no resizing room, or less than one
@@ -377,6 +376,7 @@ struct ResizableDivider: View {
                 .accessibilityValue("\(Int(width)) points")
             }
         }
+        // Keep the generous resize target without reserving a dark gutter.
         .frame(width: 8)
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -404,5 +404,6 @@ struct ResizableDivider: View {
                     dragStartWidth = nil
                 }
         )
+        .frame(width: PlayerWindowMetrics.paneDividerWidth)
     }
 }

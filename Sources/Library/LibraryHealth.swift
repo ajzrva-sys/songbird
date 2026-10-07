@@ -43,6 +43,11 @@ public enum LibraryHealthCategory: String, CaseIterable, Codable, Hashable, Send
     public var isFileAvailabilityCheck: Bool {
         self == .missingFiles || self == .unavailableVolumes
     }
+
+    public var canRecoverFileTags: Bool {
+        [.missingArtwork, .missingGenre, .missingArtistNames, .missingAlbumNames,
+         .missingTrackNumber, .emptyTitles, .missingYear].contains(self)
+    }
 }
 
 public enum LibraryHealthField: String, Codable, Hashable, Sendable {
@@ -238,6 +243,29 @@ public struct LibraryRemediationPlan: Identifiable, Codable, Hashable, Sendable 
     }
 
     public var changes: [LibraryRemediationChange] { proposals.flatMap(\.changes) }
+
+    /// Only deterministic missing-field proposals can be offered for durable
+    /// repair. Inferred titles/track numbers and consistency rewrites are excluded.
+    public var safeMissingFileTagChanges: [LibraryRemediationChange] {
+        proposals.filter { proposal in
+            proposal.isApplicable && proposal.confidence == .automaticSafe
+                && !proposal.evidence.isEmpty
+                && proposal.evidence.allSatisfy {
+                    [.embeddedMetadata, .unanimousDirectorySiblings, .provenMultiDiscCollection].contains($0.kind)
+                }
+        }.flatMap(\.changes).filter { change in
+            let expected = change.expectedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            switch change.target.field {
+            case .artist, .albumArtist:
+                return expected.isEmpty || expected.caseInsensitiveCompare("Unknown Artist") == .orderedSame
+            case .album:
+                return expected.isEmpty || expected.caseInsensitiveCompare("Unknown Album") == .orderedSame
+            case .genre: return expected.isEmpty
+            case .year, .trackNumber: return (Int(expected) ?? 0) <= 0
+            default: return false
+            }
+        }
+    }
 }
 
 /// Value-only input for proposal derivation. Embedded values are populated only by an explicit

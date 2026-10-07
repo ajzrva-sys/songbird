@@ -42,6 +42,7 @@ public enum ServicePaneDestination: Hashable {
     case filledComments
     case inconsistentAlbumArtists
     case queue
+    case playHistory
     case playlist(UUID)
     case audioCD(DiscIdentifier)
 }

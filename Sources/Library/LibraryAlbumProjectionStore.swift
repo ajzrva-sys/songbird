@@ -79,7 +79,10 @@ public final class LibraryAlbumProjectionStore: ObservableObject {
             trackIDs: album.trackIDs,
             artworkReference: album.artworkReference,
             discCount: 1,
-            isFavorite: album.isFavorite
+            isFavorite: album.isFavorite,
+            contributingArtistNames: Array(Set(album.trackIDs.compactMap {
+                snapshot.tracksByID[$0]?.artist
+            })).sorted()
         )
     }
 
@@ -167,7 +170,8 @@ public final class LibraryAlbumProjectionStore: ObservableObject {
                 partCount: group.partCount,
                 collectionKind: group.collectionKind,
                 editionLabel: group.editionLabel,
-                isFavorite: albums.isEmpty == false && albums.allSatisfy(\.isFavorite)
+                isFavorite: albums.isEmpty == false && albums.allSatisfy(\.isFavorite),
+                contributingArtistNames: group.contributingArtistNames
             )
         }
     }

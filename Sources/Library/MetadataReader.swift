@@ -23,6 +23,8 @@ public struct AudioMetadata: Sendable {
     public var bitrate: Int
     public var sampleRate: Int
     public var artworkData: Data?
+    /// A recognized picture tag may exist even when its bytes cannot be decoded.
+    public var embeddedArtworkPresent = false
 }
 
 public enum MetadataReader {
@@ -30,7 +32,8 @@ public enum MetadataReader {
     public static func read(
         from url: URL,
         backend: (any PlayerBackend)? = nil,
-        detectMissingBPM: Bool = true
+        detectMissingBPM: Bool = true,
+        requireCompleteMetadata: Bool = false
     ) async -> AudioMetadata? {
         let metadata: AudioMetadata?
         if url.pathExtension.lowercased() == "flac" {
@@ -39,11 +42,9 @@ public enum MetadataReader {
             // AVFoundation and AudioToolbox during large library imports.
             metadata = readViaFLACBridge(url: url)
         } else {
-            var m = blank(from: url)
-            if let av = await readViaAVFoundation(url: url) {
-                mergePreferringExisting(&m, with: av)
-            }
-            metadata = m
+            // The AV reader already starts with a filename fallback and replaces
+            // it when a tagged title is present. A second blank merge can lose it.
+            metadata = await readViaAVFoundation(url: url, requireCompleteMetadata: requireCompleteMetadata)
         }
 
         guard var result = metadata else { return nil }
@@ -59,7 +60,7 @@ public enum MetadataReader {
 
     // MARK: - AVFoundation fallback
 
-    private static func readViaAVFoundation(url: URL) async -> AudioMetadata? {
+    private static func readViaAVFoundation(url: URL, requireCompleteMetadata: Bool) async -> AudioMetadata? {
         let asset = AVURLAsset(url: url)
         var metadata = blank(from: url)
 
@@ -71,8 +72,17 @@ public enum MetadataReader {
         }
 
         // Prefer common keys (reliable for iTunes/ALAC), then full metadata bag.
-        let common = (try? await asset.load(.commonMetadata)) ?? []
-        let all = (try? await asset.load(.metadata)) ?? []
+        let common: [AVMetadataItem]
+        let all: [AVMetadataItem]
+        if requireCompleteMetadata {
+            do {
+                common = try await asset.load(.commonMetadata)
+                all = try await completeAVMetadata(in: asset)
+            } catch { return nil }
+        } else {
+            common = (try? await asset.load(.commonMetadata)) ?? []
+            all = await allAVMetadata(in: asset)
+        }
         await applyAVItems(common + all, to: &metadata)
 
         do {
@@ -102,18 +112,51 @@ public enum MetadataReader {
         return metadata
     }
 
-    private static func applyAVItems(_ items: [AVMetadataItem], to metadata: inout AudioMetadata) async {
+    static func applyAVItems(_ items: [AVMetadataItem], to metadata: inout AudioMetadata) async {
+        var hasTaggedTitle = false
         for item in items {
             let raw = item.identifier?.rawValue ?? ""
             let common = item.commonKey?.rawValue ?? ""
             let keySpace = item.keySpace?.rawValue ?? ""
-            let keyDesc = (item.key as? NSString as String?) ?? ""
+            let keyDesc = keyDescription(item.key)
             let key = [raw, common, keySpace, keyDesc].joined(separator: " ").lowercased()
             let lower = key.lowercased()
+            func hasID3Key(_ code: String) -> Bool {
+                keyDesc.caseInsensitiveCompare(code) == .orderedSame
+                    || raw.uppercased().hasSuffix("/\(code)")
+                    || raw.uppercased().hasSuffix(".\(code)")
+            }
+            let isTrackKey = lower.contains("tracknumber") || lower.contains("trkn")
+                || lower.contains("itunes.track") || keyDesc.lowercased() == "track"
+                || hasID3Key("TRCK") || hasID3Key("TRK")
+            let isDiscKey = lower.contains("discnumber") || keyDesc.lowercased() == "disk"
+                || hasID3Key("TPOS") || hasID3Key("TPA")
+            let isYearKey = lower.contains("year") || lower.contains("date")
+                || lower.contains("©day") || hasID3Key("TDRC") || hasID3Key("TYER")
+                || hasID3Key("TYE")
+            let isBPMKey = lower.contains("tempo") || lower.contains("bpm")
+                || keyDesc.lowercased() == "tmpo" || hasID3Key("TBPM")
 
-            if lower.contains("artwork") || common == "artwork" {
-                if let data = try? await item.load(.dataValue) {
-                    metadata.artworkData = data
+            // iTunes track/disc items are binary atoms, not string or number values.
+            if isTrackKey || isDiscKey,
+               let data = try? await item.load(.dataValue),
+               let pair = unpackNumberPair(data) {
+                if isDiscKey {
+                    if metadata.discNumber == 0 { metadata.discNumber = pair.number }
+                    if metadata.discTotal == 0 { metadata.discTotal = pair.total }
+                } else {
+                    if metadata.trackNumber == 0 { metadata.trackNumber = pair.number }
+                    if metadata.trackTotal == 0 { metadata.trackTotal = pair.total }
+                }
+            }
+
+            if isArtworkKey(raw: raw, common: common, keyDescription: keyDesc, joined: lower) {
+                metadata.embeddedArtworkPresent = true
+                if let data = await artworkData(from: item), isDecodableImage(data) {
+                    // Prefer the first usable cover; later items are often duplicates.
+                    if metadata.artworkData == nil {
+                        metadata.artworkData = data
+                    }
                 }
                 continue
             }
@@ -121,17 +164,17 @@ public enum MetadataReader {
             if let number = try? await item.load(.numberValue) {
                 if lower.contains("totaltracks") || lower.contains("trackcount") {
                     if metadata.trackTotal == 0 { metadata.trackTotal = number.intValue }
-                } else if lower.contains("discnumber") {
+                } else if isDiscKey {
                     if metadata.discNumber == 0 { metadata.discNumber = number.intValue }
                 } else if lower.contains("totaldiscs") || lower.contains("disccount") {
                     if metadata.discTotal == 0 { metadata.discTotal = number.intValue }
-                } else if lower.contains("tempo") || lower.contains("bpm") {
+                } else if isBPMKey {
                     if metadata.beatsPerMinute == 0 { metadata.beatsPerMinute = number.intValue }
-                } else if lower.contains("tracknumber")
-                    || (lower.contains("track") && !lower.contains("disc")) {
+                } else if isTrackKey {
                     if metadata.trackNumber == 0 { metadata.trackNumber = number.intValue }
-                } else if lower.contains("year") || lower.contains("date") {
-                    if metadata.year == 0 { metadata.year = number.intValue }
+                } else if isYearKey {
+                    // AV may interpret a compact YYYYMMDD text date as a number.
+                    if metadata.year == 0 { metadata.year = parseYear(from: number.stringValue) }
                 }
             }
 
@@ -149,39 +192,46 @@ public enum MetadataReader {
             let isTitleKey = common == "title"
                 || lower.contains("©nam")
                 || (lower.contains("title") && !lower.contains("album"))
+                || hasID3Key("TIT2") || hasID3Key("TT2")
             let isArtistKey = common == "artist" || lower.contains("©art")
                 || (lower.contains("artist") && !lower.contains("album"))
+                || hasID3Key("TPE1") || hasID3Key("TP1")
             let isAlbumArtistKey = lower.contains("albumartist") || lower.contains("aart")
                 || (lower.contains("album") && lower.contains("artist"))
+                || hasID3Key("TPE2") || hasID3Key("TP2")
             let isAlbumKey = common == "albumName" || lower.contains("©alb")
                 || (lower.contains("album") && !lower.contains("artist"))
+                || hasID3Key("TALB") || hasID3Key("TAL")
 
-            if isTitleKey, looksLikeFilenameTitle(metadata.title) {
+            if isTitleKey, !hasTaggedTitle {
                 metadata.title = value
+                hasTaggedTitle = true
             } else if isAlbumArtistKey {
                 if metadata.albumArtist == "Unknown Artist" { metadata.albumArtist = value }
             } else if isArtistKey {
                 if metadata.artist == "Unknown Artist" { metadata.artist = value }
             } else if isAlbumKey {
                 if metadata.album == "Unknown Album" { metadata.album = value }
-            } else if common == "type" || lower.contains("genre") || lower.contains("©gen") {
+            } else if common == "type" || lower.contains("genre") || lower.contains("©gen")
+                        || hasID3Key("TCON") || hasID3Key("TCO") {
                 if metadata.genre.isEmpty { metadata.genre = value }
-            } else if lower.contains("composer") || lower.contains("©wrt") {
+            } else if lower.contains("composer") || lower.contains("©wrt")
+                        || hasID3Key("TCOM") || hasID3Key("TCM") {
                 if metadata.composer.isEmpty { metadata.composer = value }
-            } else if lower.contains("comment") || lower.contains("©cmt") {
+            } else if lower.contains("comment") || lower.contains("©cmt")
+                        || hasID3Key("COMM") || hasID3Key("COM") {
                 if metadata.comment.isEmpty { metadata.comment = value }
-            } else if lower.contains("year") || lower.contains("creationdate")
-                        || lower.contains("©day") || lower == "day" || lower.contains("date") {
+            } else if isYearKey {
                 if metadata.year == 0 { metadata.year = parseYear(from: value) }
-            } else if lower.contains("discnumber") || lower.contains("disk") {
+            } else if isDiscKey {
                 let pair = parseNumberPair(value)
                 if metadata.discNumber == 0 { metadata.discNumber = pair.number }
                 if metadata.discTotal == 0 { metadata.discTotal = pair.total }
-            } else if lower.contains("tracknumber") || lower.contains("trkn") || lower == "track" {
+            } else if isTrackKey {
                 let pair = parseNumberPair(value)
                 if metadata.trackNumber == 0 { metadata.trackNumber = pair.number }
                 if metadata.trackTotal == 0 { metadata.trackTotal = pair.total }
-            } else if lower.contains("tempo") || lower.contains("bpm") {
+            } else if isBPMKey {
                 if metadata.beatsPerMinute == 0 { metadata.beatsPerMinute = Int(value) ?? 0 }
             }
         }
@@ -189,6 +239,102 @@ public enum MetadataReader {
         if metadata.albumArtist == "Unknown Artist", metadata.artist != "Unknown Artist" {
             metadata.albumArtist = metadata.artist
         }
+    }
+
+    static func unpackNumberPair(_ data: Data) -> (number: Int, total: Int)? {
+        guard data.count >= 6 else { return nil }
+        let bytes = Array(data.prefix(6))
+        guard bytes[0] == 0, bytes[1] == 0 else { return nil }
+        return (Int(bytes[2]) << 8 | Int(bytes[3]), Int(bytes[4]) << 8 | Int(bytes[5]))
+    }
+
+    /// `.metadata` contains recognized identifiers only. Format-specific bags
+    /// also expose container keys lacking an AVMetadataIdentifier.
+    static func allAVMetadata(in asset: AVURLAsset) async -> [AVMetadataItem] {
+        let formats = (try? await asset.load(.availableMetadataFormats)) ?? []
+        var items: [AVMetadataItem] = []
+        for format in formats {
+            if let values = try? await asset.loadMetadata(for: format) { items.append(contentsOf: values) }
+        }
+        return items.isEmpty ? ((try? await asset.load(.metadata)) ?? []) : items
+    }
+
+    /// Durable file repairs must not treat a failed metadata load as absent tags.
+    static func completeAVMetadata(in asset: AVURLAsset) async throws -> [AVMetadataItem] {
+        let formats = try await asset.load(.availableMetadataFormats)
+        var items: [AVMetadataItem] = []
+        for format in formats { items.append(contentsOf: try await asset.loadMetadata(for: format)) }
+        return items.isEmpty ? try await asset.load(.metadata) : items
+    }
+
+    static func keyDescription(_ key: (any NSCopying & NSObjectProtocol)?) -> String {
+        if let string = key as? NSString { return string as String }
+        if let number = key as? NSNumber {
+            let value = number.uint32Value
+            let bytes = [UInt8((value >> 24) & 255), UInt8((value >> 16) & 255),
+                         UInt8((value >> 8) & 255), UInt8(value & 255)]
+            return String(bytes: bytes, encoding: .isoLatin1) ?? ""
+        }
+        return ""
+    }
+
+    /// iTunes/MP4 covers often surface as `covr`/`cover` without the word "artwork".
+    public static func isArtworkKey(
+        raw: String,
+        common: String,
+        keyDescription: String,
+        joined: String
+    ) -> Bool {
+        let commonLower = common.lowercased()
+        if commonLower == AVMetadataKey.commonKeyArtwork.rawValue || commonLower == "artwork" {
+            return true
+        }
+        let rawLower = raw.lowercased()
+        if rawLower.contains("artwork")
+            || rawLower.contains("coverart")
+            || rawLower.contains("itunes.metadata.cover")
+            || rawLower.contains("id3/%00pic")
+            || rawLower.contains("id3/%01pic") {
+            return true
+        }
+        let keyLower = keyDescription.lowercased()
+        if keyLower == "covr" || keyLower == "cover" || keyLower == "cover art" || keyLower == "apic" {
+            return true
+        }
+        // Avoid matching ordinary titles that merely mention a cover song.
+        if joined.contains("artwork") || joined.contains("coverart") {
+            return true
+        }
+        return false
+    }
+
+    private static func artworkData(from item: AVMetadataItem) async -> Data? {
+        if let data = try? await item.load(.dataValue), data.isEmpty == false {
+            return data
+        }
+        if let data = item.dataValue, data.isEmpty == false {
+            return data
+        }
+        if let data = item.value as? Data, data.isEmpty == false {
+            return data
+        }
+        if let data = item.value as? NSData, data.length > 0 {
+            return data as Data
+        }
+        if let value = try? await item.load(.value) {
+            if let data = value as? Data, data.isEmpty == false {
+                return data
+            }
+            if let data = value as? NSData, data.length > 0 {
+                return data as Data
+            }
+        }
+        return nil
+    }
+
+    private static func isDecodableImage(_ data: Data) -> Bool {
+        guard data.count > 8 else { return false }
+        return ArtworkStorage.pixelSize(of: data) != nil
     }
 
     /// Core Audio exposes FLAC Vorbis comments through its file info dictionary
@@ -297,6 +443,7 @@ public enum MetadataReader {
         var artworkSize = 0
         if let artwork = SBFLACArtwork(decoder, &artworkSize), artworkSize > 0 {
             metadata.artworkData = Data(bytes: artwork, count: artworkSize)
+            metadata.embeddedArtworkPresent = true
         }
         return metadata
     }
@@ -367,7 +514,7 @@ public enum MetadataReader {
 
     // MARK: - Merge helpers
 
-    private static func blank(from url: URL) -> AudioMetadata {
+    static func blank(from url: URL) -> AudioMetadata {
         AudioMetadata(
             title: url.deletingPathExtension().lastPathComponent,
             artist: "Unknown Artist",
@@ -410,6 +557,7 @@ public enum MetadataReader {
         if source.bitrate != 0 { target.bitrate = source.bitrate }
         if source.sampleRate != 0 { target.sampleRate = source.sampleRate }
         if let art = source.artworkData { target.artworkData = art }
+        target.embeddedArtworkPresent = target.embeddedArtworkPresent || source.embeddedArtworkPresent
     }
 
     /// Fill only empty/unknown fields from fallback (AVFoundation).
@@ -439,6 +587,7 @@ public enum MetadataReader {
         if target.bitrate == 0, fallback.bitrate != 0 { target.bitrate = fallback.bitrate }
         if target.sampleRate == 0, fallback.sampleRate != 0 { target.sampleRate = fallback.sampleRate }
         if target.artworkData == nil { target.artworkData = fallback.artworkData }
+        target.embeddedArtworkPresent = target.embeddedArtworkPresent || fallback.embeddedArtworkPresent
     }
 
     /// True for empty titles or rip-style names like "1-01 Ambitionz…".

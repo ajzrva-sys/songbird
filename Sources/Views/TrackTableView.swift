@@ -43,6 +43,17 @@ enum TrackTableDoubleClickScope {
     }
 }
 
+@MainActor
+enum TrackTableKeyboardRouting {
+    static func ownsSelectAll(firstResponder: NSResponder?) -> Bool {
+        !(firstResponder is NSTextView) && !(firstResponder is NSTextField)
+    }
+
+    static func acceptsTypeSelect(searchFocused: Bool, modifiers: EventModifiers) -> Bool {
+        !searchFocused && modifiers.isDisjoint(with: [.command, .control, .option])
+    }
+}
+
 /// Bridges native table appearance and double-clicks without participating in
 /// hit testing, leaving selection and modifier-key behavior to the macOS List.
 struct TrackTableDoubleClickMonitor: NSViewRepresentable {
@@ -157,7 +168,7 @@ struct TrackTableDoubleClickMonitor: NSViewRepresentable {
                       event.window === self.window,
                       event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
                       event.charactersIgnoringModifiers?.lowercased() == "a",
-                      self.window?.firstResponder is NSTextView == false else {
+                      TrackTableKeyboardRouting.ownsSelectAll(firstResponder: self.window?.firstResponder) else {
                     return event
                 }
                 let selectAll = self.selectAllAction
@@ -232,6 +243,7 @@ public enum TrackSortColumn: String, CaseIterable, Identifiable, Sendable {
     case title, album, albumArtist, albumRating, artist, beatsPerMinute
     case bitRate, comments, composer
     case dateAdded, dateModified, description, discNumber, rating
+    case filePath
     case genre, grouping, kind, lastPlayed, lastSkipped, movementName
     case movementNumber, playCount, starRating, releaseDate
     case sampleRate, size, skipCount, sortAlbum, sortAlbumArtist, sortArtist
@@ -254,6 +266,7 @@ public enum TrackSortColumn: String, CaseIterable, Identifiable, Sendable {
         case .description: return "Description"
         case .discNumber: return "Disc Number"
         case .rating: return "Favorite"
+        case .filePath: return "Location"
         case .genre: return "Genre"
         case .grouping: return "Grouping"
         case .kind: return "Kind"
@@ -284,8 +297,8 @@ public enum TrackSortColumn: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .rating, .albumArtist, .title, .album, .duration, .genre, .playCount,
              .artist, .albumRating, .beatsPerMinute, .bitRate, .comments, .composer,
-             .dateAdded, .dateModified, .discNumber, .kind, .lastPlayed, .starRating,
-             .sampleRate, .size, .trackNumber, .year:
+             .dateAdded, .dateModified, .discNumber, .filePath, .kind, .lastPlayed,
+             .starRating, .sampleRate, .size, .trackNumber, .year:
             true
         default:
             false
@@ -299,7 +312,7 @@ public enum TrackSortColumn: String, CaseIterable, Identifiable, Sendable {
     var sortsAscendingByDefault: Bool {
         switch self {
         case .album, .albumArtist, .artist,
-             .comments, .composer, .description, .genre, .grouping, .kind,
+             .comments, .composer, .description, .filePath, .genre, .grouping, .kind,
              .movementName, .sortAlbum, .sortAlbumArtist, .sortArtist, .sortComposer,
              .sortTitle, .title, .work:
             return true
@@ -610,49 +623,10 @@ struct TrackTableColumnHeader: View {
             Button("Playlist Order") { usePlaylistOrder = true }
         }
         Divider()
-        columnVisibilityItems
-        Divider()
-        Button("Reset Columns") {
-            columnPrefsRaw = TrackTableColumnPrefs.encode(TrackTableColumnPrefs.defaults)
-        }
+        TrackTableColumnMenuItems(preferencesRaw: $columnPrefsRaw)
     }
 
-    // Keep these controls in the root context menu. The nested SwiftUI Menu can
-    // appear as a non-opening "Columns" item inside the table header's menu.
-    @ViewBuilder
-    private var columnVisibilityItems: some View {
-        ForEach(columnPrefs.sorted {
-            ($0.column?.label ?? $0.id).localizedCaseInsensitiveCompare($1.column?.label ?? $1.id)
-                == .orderedAscending
-        }) { preference in
-            if let column = preference.column, column.isSupported {
-                Toggle(
-                    column.label,
-                    isOn: Binding(
-                        get: { column == .title || preference.visible },
-                        set: { isVisible in
-                            setColumnVisibility(column, isVisible: isVisible)
-                        }
-                    )
-                )
-                .disabled(column == .title)
-            }
-        }
-    }
 
-    private func setColumnVisibility(
-        _ column: TrackSortColumn,
-        isVisible: Bool
-    ) {
-        guard column != .title else { return }
-        var prefs = columnPrefs
-        guard let index = prefs.firstIndex(where: { $0.id == column.rawValue }) else { return }
-        prefs[index].visible = isVisible
-        if let titleIndex = prefs.firstIndex(where: { $0.id == TrackSortColumn.title.rawValue }) {
-            prefs[titleIndex].visible = true
-        }
-        columnPrefsRaw = TrackTableColumnPrefs.encode(prefs)
-    }
 }
 
 /// Column separator that is either resizable or static.

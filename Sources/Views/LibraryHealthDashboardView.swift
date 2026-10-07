@@ -55,6 +55,7 @@ public struct LibraryHealthDashboardView: View {
                 spacing: 12
             ) {
                 ForEach(categories, id: \.self) { category in
+                    let status = LibraryHealthStatusPresentation(state: health.state(for: category))
                     Button {
                         navigation.showHealth(category)
                     } label: {
@@ -67,15 +68,20 @@ public struct LibraryHealthDashboardView: View {
                                     .font(.headline)
                                     .lineLimit(1)
                                 if let count = issueCount(for: category) {
-                                    Text("\(count) finding\(count == 1 ? "" : "s")")
+                                    Text(status.findingText(count: count))
                                         .font(.caption)
-                                        .foregroundStyle(count == 0 ? .green : .secondary)
-                                } else {
-                                    Text(statusText(for: category))
-                                        .font(.caption)
+                                        .foregroundStyle(count == 0 && status.isCurrent ? .green : .secondary)
+                                }
+                                Label(status.title, systemImage: status.symbol)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                if let checkedAt = status.checkedAt {
+                                    Text("Results updated \(checkedAt.formatted(date: .abbreviated, time: .shortened))")
+                                        .font(.caption2)
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .fixedSize(horizontal: false, vertical: true)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption.weight(.semibold))
@@ -83,6 +89,7 @@ public struct LibraryHealthDashboardView: View {
                         }
                         .padding(14)
                         .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
@@ -104,16 +111,6 @@ public struct LibraryHealthDashboardView: View {
 
     private func issueCount(for category: LibraryHealthCategory) -> Int? {
         health.state(for: category).lastGood?.findingCount
-    }
-
-    private func statusText(for category: LibraryHealthCategory) -> String {
-        switch health.state(for: category) {
-        case .checking: "Checking…"
-        case .failed: "Check failed · Retry"
-        case .stale: "Results stale"
-        case .notChecked: "Check required"
-        case .ready: "Checked"
-        }
     }
 
     private func symbol(for category: LibraryHealthCategory) -> String {

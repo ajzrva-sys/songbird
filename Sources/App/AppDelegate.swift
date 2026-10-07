@@ -7,6 +7,7 @@ import SongbirdLib
 final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Set by SongbirdApp so Dock menu / open-URLs can reach playback.
     var session: PlaybackSession?
+    private let activityTermination = LibraryActivityTerminationGate()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -43,8 +44,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        session?.engine.prepareForTermination()
-        return .terminateNow
+        guard !activityTermination.isFinished else { return .terminateNow }
+        activityTermination.begin(
+            prepare: { session?.engine.prepareForTermination() },
+            flush: { await LibraryStatus.shared.activity.flush() },
+            reply: { [weak sender] in sender?.reply(toApplicationShouldTerminate: true) }
+        )
+        return .terminateLater
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

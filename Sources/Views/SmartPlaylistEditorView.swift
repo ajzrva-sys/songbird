@@ -296,8 +296,10 @@ public struct SmartPlaylistEditorView: View {
             return false
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError(
-                "Could not save the smart playlist: \(error.localizedDescription)"
+            LibraryStatus.shared.showNotice(
+                "Could not save the smart playlist: \(error.localizedDescription)",
+                severity: .error,
+                source: .library
             )
             return false
         }

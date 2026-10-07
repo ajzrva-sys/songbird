@@ -157,6 +157,25 @@ final class LibraryNavigationCoordinatorTests: XCTestCase {
         )
     }
 
+    func testArtistAlbumAnchorsRemainIndependent() {
+        let first = AlbumGridScope.artist(name: "CAPSULE")
+        let second = AlbumGridScope.artist(name: "戶川純")
+        defer {
+            LibraryViewState.saveAlbumGridAnchor(nil, for: first)
+            LibraryViewState.saveAlbumGridAnchor(nil, for: second)
+        }
+
+        LibraryViewState.saveAlbumGridAnchor("capsule-album", for: first)
+        LibraryViewState.saveAlbumGridAnchor("togawa-album", for: second)
+        LibraryViewState.saveAlbumGridAnchor("all-album", for: .all)
+
+        XCTAssertEqual(LibraryViewState.loadAlbumGridAnchor(for: first), "capsule-album")
+        XCTAssertEqual(LibraryViewState.loadAlbumGridAnchor(for: second), "togawa-album")
+        XCTAssertEqual(LibraryViewState.loadAlbumGridAnchor(for: .all), "all-album")
+        LibraryViewState.saveAlbumGridAnchor(nil, for: first)
+        XCTAssertEqual(LibraryViewState.loadAlbumGridAnchor(for: second), "togawa-album")
+    }
+
     func testDestinationAndRouteRoundTrip() {
         let playlistID = UUID()
         let albumID = UUID()
@@ -165,6 +184,7 @@ final class LibraryNavigationCoordinatorTests: XCTestCase {
             .albums,
             .recentlyAdded,
             .queue,
+            .playHistory,
             .playlist(playlistID),
             .audioCD(DiscIdentifier("disc-1")),
         ]

@@ -198,7 +198,7 @@ public struct FilledCommentsView: View {
             items.removeAll { $0.id == trackID }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not clear comment: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not clear comment: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -218,7 +218,7 @@ public struct FilledCommentsView: View {
             items.removeAll { $0.isJunk }
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not clear comments: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not clear comments: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 
@@ -238,7 +238,7 @@ public struct FilledCommentsView: View {
             items = []
         } catch {
             modelContext.rollback()
-            LibraryStatus.shared.showPlaybackError("Could not clear comments: \(error.localizedDescription)")
+            LibraryStatus.shared.showNotice("Could not clear comments: \(error.localizedDescription)", severity: .error, source: .metadata)
         }
     }
 

@@ -676,6 +676,7 @@ public struct SettingsView: View {
         maintenancePhase = .running
         maintenanceProgress = .init(operation: "Preparing library maintenance", completed: 0)
         let service = LibraryMaintenanceService(modelContainer: modelContext.container)
+        let activityID = LibraryStatus.shared.activity.begin(kind: .libraryMaintenance)
         let started = maintenanceTasks.start(lease: lease) {
             LibrarySnapshotStore.active?.beginBulkUpdates()
             defer {
@@ -685,27 +686,37 @@ public struct SettingsView: View {
             let progress = LibraryMaintenanceProgressReporter { value in
                 await MainActor.run {
                     maintenanceProgress = value
+                    LibraryStatus.shared.activity.update(id: activityID, completed: value.completed,
+                                                         total: value.total, liveMessage: value.operation)
                 }
             }
             do {
                 let message = try await operation(service, progress)
                 try Task.checkCancellation()
                 maintenancePhase = .succeeded
-                libraryAlert(message)
+                LibraryStatus.shared.activity.finish(id: activityID, status: .succeeded, liveMessage: message)
+                libraryAlert(message, activityOperationID: activityID)
             } catch is CancellationError {
                 maintenancePhase = .idle
+                LibraryStatus.shared.activity.finish(id: activityID, status: .cancelled, severity: .information)
                 return
             } catch {
                 maintenancePhase = .failed
+                LibraryStatus.shared.activity.finish(id: activityID, status: .failed, severity: .error,
+                                                     liveMessage: "Library maintenance failed: \(error.localizedDescription)")
                 LibraryStatus.shared.showNotice(
                     "Library maintenance failed: \(error.localizedDescription)",
-                    severity: .error
+                    severity: .error,
+                    activityOperationID: activityID
                 )
             }
         }
         if started == false {
             maintenanceProgress = nil
             maintenancePhase = .idle
+            LibraryStatus.shared.activity.finish(id: activityID, status: .cancelled, severity: .information)
+        } else {
+            LibraryStatus.shared.activity.setCancellation(id: activityID) { maintenanceTasks.cancel() }
         }
     }
 
@@ -754,8 +765,10 @@ public struct SettingsView: View {
             } catch {
                 maintenanceProgress = nil
                 maintenancePhase = .failed
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not inspect missing files: \(error.localizedDescription)"
+                LibraryStatus.shared.showNotice(
+                    "Could not inspect missing files: \(error.localizedDescription)",
+                    severity: .error,
+                    source: .library
                 )
             }
         }
@@ -795,8 +808,10 @@ public struct SettingsView: View {
             } catch {
                 maintenanceProgress = nil
                 maintenancePhase = .failed
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not inspect empty albums and artists: \(error.localizedDescription)"
+                LibraryStatus.shared.showNotice(
+                    "Could not inspect empty albums and artists: \(error.localizedDescription)",
+                    severity: .error,
+                    source: .library
                 )
             }
         }
@@ -850,8 +865,10 @@ public struct SettingsView: View {
                 duplicatePhase = .idle
             } catch {
                 duplicatePhase = .failed
-                LibraryStatus.shared.showPlaybackError(
-                    "Could not analyze duplicate tracks: \(error.localizedDescription)"
+                LibraryStatus.shared.showNotice(
+                    "Could not analyze duplicate tracks: \(error.localizedDescription)",
+                    severity: .error,
+                    source: .library
                 )
             }
         }
@@ -865,11 +882,12 @@ public struct SettingsView: View {
         duplicatePhase = .idle
     }
 
-    private func libraryAlert(_ message: String) {
+    private func libraryAlert(_ message: String, activityOperationID: UUID? = nil) {
         LibraryStatus.shared.showNotice(
             message,
             severity: .information,
-            autoDismissAfter: 4
+            autoDismissAfter: 4,
+            activityOperationID: activityOperationID
         )
     }
 
